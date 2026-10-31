@@ -373,11 +373,11 @@ table.rec{border-collapse:collapse;width:100%;min-width:440px;font-size:14px;fon
 <script>
 (function(){
 const KIDS={
-  seoyun:{name:'서윤',full:'김서윤',no:3,about:'글씨가 예쁘고 꼼꼼해요. 미술부예요.',hair:'#5a3a22',shirt:'#8e6bc4',style:'bun'},
-  dohyun:{name:'도현',full:'박도현',no:8,about:'장난꾸러기예요. 매점에 자주 가요.',hair:'#262626',shirt:'#e0842a',style:'spike'},
-  harin:{name:'하린',full:'정하린',no:22,about:'조용한 편이에요. 아침에 일찍 등교해요.',hair:'#3a2418',shirt:'#3f9a7a',style:'bob'},
-  junho:{name:'준호',full:'이준호',no:14,about:'왼손잡이예요. 축구부예요.',hair:'#1f1f2e',shirt:'#3c6fb4',style:'band'},
-  jia:{name:'지아',full:'최지아',no:19,about:'나와 같은 학원에 다녀요. 고양이를 키워요.',hair:'#2a1c14',shirt:'#e0a52a',style:'pony'}
+  seoyun:{name:'윤아',full:'김윤아',no:3,about:'글씨가 예쁘고 꼼꼼해요. 미술부예요.',hair:'#5a3a22',shirt:'#8e6bc4',style:'bun'},
+  dohyun:{name:'성우',full:'박성우',no:8,about:'장난꾸러기예요. 매점에 자주 가요.',hair:'#262626',shirt:'#e0842a',style:'spike'},
+  harin:{name:'준희',full:'정준희',no:22,about:'조용한 편이에요. 아침에 일찍 등교해요.',hair:'#3a2418',shirt:'#3f9a7a',style:'bob'},
+  junho:{name:'연우',full:'이연우',no:14,about:'왼손잡이예요. 축구부예요.',hair:'#1f1f2e',shirt:'#3c6fb4',style:'band'},
+  jia:{name:'로아',full:'최로아',no:19,about:'나와 같은 학원에 다녀요. 고양이를 키워요.',hair:'#2a1c14',shirt:'#e0a52a',style:'pony'}
 };
 const ORDER=['seoyun','dohyun','harin','junho','jia'];
 const ANSWER='harin';
@@ -409,20 +409,20 @@ const DOCS=[
 ];
 
 const SAYS={
-  seoyun:'금요일 쪽지 나도 봤어. ㅎ을 동그라미 두 개 겹쳐서 쓰는 사람은 우리 반에 도현이밖에 없어.',
+  seoyun:'금요일 쪽지 나도 봤어. ㅎ을 동그라미 두 개 겹쳐서 쓰는 사람은 우리 반에 성우이밖에 없어.',
   dohyun:'수요일엔 늦잠 자서 8시 20분에 겨우 왔거든? 그리고 금요일 쪽지는… 그건 그냥 재미로… 아, 몰라!',
-  harin:'우리 언니 이름은 하늘이야. 하늘, 하린. 엄마가 둘 다 \'하\'로 지었대. 언니는 중학교 1학년이야.',
+  harin:'우리 언니 이름은 하늘이야. 하늘, 준희. 엄마가 둘 다 \'하\'로 지었대. 언니는 중학교 1학년이야.',
   junho:'수요일엔 7시 반부터 운동장에서 아침 훈련했어. 코치님이 훈련 끝날 때까지 아무도 못 나가게 해.',
   jia:'우리 집 고양이 털은 내 무릎 담요에 제일 많이 붙어 있어. 회색에 발바닥 무늬 있는 거. 근데 그 담요는 요즘 다른 친구한테 빌려줬어.'
 };
 
 // Who could have sent each day's gift, for the explanation.
 const WHY=[
-  {who:['jia','harin'],why:'학원 자기소개를 들은 사람만 알아요. 지아는 같은 반에서 들었고, 하린이는 중1반 정하늘 언니가 합반 수업에서 듣고 전해 줬어요.'},
-  {who:['junho','harin'],why:'왼손 글씨예요. 왼손잡이 준호, 그리고 화요일 사진에서 오른손에 붕대를 감고 왼손으로 쓰는 하린이만 가능해요.'},
-  {who:['seoyun','harin'],why:'8시 전에 교실에 들어온 사람은 하린(7:40)과 서윤(7:55)뿐이에요. 준호는 7:25에 학교에 왔지만 운동장에서 훈련하고 8:30에 교실에 왔어요.'},
-  {who:['jia','harin'],why:'지아는 고양이를 키우고, 지아의 고양이 발바닥 담요는 사진 속 하린이가 두르고 있어요.'},
-  {who:[],why:'다른 날은 모두 하늘색 편지지인데 이날만 노란 스마일 메모지예요. 목요일에 도현이가 매점에서 스마일 메모지를 샀고, 서윤이 말대로 ㅎ 글씨도 도현이 글씨예요. 도현이의 장난이에요.',fake:true}
+  {who:['jia','harin'],why:'학원 자기소개를 들은 사람만 알아요. 로아는 같은 반에서 들었고, 준희이는 중1반 정하늘 언니가 합반 수업에서 듣고 전해 줬어요.'},
+  {who:['junho','harin'],why:'왼손 글씨예요. 왼손잡이 연우, 그리고 화요일 사진에서 오른손에 붕대를 감고 왼손으로 쓰는 준희이만 가능해요.'},
+  {who:['seoyun','harin'],why:'8시 전에 교실에 들어온 사람은 준희(7:40)과 윤아(7:55)뿐이에요. 연우는 7:25에 학교에 왔지만 운동장에서 훈련하고 8:30에 교실에 왔어요.'},
+  {who:['jia','harin'],why:'로아는 고양이를 키우고, 로아의 고양이 발바닥 담요는 사진 속 준희이가 두르고 있어요.'},
+  {who:[],why:'다른 날은 모두 하늘색 편지지인데 이날만 노란 스마일 메모지예요. 목요일에 성우이가 매점에서 스마일 메모지를 샀고, 윤아이 말대로 ㅎ 글씨도 성우이 글씨예요. 성우이의 장난이에요.',fake:true}
 ];
 
 const $=id=>document.getElementById(id);
@@ -523,7 +523,7 @@ function photoSVG(){
       <text x="${cx}" y="249" text-anchor="middle" font-family="Jua,sans-serif" font-size="14" fill="#2b2b38">${c.name}</text>
     </g>`;
   }).join('');
-  return `<svg viewBox="0 0 700 270" role="img" aria-label="화요일 국어 시간 사진. 왼쪽부터 지아, 준호, 서윤, 하린, 도현. 지아·서윤·도현은 오른손으로 연필을 쥐었고, 준호는 왼손으로 쓰고 있어요. 하린이는 오른손에 붕대를 감고 왼손으로 쓰고 있고, 회색 발바닥 무늬 담요를 어깨에 두르고 있어요.">
+  return `<svg viewBox="0 0 700 270" role="img" aria-label="화요일 국어 시간 사진. 왼쪽부터 로아, 연우, 윤아, 준희, 성우. 로아·윤아·성우은 오른손으로 연필을 쥐었고, 연우는 왼손으로 쓰고 있어요. 준희이는 오른손에 붕대를 감고 왼손으로 쓰고 있고, 회색 발바닥 무늬 담요를 어깨에 두르고 있어요.">
     <rect width="700" height="270" fill="var(--wall)"/>
     <rect x="40" y="16" width="250" height="40" rx="3" fill="#2f5a4b"/>
     <text x="165" y="42" text-anchor="middle" font-family="Jua,sans-serif" font-size="17" fill="#f4f1dc">국어 · 친구에게 편지 쓰기</text>
@@ -538,21 +538,21 @@ function photoSVG(){
 function docHTML(id){
   if(id==='att')return `<p class="doc-cap">보건 선생님이 쓰는 수요일 아침 등교 기록이에요. 교문을 지난 시각과 교실에 들어온 시각이 따로 적혀 있어요.</p>
     <div class="tbl-wrap"><table class="rec"><thead><tr><th>번호</th><th>이름</th><th>교문 통과</th><th>교실 도착</th><th>비고</th></tr></thead><tbody>
-    <tr><td>14</td><td>이준호</td><td class="t">7:25</td><td class="t">8:30</td><td>축구부 아침 훈련 (운동장) · 코치 확인</td></tr>
-    <tr><td>22</td><td>정하린</td><td class="t">7:38</td><td class="t">7:40</td><td></td></tr>
-    <tr><td>3</td><td>김서윤</td><td class="t">7:52</td><td class="t">7:55</td><td></td></tr>
+    <tr><td>14</td><td>이연우</td><td class="t">7:25</td><td class="t">8:30</td><td>축구부 아침 훈련 (운동장) · 코치 확인</td></tr>
+    <tr><td>22</td><td>정준희</td><td class="t">7:38</td><td class="t">7:40</td><td></td></tr>
+    <tr><td>3</td><td>김윤아</td><td class="t">7:52</td><td class="t">7:55</td><td></td></tr>
     <tr><td>11</td><td>오민재</td><td class="t">7:58</td><td class="t">8:00</td><td>주번</td></tr>
-    <tr><td>8</td><td>박도현</td><td class="t">8:18</td><td class="t">8:20</td><td></td></tr>
+    <tr><td>8</td><td>박성우</td><td class="t">8:18</td><td class="t">8:20</td><td></td></tr>
     <tr><td>17</td><td>나</td><td class="t">8:24</td><td class="t">8:26</td><td></td></tr>
-    <tr><td>19</td><td>최지아</td><td class="t">8:41</td><td class="t">8:43</td><td>늦잠</td></tr>
+    <tr><td>19</td><td>최로아</td><td class="t">8:41</td><td class="t">8:43</td><td>늦잠</td></tr>
     </tbody></table></div>`;
   if(id==='photo')return `<p class="doc-cap">화요일 3교시에 선생님이 찍은 사진이에요. 사진은 친구들을 마주 보고 찍었어요. 그래서 친구의 오른손은 사진에서 왼쪽에 보여요.</p>
     <figure class="photo" style="margin:0"><div class="photo-scroll">${photoSVG()}</div><div class="swipe">← 옆으로 밀어서 다섯 명을 모두 보세요 →</div><figcaption>10월 21일 (화) 편지 쓰기 시간</figcaption></figure>`;
-  if(id==='acad')return `<p class="doc-cap">나와 지아가 다니는 해솔 영어학원의 출석부예요. 3월 4일 첫 수업은 6학년반과 중1반이 한 교실에 모여 함께 자기소개를 했어요.</p>
+  if(id==='acad')return `<p class="doc-cap">나와 로아가 다니는 해솔 영어학원의 출석부예요. 3월 4일 첫 수업은 6학년반과 중1반이 한 교실에 모여 함께 자기소개를 했어요.</p>
     <div class="tbl-wrap"><table class="rec"><thead><tr><th>반</th><th>이름</th><th>학교</th><th>3월 4일 첫 수업</th></tr></thead><tbody>
     <tr class="grp"><td colspan="4">6학년반</td></tr>
     <tr><td>6</td><td>나</td><td>햇빛초 6-2</td><td>출석</td></tr>
-    <tr><td>6</td><td>최지아</td><td>햇빛초 6-2</td><td>출석</td></tr>
+    <tr><td>6</td><td>최로아</td><td>햇빛초 6-2</td><td>출석</td></tr>
     <tr><td>6</td><td>오세빈</td><td>푸른초 6-1</td><td>출석</td></tr>
     <tr><td>6</td><td>한유나</td><td>푸른초 6-4</td><td>결석</td></tr>
     <tr class="grp"><td colspan="4">중1반</td></tr>
@@ -635,31 +635,31 @@ function renderEnd(){
   if(!S.ending){if($('endDlg').open)$('endDlg').close();el.innerHTML='';return}
   if(S.ending==='wait'){
     el.innerHTML=`<h2>금요일 다음 날, 마니또 공개일</h2>
-      <p>선생님이 "자, 이제 마니또를 공개해요!" 하고 말하자 교실이 시끌시끌해졌어요. 내 앞으로 걸어온 친구는 하린이었어요.</p>
+      <p>선생님이 "자, 이제 마니또를 공개해요!" 하고 말하자 교실이 시끌시끌해졌어요. 내 앞으로 걸어온 친구는 준희이었어요.</p>
       <div class="scene">${face('harin')}<div class="bubble">“나였어! 끝까지 몰랐지? 일주일 동안 들킬까 봐 엄청 조마조마했어.”</div></div>
-      <p>명탐정 배지는 다른 친구가 받아 갔어요. 하린이는 어떻게 들키지 않았을까요? 처음부터 다시 추리해 보면 단서가 다르게 보일 거예요.</p>
+      <p>명탐정 배지는 다른 친구가 받아 갔어요. 준희이는 어떻게 들키지 않았을까요? 처음부터 다시 추리해 보면 단서가 다르게 보일 거예요.</p>
       <div class="end-actions"><button class="again" type="button" id="again">처음부터 다시 추리하기</button><a class="to-list" href="../index.html">게임 목록</a></div>`;
   }else{
     const pick=S.clues.slice().sort();
     const rows=WHY.map((w,i)=>`<tr class="${w.fake?'fake':''}"><td class="c">${DAYS[i].d} · ${DAYS[i].title}</td><td class="c">${w.fake?'가짜 단서':w.who.map(k=>KIDS[k].name).join(', ')}</td><td>${w.why}</td></tr>`).join('');
     el.innerHTML=`<span class="stamp">명탐정 배지</span>
-      <h2>${S.tries===0?'한 번에':S.tries+1+'번 만에'} 맞혔어요. 나의 마니또는 하린이에요!</h2>
+      <h2>${S.tries===0?'한 번에':S.tries+1+'번 만에'} 맞혔어요. 나의 마니또는 준희이에요!</h2>
       <div class="scene">${face('harin')}<div class="bubble">“들켰네! 어떻게 알았어? 내일까지 비밀로 하려고 했는데.”</div></div>
-      <p>하린이가 웃으면서 하늘색 편지 한 장을 건네줬어요.</p>
+      <p>준희이가 웃으면서 하늘색 편지 한 장을 건네줬어요.</p>
       <div class="letter"><div class="w">
         월요일 사탕은 우리 언니 덕분이야. 언니가 학원 자기소개 때 네가 딸기를 제일 좋아한다고 했다고 알려 줬거든.<br>
         화요일엔 오른손을 다쳐서 왼손으로 썼어. 글씨 엉망이었지?<br>
         수요일엔 아무도 없을 때 놓고 싶어서 평소보다 더 일찍 왔어.<br>
-        목요일 포장지의 고양이 털은 지아한테 빌린 담요 때문이야.<br>
-        금요일 쪽지는 내 거 아니야! 도현이가 장난친 거래.<br>
-        일주일 동안 정말 재밌었어. 앞으로도 친하게 지내자!</div><span class="sign">- 너의 마니또 하린</span></div>
+        목요일 포장지의 고양이 털은 로아한테 빌린 담요 때문이야.<br>
+        금요일 쪽지는 내 거 아니야! 성우이가 장난친 거래.<br>
+        일주일 동안 정말 재밌었어. 앞으로도 친하게 지내자!</div><span class="sign">- 너의 마니또 준희</span></div>
       <div class="why"><h3>해설: 날마다 선물을 보낼 수 있었던 친구</h3>
         <div class="tbl-wrap"><table><thead><tr><th>단서</th><th>가능한 친구</th><th>근거</th></tr></thead><tbody>${rows}</tbody></table></div>
         <ul>
-          <li>내가 고른 결정적 단서는 <b>${DAYS[pick[0]].d}요일 ${DAYS[pick[0]].title}</b>와 <b>${DAYS[pick[1]].d}요일 ${DAYS[pick[1]].title}</b>예요. 두 단서에 모두 들어맞는 친구는 하린이 한 명뿐이에요.</li>
-          <li>지아는 학원, 고양이, 금요일 쪽지가 다 들어맞아 보였어요. 하지만 지아는 오른손으로 글씨를 쓰고, 수요일엔 8시 43분에 교실에 왔어요. 금요일 쪽지는 도현이의 장난이었어요.</li>
-          <li>왼손잡이 준호는 수요일에 7시 25분에 학교에 왔지만 운동장에서 훈련하고 8시 30분에야 교실에 들어왔어요.</li>
-          <li>서윤이는 수요일 아침 일찍 왔지만 오른손으로 쓰고 다친 데도 없어요. 도현이는 오른손잡이이고 수요일엔 8시 20분에 왔어요.</li>
+          <li>내가 고른 결정적 단서는 <b>${DAYS[pick[0]].d}요일 ${DAYS[pick[0]].title}</b>와 <b>${DAYS[pick[1]].d}요일 ${DAYS[pick[1]].title}</b>예요. 두 단서에 모두 들어맞는 친구는 준희이 한 명뿐이에요.</li>
+          <li>로아는 학원, 고양이, 금요일 쪽지가 다 들어맞아 보였어요. 하지만 로아는 오른손으로 글씨를 쓰고, 수요일엔 8시 43분에 교실에 왔어요. 금요일 쪽지는 성우이의 장난이었어요.</li>
+          <li>왼손잡이 연우는 수요일에 7시 25분에 학교에 왔지만 운동장에서 훈련하고 8시 30분에야 교실에 들어왔어요.</li>
+          <li>윤아이는 수요일 아침 일찍 왔지만 오른손으로 쓰고 다친 데도 없어요. 성우이는 오른손잡이이고 수요일엔 8시 20분에 왔어요.</li>
         </ul></div>
       <div class="end-actions"><button class="again" type="button" id="again">처음부터 다시 하기</button><a class="to-list" href="../index.html">게임 목록</a></div>`;
   }
