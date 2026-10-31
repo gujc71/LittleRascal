@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>게임기를 가기고 싶어</title>
+<style>html{color-scheme:light}body{margin:0}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap">
+<style>
+/* Layout: one notebook page — header with hearts and the trade chain, a dialogue strip, then the neighbourhood people as cards */
+:root {
+  --paper: #fbfbf7;
+  --grid: #dfe8ee;
+  --ink: #233140;
+  --ink-soft: #5b6b7a;
+  --pencil: #f6c544;
+  --pencil-deep: #c9930f;
+  --sky: #3d7fc4;
+  --leaf: #3f9a63;
+  --heart: #e2474f;
+  --card: #ffffff;
+  --line: #c8d3dc;
+  --shadow: 0 3px 0 #c8d3dc;
+  --display: "Jua", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --body: "Gowun Dodum", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #1b2330; --grid: #26313f; --ink: #eef2f6; --ink-soft: #a7b4c2;
+    --pencil: #f2c94c; --pencil-deep: #f2c94c; --sky: #7db3ea; --leaf: #6cc792; --heart: #ff6b72;
+    --card: #232e3d; --line: #364457; --shadow: 0 3px 0 #111823; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #1b2330; --grid: #26313f; --ink: #eef2f6; --ink-soft: #a7b4c2;
+  --pencil: #f2c94c; --pencil-deep: #f2c94c; --sky: #7db3ea; --leaf: #6cc792; --heart: #ff6b72;
+  --card: #232e3d; --line: #364457; --shadow: 0 3px 0 #111823; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  background-color: var(--paper);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 17px;
+  line-height: 1.6;
+  padding-block: 20px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+h1, h2, .display { font-family: var(--display); font-weight: 400; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(1.7rem, 5vw, 2.3rem); line-height: 1.2; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible { outline: 3px solid var(--sky); outline-offset: 2px; }
+
+header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.hearts { text-align: right; line-height: 1.1; margin: -15px 0 -20px; font-size: 1.6rem; letter-spacing: 2px; color: var(--heart); font-family: var(--display); }
+.hearts span.lost { color: var(--line); }
+header { flex-wrap: nowrap; }
+header .back { margin-left: auto; flex: 0 0 auto; white-space: nowrap; font-size: 0.85rem; color: var(--ink-soft); text-decoration: none; padding: 4px 10px; border: 2px solid var(--line); border-radius: 999px; background: var(--card); }
+header .back:hover { color: var(--ink); }
+
+.chain { display: flex; align-items: center; gap: 2px; flex-wrap: wrap; background: var(--card); border: 2px solid var(--line); border-radius: 14px; padding: 10px 12px; }
+.chain .slot { display: flex; flex-direction: column; align-items: center; min-width: 36px; font-size: 0.68rem; text-align: center; color: var(--ink-soft); }
+.chain .slot b { font-size: 1.5rem; line-height: 1.2; filter: grayscale(1); opacity: 0.35; font-weight: 400; }
+.chain .slot.got b, .chain .slot.now b { filter: none; opacity: 1; }
+.chain .slot.now { color: var(--ink); font-weight: 700; }
+.chain .slot.now b { animation: bob 1.4s ease-in-out infinite; }
+.chain .arrow { color: var(--line); font-family: var(--display); }
+
+.talk { background: var(--card); border: 2px solid var(--ink); border-radius: 16px; padding: 14px 16px; box-shadow: 0 4px 0 var(--ink); min-height: 132px; display: flex; flex-direction: column; gap: 8px; }
+.talk .who { font-family: var(--display); font-size: 1.05rem; display: inline-block; background: var(--pencil); color: #233140; padding: 0 10px; border-radius: 8px; align-self: flex-start; }
+.talk .who.narr { background: var(--grid); color: var(--ink); }
+.talk .who.fail { background: var(--heart); color: #fff; }
+.talk .text { font-size: 1.12rem; min-height: 3.2em; }
+.talk { cursor: pointer; }
+.talk .skip { font-size: 0.78rem; color: var(--ink-soft); align-self: flex-end; }
+.talk .text.typing::after { content: "▍"; color: var(--pencil-deep); animation: blink 0.8s steps(1) infinite; }
+.btn { border: 2px solid var(--ink); background: var(--pencil); color: #233140; border-radius: 12px; padding: 6px 16px; font-family: var(--display); font-size: 1.05rem; box-shadow: 0 3px 0 var(--ink); }
+.btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
+.btn.ghost { background: var(--card); color: var(--ink); }
+.btn:disabled { opacity: 0.4; cursor: default; }
+
+.people { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 12px; }
+.person .name { white-space: nowrap; }
+.person { background: var(--card); border: 2px solid var(--line); border-radius: 14px; padding: 12px 8px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 4px; box-shadow: var(--shadow); position: relative; }
+.person .face { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; font-size: 2.3rem; line-height: 1; border: 3px solid var(--card); box-shadow: 0 0 0 2px var(--line); }
+.person .name { font-family: var(--display); font-size: 1.05rem; }
+.person .role { font-size: 0.8rem; color: var(--ink-soft); line-height: 1.3; }
+.person.sel { border-color: var(--sky); box-shadow: 0 3px 0 var(--sky); }
+.person.done::after { content: "교환 완료"; position: absolute; top: 6px; right: 6px; font-size: 0.68rem; background: var(--leaf); color: #fff; border-radius: 6px; padding: 0 5px; }
+
+.actions { position: fixed; bottom: max(12px, env(safe-area-inset-bottom, 0px)); left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); max-width: 728px; margin: 0 auto; z-index: 10; box-shadow: 0 -6px 16px rgba(0,0,0,0.08); background: var(--card); border: 2px dashed var(--line); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+#play { padding-bottom: 150px; }
+.actions .label { font-size: 0.9rem; color: var(--ink-soft); letter-spacing: 0.02em; }
+.actions .row { display: flex; flex-wrap: nowrap; gap: 8px; overflow-x: auto; }
+.actions .row .btn { white-space: nowrap; flex: 0 0 auto; }
+.bag { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.card { background: var(--card); border: 2px solid var(--ink); border-radius: 18px; padding: 22px 20px; box-shadow: 0 5px 0 var(--ink); display: flex; flex-direction: column; gap: 12px; }
+.overlay { position: relative; height: 0; margin-bottom: -16px; z-index: 15; }
+.overlay .card { position: absolute; top: 0; left: 0; right: 0; }
+.card.title { align-items: center; }
+.card.title > p { text-align: center; }
+.card.title .rules { align-self: stretch; }
+.card ul, .card ol { margin: 0; padding-left: 1.3em; display: flex; flex-direction: column; gap: 6px; }
+.tip { background: var(--grid); border-radius: 12px; padding: 10px 14px; }
+.big { font-size: 3rem; line-height: 1; }
+
+@keyframes blink { 50% { opacity: 0; } }
+@keyframes bob { 50% { transform: translateY(-4px); } }
+@keyframes shake { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+.shake { animation: shake 0.4s; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>게임기를 가지고 싶어</h1>
+    <a class="back" href="../index.html">← 게임 목록</a>
+  </header>
+
+  <div class="overlay">
+  <section class="card" id="overCard" hidden>
+    <h2>아쉽게도 기회를 모두 썼어요</h2>
+    <p class="tip" style="margin:0"><b>힌트:</b> 교환하기 전에 사람들에게 먼저 말을 걸어 보세요. "없어서 걱정이야", "좋아해", "허전해" 같은 말에 답이 숨어 있어요.</p>
+    <button class="btn" id="retryBtn" style="align-self:flex-start">다시 하기 ♥♥♥</button>
+  </section>
+
+  <section class="card" id="endCard" hidden>
+    <div class="big" aria-hidden="true">🎮</div>
+    <h2>축하해요! 지우개 하나로 게임기를 얻었어요</h2>
+    <p style="margin:0">물건의 가치는 가격이 아니라, <b>그 물건이 필요한 사람</b>에게서 생겨요.</p>
+    <p style="margin:0" id="endStat"></p>
+    <h2 style="font-size:1.3rem">생각해 보기</h2>
+    <ol>
+      <li>비싼 필통은 왜 게임기와 바꿀 수 없었을까요?</li>
+      <li>나에게는 필요 없지만 다른 사람에게는 꼭 필요한 물건이 내 주변에 있나요? 누구에게 주면 좋을까요?</li>
+      <li>내가 누군가에게 도움을 주려면, 먼저 무엇을 해야 할까요? (힌트: 시연이가 게임에서 성공한 방법)</li>
+    </ol>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;align-self:flex-start">
+      <button class="btn ghost" id="againBtn">처음부터 다시 하기</button>
+      <a class="btn ghost" href="../index.html" style="text-decoration:none">게임 목록</a>
+    </div>
+  </section>
+  </div>
+
+  <div class="hearts" id="hearts" aria-live="polite"></div>
+
+  <div class="chain" id="chain" aria-label="교환 순서"></div>
+
+  <section class="card title" id="titleCard">
+    <div class="big" aria-hidden="true">? → 🎮</div>
+    <p style="margin:0">시연이는 자기가 가진 물건으로 게임기를 얻을 수 있을까요?<br>옆집 오빠가 <b>자기에게 꼭 필요한 물건</b>을 가져오면 안 쓰는 게임기를 준대요.</p>
+    <ul class="rules">
+      <li>물건을 <b>꼭 필요한 사람</b>에게 주면 교환 성공!</li>
+      <li>필요 없는 사람에게 주면 거절당하고 ♥ 하나가 사라져요.</li>
+      <li>♥ 3개가 모두 사라지면 게임이 끝나요.</li>
+      <li>사람을 누르면 이야기를 들려줘요. 그 말에 힌트가 있어요!</li>
+    </ul>
+    <button class="btn" id="startBtn">게임 시작</button>
+  </section>
+
+  <section class="talk" id="talk" hidden aria-live="polite">
+    <span class="who" id="who"></span>
+    <div class="text" id="text"></div>
+    <span class="skip">화면을 누르면 빠르게 넘어가요</span>
+  </section>
+
+  <section id="play" hidden style="display:flex;flex-direction:column;gap:16px">
+    <div class="people" id="people"></div>
+    <div class="actions" id="actions">
+      <div class="label" id="actLabel">이야기할 사람을 골라 보세요.</div>
+      <div class="row" id="actRow"></div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+const ITEMS = {
+  eraser:   { icon: "🦖", name: "공룡 지우개" },
+  paper:    { icon: "📄", name: "색종이" },
+  sticker:  { icon: "✨", name: "반짝이 스티커" },
+  pot:      { icon: "🪴", name: "화분" },
+  wordbook: { icon: "📘", name: "영어 단어장" },
+  console:  { icon: "🎮", name: "게임기" },
+  pencil:   { icon: "✏️", name: "비싼 필통" }
+};
+const CHAIN = ["eraser", "paper", "sticker", "pot", "wordbook", "console"];
+
+const PEOPLE = {
+  seoa:    { name: "서아", label: "서아 (3학년 동생)", face: "👧", color: "#cfe9d6", wants: "eraser" },
+  jiyu:    { name: "준희", label: "준희 (짝꿍)", face: "🧒", color: "#cfe0f5", wants: "paper" },
+  grandma: { name: "할머니", label: "문방구 할머니", face: "👵", color: "#f0dcc4", wants: "sticker" },
+  teacher: { name: "선생님", label: "담임선생님", face: "👩‍🏫", color: "#e2d5f2", wants: "pot" },
+  oppa:    { name: "오빠", label: "옆집 중학교 오빠", face: "👦", color: "#f6d2d7", wants: "wordbook" }
+};
+
+// 이야기 듣기 (힌트). before = 교환 전, after = 교환 후
+const HINTS = {
+  seoa: {
+    before: () => [["서아", "크아앙! 티라노사우루스다! 나는 공룡이 제일 좋아. 공룡 물건은 다 모을 거야!"]],
+    after:  () => [["서아", "공룡 지우개 최고야! 필통에 넣고 매일 들고 다닐 거야."]]
+  },
+  jiyu: {
+    before: () => step() < 1
+      ? [["준희", "휴, 내일까지 미술 숙제 해야 하는데 만들 재료가 없어."]]
+      : [["준희", "미술 숙제가 종이로 꽃 접기인데, 색종이를 사러 갈 시간이 없어. 큰일이야."]],
+    after:  () => [["준희", "숙제 다 했어! 선생님께 칭찬받을 것 같아."]]
+  },
+  grandma: {
+    before: () => [
+      ["할머니", "우리 손녀 하은이가 다이어리 꾸미기, 다꾸에 푹 빠졌단다. 반짝반짝한 걸 제일 좋아하는데 다 팔려 버렸지 뭐야."],
+      ["할머니", "그리고 가게에 화분이 너무 많아서 자리가 부족하구나."]
+    ],
+    after:  () => [["할머니", "하은이가 스티커를 받고 깡충깡충 뛰었단다. 고맙다."]]
+  },
+  teacher: {
+    before: () => [
+      ["선생님", "우리 교실 창가가 너무 허전하지 않니? 초록색이 있으면 좋겠는데."],
+      ["선생님", "책상 정리하다 보니 예전에 쓰던 영어 단어장이 나왔네."]
+    ],
+    after:  () => [["선생님", "창가가 환해졌지? 시연이 덕분이야."]]
+  },
+  oppa: {
+    before: () => [["오빠", "아, 다음 주가 영어 시험인데 단어를 하나도 못 외웠어. 외울 책도 없고… 그래서 게임도 안 하는 거야."]],
+    after:  () => [["오빠", "단어장 덕분에 공부 잘하고 있어!"]]
+  }
+};
+
+const SUCCESS = {
+  seoa: [
+    ["서아", "우와! 공룡 지우개다! 진짜 나 줘?"],
+    ["시연", "응, 대신 너한테 필요 없는 물건 있으면 바꿀래?"],
+    ["서아", "엄마가 사 준 색종이 있어. 나는 그리기만 좋아해서 안 써. 자, 여기!"],
+    ["내레이션", "시연이는 📄 색종이를 얻었어요!"]
+  ],
+  jiyu: [
+    ["준희", "어? 색종이다! 시연아, 너 진짜 최고야. 이제 숙제할 수 있겠다!"],
+    ["준희", "고마워서 이거 줄게. 내 반짝이 스티커인데, 나는 별로 안 써."],
+    ["내레이션", "시연이는 ✨ 반짝이 스티커를 얻었어요!"]
+  ],
+  grandma: [
+    ["할머니", "어머나, 반짝이 스티커구나! 하은이가 보면 깡충 뛰겠네."],
+    ["할머니", "고마워서 이 화분 하나 가져가렴. 예쁜 꽃이 필 거야."],
+    ["내레이션", "시연이는 🪴 화분을 얻었어요!"]
+  ],
+  teacher: [
+    ["선생님", "어머, 화분이네! 창가에 두면 교실이 훨씬 밝아지겠다. 고마워, 시연아."],
+    ["선생님", "이 영어 단어장 가져갈래? 선생님은 이제 안 쓰거든. 필요한 사람이 있을 거야."],
+    ["내레이션", "시연이는 📘 영어 단어장을 얻었어요!"]
+  ],
+  oppa: [
+    ["오빠", "우와, 영어 단어장이잖아! 이거 딱 내가 찾던 거야."],
+    ["오빠", "약속대로 게임기는 네 거야. 지우개 하나로 여기까지 오다니, 대단한데?"],
+    ["내레이션", "시연이는 드디어 🎮 게임기를 얻었어요!"]
+  ]
+};
+
+// 거절 대사: REFUSE[사람][물건]
+const REFUSE = {
+  seoa: {
+    paper: "그거 내가 준 색종이잖아! 난 안 쓴다니까?",
+    sticker: "반짝이네? 근데 공룡 스티커는 없어? 공룡 아니면 싫어!",
+    pot: "꽃은 공룡이 아니잖아. 난 공룡만 좋아!",
+    wordbook: "글자가 너무 많아! 공룡 그림은 없어?",
+    pencil: "나도 필통 있어! 근데 여기엔 공룡이 없네?"
+  },
+  jiyu: {
+    eraser: "난 공룡 별로야. 지우개는 나도 있어.",
+    sticker: "이건 내가 준 거잖아. 나 스티커 별로 안 쓴다니까?",
+    pot: "우리 집에도 화분 많아. 엄마가 더 가져오지 말래.",
+    wordbook: "영어 단어장? 우리는 아직 이런 어려운 단어 안 배워.",
+    pencil: "필통 예쁘다. 근데 나 지금 미술 숙제가 더 급해."
+  },
+  grandma: {
+    eraser: "지우개는 우리 가게에 산더미처럼 있단다, 호호.",
+    paper: "색종이는 가게에도 많아. 우리 하은이는 요즘 다른 걸 좋아하던데.",
+    pot: "그건 내가 준 화분이지? 가게에 화분이 너무 많아서 준 거란다.",
+    wordbook: "할미는 영어 공부 안 해도 된단다, 호호.",
+    pencil: "아이고, 우리 가게에 필통은 많단다."
+  },
+  teacher: {
+    eraser: "귀여운 지우개네. 그런데 선생님은 지우개가 필요 없어요.",
+    paper: "색종이는 교실 사물함에 가득 있단다.",
+    sticker: "예쁘다. 그런데 선생님은 칭찬 스티커가 이미 많단다.",
+    wordbook: "그건 선생님이 준 단어장이잖니. 선생님보다 더 필요한 사람에게 주렴.",
+    pencil: "시연아, 그건 엄마가 사 주신 거잖니. 선생님은 필요 없어요."
+  },
+  oppa: {
+    eraser: "지우개? 하하, 이걸로는 게임기랑 못 바꿔. 나한테 필요한 걸 가져와!",
+    paper: "색종이? 중학생은 종이접기 안 해. 나한테 필요한 건 그게 아니야.",
+    sticker: "반짝이 스티커? 나는 스티커 안 붙여. 필요 없어.",
+    pot: "화분? 나 요즘 바빠서 물 줄 시간도 없어. 필요 없어.",
+    pencil: "우와, 비싼 필통이네. 근데 필통은 이미 있어. 비싼 거라고 내가 필요한 건 아니야."
+  }
+};
+
+const FAIL_NOTE = [
+  null,
+  ["시연", "어라, 이 사람한테는 필요 없는 물건이구나. 누가 이걸 정말 필요로 할까? (♥ 2개 남음)"],
+  ["시연", "기회가 한 번밖에 없어! 바꾸기 전에 사람들에게 먼저 말을 걸어 보자. (♥ 1개 남음)"]
+];
+const GAMEOVER = [
+  ["내레이션", "노을이 지는 골목길, 시연이가 벤치에 앉아 있어요."],
+  ["시연", "휴… 오늘은 게임기를 못 얻었네."],
+  ["오빠", "시연아, 너무 실망하지 마. 너 열심히 뛰어다니는 거 다 봤어."],
+  ["오빠", "그런데 너 물건을 주기 전에 그 사람이 무슨 말을 하는지 잘 들어 봤어?"],
+  ["시연", "아… 그냥 아무한테나 주려고 했던 것 같아요."],
+  ["오빠", "비싼 물건이라고 좋은 교환이 되는 건 아니야. 그 사람에게 꼭 필요한 물건일 때 가치가 생기는 거지."],
+  ["내레이션", "다시 도전해 볼까요?"]
+];
+let state;
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function fresh() { return { step: 0, fails: 0, sel: null, done: {}, busy: false, order: shuffle(Object.keys(PEOPLE)) }; }
+function step() { return state.step; }
+const $ = (id) => document.getElementById(id);
+
+function renderHearts() {
+  const left = 3 - state.fails;
+  $("hearts").innerHTML = [0, 1, 2].map(i => `<span class="${i < left ? "" : "lost"}">${i < left ? "♥" : "♡"}</span>`).join("");
+}
+function renderChain() {
+  // 시작 물건(공룡 지우개)은 순서표에 넣지 않고, 얻을 물건만 보여 준다
+  $("chain").innerHTML = CHAIN.slice(1).map((k, n) => {
+    const i = n + 1;
+    const cls = i <= state.step ? "got" : "";
+    const got = i <= state.step;
+    return (n ? '<span class="arrow" aria-hidden="true">→</span>' : "") +
+      `<div class="slot ${cls}"><b aria-hidden="true">${got ? ITEMS[k].icon : "?"}</b>${got ? ITEMS[k].name : ""}</div>`;
+  }).join("");
+}
+function renderPeople() {
+  $("people").innerHTML = state.order.map(id => [id, PEOPLE[id]]).map(([id, p]) =>
+    `<button class="person ${state.sel === id ? "sel" : ""} ${state.done[id] ? "done" : ""}" data-id="${id}" ${state.busy && !state.interruptible ? "disabled" : ""}>
+       <span class="face" style="background:${p.color}" aria-hidden="true">${p.face}</span>
+       <span class="name">${p.label}</span>
+     </button>`).join("");
+  $("people").querySelectorAll(".person").forEach(b => b.onclick = () => { state.sel = b.dataset.id; renderAll(); listen(state.sel); });
+}
+function renderActions() {
+  const row = $("actRow");
+  row.innerHTML = "";
+  if (!state.sel) { $("actLabel").textContent = "이야기할 사람을 골라 보세요."; return; }
+  const p = PEOPLE[state.sel];
+  $("actLabel").textContent = `${p.label}에게 무엇을 줄까요?`;
+  const mk = (label, cls, fn) => { const b = document.createElement("button"); b.className = "btn " + cls; b.textContent = label; b.disabled = state.busy; b.onclick = fn; row.appendChild(b); };
+  const cur = CHAIN[state.step];
+  [cur, "pencil"].forEach(k => mk(`${ITEMS[k].icon} ${ITEMS[k].name}`, "", () => give(state.sel, k)));
+}
+function renderAll() { renderHearts(); renderChain(); renderPeople(); renderActions(); }
+
+// dialogue player: types each line, then moves on by itself. Tapping the box speeds it up.
+const TYPE_MS = 38;
+let queue = [], onDone = null, gen = 0, timer = null, typing = null;
+function say(lines, done, interruptible) {
+  clearTimeout(timer); gen++;
+  queue = lines.slice(); onDone = done || null;
+  state.busy = true; state.interruptible = !!interruptible; renderAll();
+  $("talk").hidden = false;
+  $("talk").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  nextLine(gen);
+}
+function nextLine(g) {
+  if (g !== gen) return;
+  if (!queue.length) {
+    state.busy = false;
+    const cb = onDone; onDone = null;
+    if (cb) cb(); else renderAll();
+    return;
+  }
+  const [who, text, kind] = queue.shift();
+  const w = $("who");
+  w.textContent = who;
+  w.className = "who" + (who === "내레이션" ? " narr" : "") + (kind === "fail" ? " fail" : "");
+  const el = $("text");
+  const chars = Array.from(text);
+  let n = 0;
+  el.classList.add("typing");
+  const finish = () => {
+    el.textContent = text; el.classList.remove("typing"); typing = null;
+    timer = setTimeout(() => nextLine(g), 900 + chars.length * 18);
+  };
+  typing = { finish };
+  const tick = () => {
+    if (g !== gen) return;
+    n++; el.textContent = chars.slice(0, n).join("");
+    if (n >= chars.length) finish(); else timer = setTimeout(tick, TYPE_MS);
+  };
+  el.textContent = "";
+  tick();
+}
+$("talk").onclick = () => {
+  if (!state.busy) return;
+  clearTimeout(timer);
+  if (typing) { typing.finish(); clearTimeout(timer); timer = setTimeout(() => nextLine(gen), 350); }
+  else nextLine(gen);
+};
+
+function listen(id) {
+  const h = HINTS[id];
+  say(state.done[id] ? h.after() : h.before(), null, true);
+}
+function give(id, item) {
+  if (PEOPLE[id].wants === item && !state.done[id]) {
+    say(SUCCESS[id], () => {
+      state.done[id] = true;
+      state.step++;
+      state.sel = null;
+      if (state.step === 5) return finish();
+      renderAll();
+    });
+    return;
+  }
+  state.fails++;
+  const card = $("talk");
+  card.classList.remove("shake"); void card.offsetWidth; card.classList.add("shake");
+  const lines = [[PEOPLE[id].name, REFUSE[id][item] || "고맙지만 나한테는 필요 없어.", "fail"]];
+  if (state.fails < 3) lines.push(FAIL_NOTE[state.fails]);
+  renderHearts();
+  say(lines, () => state.fails >= 3 ? gameOver() : renderAll());
+}
+
+function show(which) {
+  ["titleCard", "play", "overCard", "endCard"].forEach(k => $(k).hidden = k !== which);
+}
+function gameOver() {
+  show(null); renderAll();
+  say(GAMEOVER, () => { $("talk").hidden = true; show("overCard"); $("retryBtn").focus(); });
+}
+function finish() {
+  $("talk").hidden = true;
+  $("endStat").textContent = state.fails === 0
+    ? "한 번도 실패하지 않았어요! 사람들의 말을 정말 잘 들었네요."
+    : `실패 ${state.fails}번을 딛고 끝까지 해냈어요.`;
+  renderAll();
+  show("endCard");
+}
+function begin(skipIntro) {
+  state = fresh();
+  show("play"); renderAll();
+  say([skipIntro
+    ? ["시연", "좋아, 이번엔 그 사람이 무엇이 필요한지 먼저 물어볼 거야!"]
+    : ["내레이션", "누구에게 먼저 가 볼까요? 사람을 누르면 이야기를 들려줘요."]]);
+}
+$("startBtn").onclick = () => begin(false);
+$("retryBtn").onclick = () => begin(true);
+$("againBtn").onclick = () => begin(false);
+
+state = fresh();
+renderAll();
+</script>
+
+</body>
+</html>
