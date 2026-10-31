@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#e04570">
+<title>나의 마니또는 누구?</title>
+<meta name="description" content="공개일 하루 전, 닷새 동안 받은 선물을 열어 보며 증거를 모아 내 마니또가 누구인지 알아내는 친구 찾기 추리 게임.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="개구쟁이들">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:title" content="나의 마니또는 누구?">
+<meta property="og:description" content="공개일 하루 전, 닷새 동안 받은 선물을 열어 보며 증거를 모아 내 마니또가 누구인지 알아내는 친구 찾기 추리 게임.">
+<meta name="twitter:card" content="summary">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&family=Gowun+Dodum&family=Nanum+Pen+Script&display=swap">
+<style>
+/* Layout: a week of gift tags on top (open each day's gift), then the evidence folder with five tabs,
+   then the suspects, and at the bottom the answer slip. The ending opens in a modal dialog.
+   Ribbon red marks gifts and actions, sky-blue letter paper is the manitto's notes, kraft is wrapping. */
+:root{
+  color-scheme:light;
+  --bg:#f7f4fd; --surface:#ffffff; --paper:#fcfaff; --ink:#1f2236; --muted:#636780; --line:#e4dff0;
+  --ribbon:#e04570; --ribbon-ink:#ffffff; --ribbon-soft:#ffe1ea;
+  --letter:#d7e8f7; --letter-line:#b5cfe8; --letter-ink:#24335a;
+  --memo:#ffe58a; --memo-ink:#3a2f05;
+  --kraft:#c99f73; --kraft-2:#b18559; --tape:#f3ead2;
+  --ok:#2a8a5c; --bad:#c8432e;
+  --wall:#e6e2ec; --floor:#cfb08a; --desk:#d9b98f; --desk-2:#b8956a; --skin:#f3c9a0;
+  --shadow:0 1px 0 rgba(31,34,54,.05),0 6px 18px rgba(31,34,54,.09);
+  --f-display:"Black Han Sans","Gowun Dodum",sans-serif;
+  --f-body:"Gowun Dodum","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-talk:"Jua","Gowun Dodum",sans-serif;
+  --f-hand:"Nanum Pen Script","Jua",cursive;
+}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--ribbon);outline-offset:2px}
+html,body{height:100%}
+.app{max-width:1000px;margin:0 auto;padding-block:12px 36px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:14px}
+/* Wide screens keep the single long column; narrow screens show one pane at a time. */
+.panes{display:flex;flex-direction:column;gap:14px;min-width:0}
+.pane{display:contents}
+.vtabs{display:none}
+
+/* Header */
+.hud{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:8px 16px}
+.brand small{display:block;font-size:12px;letter-spacing:.08em;color:var(--muted)}
+.brand h1{margin:0;font-family:var(--f-display);font-weight:400;font-size:28px;line-height:1.1;text-wrap:balance}
+.brand h1 em{font-style:normal;color:var(--ribbon)}
+.count{display:flex;gap:14px;font-variant-numeric:tabular-nums;font-size:13px;color:var(--muted)}
+.count b{font-family:var(--f-display);font-weight:400;font-size:22px;color:var(--ink);margin-right:2px}
+.intro{margin:0;color:var(--muted);font-size:14px;max-width:64ch}
+
+.sec-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin:0 0 10px}
+.sec-h h2{margin:0;font-family:var(--f-talk);font-weight:400;font-size:21px}
+.sec-h small{color:var(--muted);font-size:12.5px}
+.panel{background:var(--surface);border-radius:10px;box-shadow:var(--shadow);padding:14px;min-width:0}
+
+/* Week of gifts */
+.week{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.tag{position:relative;display:grid;justify-items:center;gap:2px;padding:12px 4px 8px;border-radius:8px;border:1.5px solid var(--line);
+  background:var(--paper);min-height:76px}
+.tag::before{content:"";position:absolute;top:7px;left:50%;width:8px;height:8px;margin-left:-4px;border-radius:50%;background:var(--surface);border:1.5px solid var(--line)}
+.tag .d{font-family:var(--f-display);font-size:22px;line-height:1.1;margin-top:6px}
+.tag small{font-size:12px;color:var(--muted);line-height:1.3;text-align:center}
+.tag.opened{background:var(--ribbon-soft);border-color:color-mix(in srgb,var(--ribbon) 40%,var(--line))}
+.tag[aria-pressed="true"]{border-color:var(--ribbon);border-width:2.5px}
+.gift{display:grid;grid-template-columns:minmax(0,220px) minmax(0,1fr);gap:16px;align-items:center;margin-top:12px;
+  padding:14px;border-radius:8px;background:var(--paper);border:1px solid var(--line);min-height:150px}
+.gift.empty{display:block;color:var(--muted);min-height:0}
+.gift h3{margin:0 0 4px;font-family:var(--f-talk);font-weight:400;font-size:20px;color:var(--ribbon)}
+.gift p{margin:0;max-width:62ch}
+.gift dl{margin:8px 0 0;display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:13.5px}
+.gift dt{color:var(--muted)}
+.gift dd{margin:0}
+.fig svg{display:block;width:100%;height:auto}
+.pop{animation:pop .35s ease-out}
+@keyframes pop{from{transform:translateY(4px);opacity:.6}to{transform:none;opacity:1}}
+
+/* Notes on paper (the papers stay light in both themes, like real paper) */
+.letter{background:var(--letter);color:var(--letter-ink);border-radius:3px;padding:12px 14px 10px;transform:rotate(-1.5deg);
+  background-image:repeating-linear-gradient(transparent 0 27px,var(--letter-line) 27px 28px);box-shadow:0 2px 6px rgba(0,0,0,.12)}
+.letter .w{font-family:var(--f-hand);font-size:25px;line-height:28px}
+.letter .smear{display:inline-block;transform:skewX(-6deg) rotate(1.5deg);text-shadow:4px 0 1.5px rgba(36,51,90,.45),9px 0 3px rgba(36,51,90,.22);letter-spacing:.04em}
+.letter .sign{display:block;text-align:right;font-family:var(--f-hand);font-size:21px;line-height:28px;opacity:.85}
+.memo{background:var(--memo);color:var(--memo-ink);border-radius:3px;padding:12px 14px;transform:rotate(2deg);box-shadow:0 2px 6px rgba(0,0,0,.12);position:relative}
+.memo::after{content:"☺";position:absolute;right:8px;top:4px;font-size:22px;opacity:.55}
+.memo .w{font-family:var(--f-talk);font-size:26px;line-height:1.3}
+
+/* Evidence folder */
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.tab{border:1.5px solid var(--line);background:var(--paper);border-radius:18px;padding:5px 14px;min-height:40px;font-family:var(--f-talk);font-size:16px}
+.tab.seen{border-color:color-mix(in srgb,var(--ink) 30%,var(--line))}
+.tab[aria-selected="true"]{background:var(--ribbon);color:var(--ribbon-ink);border-color:var(--ribbon)}
+.doc{min-width:0}
+.doc-cap{margin:0 0 8px;color:var(--muted);font-size:13.5px;max-width:70ch}
+.tbl-wrap{overflow-x:auto}
+table.rec{border-collapse:collapse;width:100%;min-width:440px;font-size:14px;font-variant-numeric:tabular-nums}
+.rec th,.rec td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;white-space:nowrap}
+.rec thead th{font-size:12.5px;color:var(--muted);font-weight:400;border-bottom:2px solid var(--ink)}
+.rec td.t{font-family:var(--f-talk);font-size:16px}
+.rec .grp td{background:var(--paper);font-size:12.5px;color:var(--muted)}
+.photo{background:#fbfaf6;border-radius:4px;padding:10px 10px 6px;box-shadow:0 3px 10px rgba(0,0,0,.16);max-width:720px}
+.photo-scroll{overflow-x:auto}
+.photo svg{display:block;width:100%;min-width:520px;height:auto}
+.swipe{display:none;font-size:12.5px;color:#6b6a78;padding:4px 4px 0}
+.photo figcaption{font-family:var(--f-hand);font-size:21px;color:#3b3a48;padding:4px 4px 0}
+.receipts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.rcpt{background:#fdfdfb;color:#272733;font-family:ui-monospace,"D2Coding",Menlo,monospace;font-size:12.5px;line-height:1.5;padding:12px 12px 16px;
+  border-radius:2px;box-shadow:0 2px 6px rgba(0,0,0,.14);
+  -webkit-mask:linear-gradient(#000 0 0) top/100% calc(100% - 8px) no-repeat,radial-gradient(circle 5px at 50% 100%,transparent 4.5px,#000 5px) bottom/12px 8px repeat-x;
+          mask:linear-gradient(#000 0 0) top/100% calc(100% - 8px) no-repeat,radial-gradient(circle 5px at 50% 100%,transparent 4.5px,#000 5px) bottom/12px 8px repeat-x}
+.rcpt b{display:block;text-align:center;font-size:13.5px}
+.rcpt hr{border:0;border-top:1px dashed #9a9aa6;margin:6px 0}
+.rcpt .r{display:flex;justify-content:space-between;gap:8px}
+.talks{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.who{display:grid;justify-items:center;gap:2px;background:var(--paper);border:1.5px solid var(--line);border-radius:8px;padding:8px 4px 6px}
+.who svg{width:50px;height:50px}
+.who b{font-family:var(--f-talk);font-weight:400;font-size:16px}
+.who[aria-pressed="true"]{border-color:var(--ink);border-width:2.5px}
+.who.heard small::after{content:"들음";font-size:11px;color:var(--muted)}
+.who small{min-height:1.2em}
+.quote{margin:10px 0 0;padding:12px 14px;border-radius:8px;background:var(--paper);border:1px solid var(--line);font-family:var(--f-talk);font-size:17.5px;line-height:1.5;min-height:3.4em}
+.quote .by{display:block;font-family:var(--f-body);font-size:12.5px;color:var(--muted);margin-bottom:2px}
+.quote.hint{font-family:var(--f-body);font-size:14px;color:var(--muted)}
+
+/* Suspects */
+.sus{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px}
+.sus li{display:grid;grid-template-columns:48px 1fr;gap:10px;align-items:center;padding:8px 10px;border-radius:8px;background:var(--paper)}
+.sus svg{width:48px;height:48px}
+.sus b{font-family:var(--f-talk);font-weight:400;font-size:17px}
+.sus b span{font-family:var(--f-body);font-size:12px;color:var(--muted);margin-left:6px}
+.sus p{margin:0;font-size:13.5px;line-height:1.45;color:var(--muted)}
+.ghost{background:none;border:1px solid var(--line);border-radius:16px;padding:4px 12px;min-height:34px;font-size:13px;color:var(--muted)}
+
+/* Answer slip */
+.answer{background:var(--surface);border-radius:10px;box-shadow:var(--shadow);padding:16px;display:grid;gap:14px;border-top:6px solid var(--ribbon)}
+.answer h2{margin:0;font-family:var(--f-display);font-weight:400;font-size:22px}
+.answer .sub{margin:-8px 0 0;color:var(--muted);font-size:13.5px}
+.pick{display:grid;gap:6px}
+.pick > span{font-size:13.5px;color:var(--muted)}
+.pick > span b{color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1.5px solid var(--ink);background:var(--surface);border-radius:18px;padding:4px 14px;font-family:var(--f-talk);font-size:17px;min-height:40px}
+.chip[aria-pressed="true"]{background:var(--ribbon);border-color:var(--ribbon);color:var(--ribbon-ink)}
+.chip small{font-family:var(--f-body);font-size:12px;opacity:.8;margin-left:4px}
+.go{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.submit{background:var(--ribbon);color:var(--ribbon-ink);border:0;border-radius:22px;padding:8px 24px;font-family:var(--f-talk);font-size:19px;min-height:46px}
+.submit:disabled{opacity:.45;cursor:not-allowed}
+.fb{font-size:15px;min-height:1.4em;font-family:var(--f-talk)}
+.fb.bad{color:var(--bad)}
+.shake{animation:shake .35s}
+@keyframes shake{0%,100%{transform:none}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.wait{border-top:1px dashed var(--line);padding-top:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13.5px;color:var(--muted)}
+.wait .ask{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.wait .ghost.danger{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 40%,var(--line))}
+
+/* Endings: shown in a modal dialog over the case */
+.end-dlg{border:0;padding:0;background:transparent;color:var(--ink);width:min(760px,calc(100vw - 32px));max-width:none;
+  max-height:calc(100dvh - 32px);overflow:auto;overscroll-behavior:contain;border-radius:10px}
+.end-dlg::backdrop{background:rgb(20 18 36 / .55)}
+.end-close{position:sticky;top:8px;display:block;margin:8px 8px -48px auto;z-index:1;width:40px;height:40px;border-radius:50%;
+  border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:20px;line-height:1}
+.end{border-radius:10px;padding:18px;display:grid;gap:14px;background:var(--surface);box-shadow:var(--shadow)}
+.end .stamp{justify-self:start;font-family:var(--f-display);font-size:28px;color:var(--ribbon);border:4px solid var(--ribbon);border-radius:8px;padding:0 14px;transform:rotate(-4deg)}
+.end h2{margin:0;font-family:var(--f-talk);font-weight:400;font-size:22px}
+.end p{margin:0;max-width:68ch}
+.scene{display:grid;grid-template-columns:64px 1fr;gap:12px;align-items:start}
+.scene svg{width:64px;height:64px}
+.bubble{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-family:var(--f-talk);font-size:18px}
+.end .letter{transform:rotate(-.6deg);max-width:620px}
+.end .letter .w{font-size:23px}
+.why{display:grid;gap:8px}
+.why h3{margin:0;font-size:16px}
+.why table{border-collapse:collapse;width:100%;min-width:480px;font-size:13.5px}
+.why th,.why td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+.why thead th{white-space:nowrap;font-weight:400;color:var(--muted);font-size:12.5px;border-bottom:2px solid var(--ink)}
+.why td.c{font-family:var(--f-talk);font-size:15px;white-space:nowrap}
+.why .fake td{color:var(--muted)}
+.why ul{margin:0;padding-left:1.2em;display:grid;gap:4px;max-width:70ch}
+.again{justify-self:start;background:var(--ink);color:var(--bg);border:0;border-radius:20px;padding:6px 18px;font-family:var(--f-talk);font-size:17px;min-height:44px}
+.end-actions{justify-self:start;display:flex;flex-wrap:wrap;gap:10px}
+.to-list{display:inline-flex;align-items:center;background:transparent;color:var(--ink);border:2px solid var(--ink);border-radius:20px;padding:4px 18px;font-family:var(--f-talk);font-size:17px;min-height:44px;text-decoration:none}
+
+@media (max-width:760px){
+  .gift{grid-template-columns:1fr}
+  .gift .fig{max-width:260px}
+  .receipts{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+  .brand h1{font-size:25px}
+}
+@media (max-width:520px){
+  .week{gap:5px}
+  .tag{padding:12px 2px 6px;min-height:70px}
+  .tag small{font-size:11px}
+  .talks{grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
+  .who svg{width:40px;height:40px}
+  .who b{font-size:15px}
+  .tab{padding:4px 11px;font-size:15px}
+  .swipe{display:block}
+}
+/* ---------- one-screen layout for phones: no page scroll, one pane at a time ---------- */
+@media (max-width:760px),(max-height:620px) and (max-width:1100px){
+  body{margin:0;overflow:hidden}
+  .app{height:100%;max-width:none;position:relative;overflow:hidden;gap:7px;padding-block:8px 0}
+
+  .hub-back{position:absolute;top:7px;right:max(16px,env(safe-area-inset-right,0px));margin:0;z-index:4}
+  .hub-back a{padding:4px 9px;font-size:11.5px}
+  .hud{display:block;padding-right:96px}
+  .brand small{display:none}
+  .brand h1{font-size:20px}
+  .count{gap:12px;font-size:11.5px;margin-top:1px}
+  .count b{font-size:15px}
+  /* the opening blurb stays on the first view until a gift is opened, then the gift takes the room */
+  .intro{display:none;font-size:12.5px;line-height:1.45}
+  .app[data-view="case"]:has(.gift.empty) .intro{display:block}
+
+  .panes{flex:1;min-height:0;gap:0}
+  .pane{display:none}
+  .app[data-view="case"] #pCase,.app[data-view="doc"] #pDoc,.app[data-view="sus"] #pSus,
+  .app[data-view="ans"] #pAns{
+    display:flex;flex-direction:column;height:100%;gap:10px;
+    overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}
+  .panel,.answer,.end{flex:none}
+  .panel{padding:11px}
+  .sec-h{margin:0 0 8px}
+  .sec-h h2{font-size:18px}
+  .sec-h small{font-size:11.5px}
+
+  /* the five days stay put, the opened gift scrolls under them */
+  .app[data-view="case"] #pCase{overflow:hidden}
+  #pCase .panel{flex:1;min-height:0;display:flex;flex-direction:column}
+  .week{flex:none}
+  .gift{flex:1;min-height:0;overflow:auto;align-items:start;padding:11px;margin-top:10px}
+  .gift.empty{flex:none}
+  .gift .fig{max-width:150px;justify-self:center}
+  .gift h3{font-size:18px}
+  .gift dl{font-size:12.5px}
+
+  .tabs{gap:5px;margin-bottom:9px}
+  .tab{padding:4px 11px;min-height:36px;font-size:15px}
+  .doc-cap,.doc-foot{font-size:12.5px}
+  .quote{font-size:16px;padding:10px 12px}
+  .receipts{gap:8px}
+  .rcpt{font-size:11.5px;line-height:1.45;padding:9px 9px 13px}
+  .rcpt b{font-size:12.5px}
+  .rec th,.rec td{padding:5px 7px}
+
+  .sus li{padding:6px 8px;gap:8px;grid-template-columns:40px 1fr}
+  .sus svg{width:40px;height:40px}
+  .sus b{font-size:16px}
+  .sus p{font-size:12.5px;line-height:1.4}
+
+  .answer{padding:12px;gap:10px}
+  .answer h2{font-size:20px}
+  .answer .sub{font-size:12.5px}
+  .chip{padding:3px 12px;min-height:38px;font-size:16px}
+  .submit{min-height:42px;padding:7px 20px;font-size:18px}
+  .end{padding:12px;gap:10px}
+  .end .stamp{font-size:24px}
+  .end h2{font-size:20px}
+  .end .letter .w{font-size:20px}
+
+  .vtabs{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;flex:none;
+    background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px;
+    margin-bottom:max(6px,env(safe-area-inset-bottom,0px))}
+  .vtabs button{border:0;background:none;border-radius:10px;min-height:40px;color:var(--muted);
+    font-family:var(--f-talk);font-size:14px;display:flex;align-items:center;justify-content:center;gap:4px}
+  .vtabs button[aria-pressed="true"]{background:var(--ribbon);color:var(--ribbon-ink)}
+  .vtabs .dot{width:7px;height:7px;border-radius:50%;background:var(--ribbon)}
+  .vtabs button[aria-pressed="true"] .dot{background:var(--ribbon-ink)}
+}
+/* phone turned sideways: the pane is short, so use the width */
+@media (max-height:620px) and (max-width:1100px) and (orientation:landscape){
+  .sus{grid-template-columns:1fr 1fr}
+  .chips{gap:6px}
+}
+@media (max-width:760px) and (max-height:700px){
+  .app{gap:5px}
+  .brand h1{font-size:18px}
+  .count{font-size:11px}
+  .count b{font-size:13px}
+  .tag{padding:11px 2px 5px;min-height:62px}
+  .tag .d{font-size:19px}
+  .receipts{gap:6px}
+  .rcpt{font-size:11px;padding:8px 8px 12px}
+  .sus svg{width:36px;height:36px}
+  .sus p{font-size:12px}
+  .vtabs button{min-height:36px;font-size:13px}
+  .vtabs{padding:3px;margin-bottom:max(4px,env(safe-area-inset-bottom,0px))}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+<style>
+.hub-back{display:block;margin-bottom:2px}
+.hub-back a{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;line-height:1;
+  color:var(--muted);text-decoration:none;padding:6px 11px;border:1px solid var(--line);
+  border-radius:999px;background:var(--surface)}
+.hub-back a:hover{color:var(--ink)}
+.hub-back a:focus-visible{outline:3px solid var(--heat,var(--ink));outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="app" id="app" data-view="case">
+<nav class="hub-back" aria-label="게임 목록"><a href="../index.html">← 게임 목록</a></nav>
+  <header class="hud">
+    <div class="brand">
+      <small>6학년 2반 마니또 주간 · 공개일 하루 전</small>
+      <h1>나의 <em>마니또</em>는 누구?</h1>
+    </div>
+    <div class="count" aria-live="polite">
+      <span><b id="nGift">0</b>/5 선물</span>
+      <span><b id="nDoc">0</b>/5 자료</span>
+    </div>
+  </header>
+  <p class="intro">일주일 동안 이어진 마니또 활동이 내일 끝나요. 공개일 전에 내 마니또를 맞히면 반 친구들 앞에서 명탐정 배지를 받아요. 닷새 동안 받은 선물과 쪽지를 열어 보고, 증거 자료와 맞대어 보낸 친구를 추리해 보세요.</p>
+
+  <div class="panes">
+  <div class="pane" id="pCase">
+  <section class="panel" aria-labelledby="weekH">
+    <div class="sec-h"><h2 id="weekH">닷새 동안 받은 선물</h2><small>요일을 눌러 열어 보세요</small></div>
+    <div class="week" id="week"></div>
+    <div class="gift empty" id="gift" aria-live="polite">아직 열어 본 선물이 없어요. 월요일부터 열어 보세요.</div>
+  </section>
+  </div>
+
+  <div class="pane" id="pDoc">
+  <section class="panel" aria-labelledby="docH">
+    <div class="sec-h"><h2 id="docH">증거 자료</h2><small>선생님과 친구들에게 빌려 온 자료예요</small></div>
+    <div class="tabs" id="tabs" role="tablist" aria-label="증거 자료"></div>
+    <div class="doc" id="doc" role="tabpanel"></div>
+  </section>
+  </div>
+
+  <div class="pane" id="pSus">
+  <section class="panel" aria-labelledby="susH">
+    <div class="sec-h"><h2 id="susH">후보</h2><small>우리 반 친구 다섯 명</small></div>
+    <ul class="sus" id="sus"></ul>
+  </section>
+  </div>
+
+  <div class="pane" id="pAns">
+  <section class="answer" id="answer" aria-labelledby="ansH">
+    <h2 id="ansH">마니또 맞히기</h2>
+    <p class="sub">마니또 이름 한 명과, 그 친구라고 확신하게 만든 결정적 단서 두 개를 골라 제출하세요.</p>
+    <div class="pick"><span>나의 마니또는</span><div class="chips" id="pickName"></div></div>
+    <div class="pick"><span>결정적 단서 <b id="clueN">0</b>/2</span><div class="chips" id="pickClue"></div></div>
+    <div class="go"><button class="submit" id="submit" type="button" disabled>제출하기</button><span class="fb" id="fb" aria-live="polite"></span></div>
+    <div class="wait" id="wait"></div>
+  </section>
+  </div>
+  </div>
+
+  <nav class="vtabs" id="vtabs" aria-label="화면 바꾸기">
+    <button type="button" data-view="case" aria-pressed="true">선물</button>
+    <button type="button" data-view="doc" aria-pressed="false">자료</button>
+    <button type="button" data-view="sus" aria-pressed="false">후보</button>
+    <button type="button" data-view="ans" aria-pressed="false">누구?<span class="dot" id="ansDot" hidden></span></button>
+  </nav>
+</div>
+
+<dialog class="end-dlg" id="endDlg" aria-label="게임 결과">
+  <button class="end-close" id="endClose" type="button" aria-label="결과 창 닫기">✕</button>
+  <section class="end" id="end"></section>
+</dialog>
+
+<script>
+(function(){
+const KIDS={
+  seoyun:{name:'서윤',full:'김서윤',no:3,about:'글씨가 예쁘고 꼼꼼해요. 미술부예요.',hair:'#5a3a22',shirt:'#8e6bc4',style:'bun'},
+  dohyun:{name:'도현',full:'박도현',no:8,about:'장난꾸러기예요. 매점에 자주 가요.',hair:'#262626',shirt:'#e0842a',style:'spike'},
+  harin:{name:'하린',full:'정하린',no:22,about:'조용한 편이에요. 아침에 일찍 등교해요.',hair:'#3a2418',shirt:'#3f9a7a',style:'bob'},
+  junho:{name:'준호',full:'이준호',no:14,about:'왼손잡이예요. 축구부예요.',hair:'#1f1f2e',shirt:'#3c6fb4',style:'band'},
+  jia:{name:'지아',full:'최지아',no:19,about:'나와 같은 학원에 다녀요. 고양이를 키워요.',hair:'#2a1c14',shirt:'#e0a52a',style:'pony'}
+};
+const ORDER=['seoyun','dohyun','harin','junho','jia'];
+const ANSWER='harin';
+
+const DAYS=[
+  {d:'월',title:'딸기 사탕',paper:'하늘색 편지지',
+   text:'책상 서랍 안에 분홍색 딸기 사탕 세 개와 쪽지가 들어 있었어요. 내가 딸기를 제일 좋아한다는 건 학교에서 말한 적이 없어요. 3월에 학원 첫 수업 자기소개 때 딱 한 번 말했어요.',
+   gift:'딸기 사탕 3개',where:'책상 서랍',note:'딸기 좋아하지?'},
+  {d:'화',title:'번진 쪽지',paper:'하늘색 편지지',
+   text:'쪽지 글씨가 삐뚤빼뚤하고, 연필 자국이 글자 오른쪽으로 쭉 번져 있어요. 왼손으로 글씨를 쓰면 손 옆면이 방금 쓴 글자를 문지르면서 이렇게 번지곤 해요.',
+   gift:'쪽지 한 장',where:'필통 안',note:'체육 시간에 넘어진 거 괜찮아? 힘내!',smear:true},
+  {d:'수',title:'이른 아침 선물',paper:'하늘색 편지지',
+   text:'교실 뒤 내 사물함 위에 연필 세트와 쪽지가 놓여 있었어요. 주번 민재가 아침 8시에 교실에 들어왔을 때 이미 있었대요. 그러니까 8시 전에 교실에 들어온 사람이 놓고 간 거예요.',
+   gift:'연필 세트',where:'교실 뒤 사물함 위',note:'시험 공부 파이팅!'},
+  {d:'목',title:'털 묻은 포장지',paper:'하늘색 편지지',
+   text:'갈색 포장지에 싸인 곰돌이 키링이 왔어요. 포장지 테이프에 하얗고 회색인 고양이 털이 여러 가닥 붙어 있어요. 털은 테이프 안쪽에도 끼어 있어서, 포장할 때 묻은 것 같아요.',
+   gift:'곰돌이 키링',where:'책상 위',note:'가방에 달아 줘!'},
+  {d:'금',title:'학원 쪽지',paper:'노란 스마일 메모지',
+   text:'의자 위에 쪽지 한 장이 놓여 있었어요. 글씨가 크고 동글동글해요. 다른 날 쪽지와 달리 선물은 없었어요.',
+   gift:'없음 (쪽지만)',where:'의자 위',note:'학원에서 보자 😊',memo:true}
+];
+
+const DOCS=[
+  {id:'att',name:'등교 기록표'},
+  {id:'photo',name:'학급 사진'},
+  {id:'acad',name:'학원 출석부'},
+  {id:'store',name:'매점 영수증'},
+  {id:'talk',name:'친구들 증언'}
+];
+
+const SAYS={
+  seoyun:'금요일 쪽지 나도 봤어. ㅎ을 동그라미 두 개 겹쳐서 쓰는 사람은 우리 반에 도현이밖에 없어.',
+  dohyun:'수요일엔 늦잠 자서 8시 20분에 겨우 왔거든? 그리고 금요일 쪽지는… 그건 그냥 재미로… 아, 몰라!',
+  harin:'우리 언니 이름은 하늘이야. 하늘, 하린. 엄마가 둘 다 \'하\'로 지었대. 언니는 중학교 1학년이야.',
+  junho:'수요일엔 7시 반부터 운동장에서 아침 훈련했어. 코치님이 훈련 끝날 때까지 아무도 못 나가게 해.',
+  jia:'우리 집 고양이 털은 내 무릎 담요에 제일 많이 붙어 있어. 회색에 발바닥 무늬 있는 거. 근데 그 담요는 요즘 다른 친구한테 빌려줬어.'
+};
+
+// Who could have sent each day's gift, for the explanation.
+const WHY=[
+  {who:['jia','harin'],why:'학원 자기소개를 들은 사람만 알아요. 지아는 같은 반에서 들었고, 하린이는 중1반 정하늘 언니가 합반 수업에서 듣고 전해 줬어요.'},
+  {who:['junho','harin'],why:'왼손 글씨예요. 왼손잡이 준호, 그리고 화요일 사진에서 오른손에 붕대를 감고 왼손으로 쓰는 하린이만 가능해요.'},
+  {who:['seoyun','harin'],why:'8시 전에 교실에 들어온 사람은 하린(7:40)과 서윤(7:55)뿐이에요. 준호는 7:25에 학교에 왔지만 운동장에서 훈련하고 8:30에 교실에 왔어요.'},
+  {who:['jia','harin'],why:'지아는 고양이를 키우고, 지아의 고양이 발바닥 담요는 사진 속 하린이가 두르고 있어요.'},
+  {who:[],why:'다른 날은 모두 하늘색 편지지인데 이날만 노란 스마일 메모지예요. 목요일에 도현이가 매점에서 스마일 메모지를 샀고, 서윤이 말대로 ㅎ 글씨도 도현이 글씨예요. 도현이의 장난이에요.',fake:true}
+];
+
+const $=id=>document.getElementById(id);
+const KEY='manitto-v1';
+let S;
+function fresh(){return {opened:[],day:null,seen:[],doc:'att',heard:[],talk:null,name:null,clues:[],tries:0,ending:null,askWait:false}}
+function load(){try{const v=JSON.parse(localStorage.getItem(KEY)||'null');if(v&&v.opened&&!v.ending)return Object.assign(fresh(),v)}catch(e){}return fresh()}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+
+function face(k,size){
+  const c=KIDS[k];let extra='';
+  if(c.style==='bun')extra=`<circle cx="32" cy="10" r="7" fill="${c.hair}"/>`;
+  if(c.style==='pony')extra=`<path d="M48 18 q12 6 6 22" stroke="${c.hair}" stroke-width="6" fill="none" stroke-linecap="round"/>`;
+  const top=c.style==='spike'
+    ?`<path d="M15 29 l2 -12 l5 5 l4 -10 l5 7 l5 -8 l4 9 l5 -5 l1 14 q-8 -7 -15 -5 q-8 -2 -16 5z" fill="${c.hair}"/>`
+    :c.style==='bob'
+    ?`<path d="M14 36 q-2 -24 18 -24 q20 0 18 24 l-4 0 q0 -12 -4 -16 q-10 4 -20 0 q-4 4 -4 16z" fill="${c.hair}"/>`
+    :`<path d="M16 28 q2 -16 16 -16 q14 0 16 16 q-8 -8 -16 -6 q-8 -2 -16 6z" fill="${c.hair}"/>`;
+  const band=c.style==='band'?`<path d="M16.5 24 q15.5 -7 31 0" stroke="#e8e8ee" stroke-width="4" fill="none"/>`:'';
+  return `<svg viewBox="0 0 64 64" aria-hidden="true"${size?` width="${size}" height="${size}"`:''}><path d="M10 64 q0 -16 22 -16 q22 0 22 16z" fill="${c.shirt}"/>${extra}<circle cx="32" cy="30" r="16" fill="var(--skin)"/>${top}${band}<circle cx="25" cy="31" r="1.8" fill="#222"/><circle cx="39" cy="31" r="1.8" fill="#222"/><path d="M27 38 q5 3 10 0" stroke="#8a4a2a" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`;
+}
+
+/* ---------- gift illustrations ---------- */
+function noteHTML(day){
+  if(day.memo)return `<div class="memo"><div class="w">${day.note}</div></div>`;
+  const body=day.smear?`<span class="smear">${day.note}</span>`:day.note;
+  return `<div class="letter"><div class="w">${body}</div><span class="sign">- 너의 마니또</span></div>`;
+}
+function giftFig(i){
+  const day=DAYS[i];
+  if(i===0)return `<svg viewBox="0 0 220 70" aria-hidden="true">${[30,90,150].map((x,j)=>`<g transform="translate(${x+(j-1)*4},${32+(j%2)*6}) rotate(${(j-1)*12})"><path d="M-30 0 l-10 -10 v20z M30 0 l10 -10 v20z" fill="#f29bb3"/><ellipse rx="26" ry="16" fill="#e8577d"/><ellipse rx="18" ry="9" cx="-4" cy="-3" fill="#f6a3b8" opacity=".7"/><text y="5" text-anchor="middle" font-family="Jua,sans-serif" font-size="13" fill="#fff">딸기</text></g>`).join('')}</svg>`+noteHTML(day);
+  if(i===2)return `<svg viewBox="0 0 220 120" aria-hidden="true"><rect x="10" y="40" width="200" height="80" fill="var(--desk-2)"/>${[0,1,2,3].map(j=>`<rect x="${16+j*49}" y="46" width="44" height="70" rx="2" fill="var(--desk)"/><circle cx="${52+j*49}" cy="81" r="2.5" fill="var(--ink)" opacity=".5"/>`).join('')}<text x="87" y="64" text-anchor="middle" font-family="Jua,sans-serif" font-size="11" fill="var(--ink)" opacity=".7">내 사물함</text><rect x="62" y="18" width="52" height="22" rx="2" fill="#5b8fd6"/><rect x="62" y="26" width="52" height="5" fill="var(--ribbon)"/>${[0,1,2,3,4].map(j=>`<rect x="${68+j*9}" y="8" width="5" height="14" fill="${['#f2c94c','#e8577d','#6fcf97','#56ccf2','#f2994a'][j]}"/>`).join('')}<rect x="122" y="24" width="30" height="16" rx="1" fill="var(--letter)" transform="rotate(8 137 32)"/></svg>`+noteHTML(day);
+  if(i===3)return `<svg viewBox="0 0 220 120" aria-hidden="true"><rect x="40" y="22" width="140" height="88" rx="4" fill="var(--kraft)"/><path d="M40 60 h140" stroke="var(--kraft-2)" stroke-width="2"/><rect x="98" y="14" width="26" height="104" fill="var(--tape)" opacity=".85"/><g stroke="#f4f4f4" stroke-width="1.4" fill="none" stroke-linecap="round"><path d="M102 30 q6 4 12 1"/><path d="M104 48 q8 -3 14 2"/><path d="M101 70 q5 5 13 3"/><path d="M106 92 q6 -4 11 0"/></g><g stroke="#8d8d96" stroke-width="1.3" fill="none" stroke-linecap="round"><path d="M108 38 q5 3 9 -1"/><path d="M103 82 q7 2 12 -3"/><path d="M110 60 q4 4 8 2"/></g><circle cx="160" cy="36" r="11" fill="#b07a4a"/><circle cx="152" cy="27" r="4.5" fill="#b07a4a"/><circle cx="168" cy="27" r="4.5" fill="#b07a4a"/><circle cx="156" cy="35" r="1.5" fill="#222"/><circle cx="164" cy="35" r="1.5" fill="#222"/><path d="M160 47 v10" stroke="#888" stroke-width="2"/></svg>`+noteHTML(day);
+  return noteHTML(day);
+}
+
+/* ---------- week ---------- */
+function buildWeek(){
+  $('week').innerHTML=DAYS.map((d,i)=>`<button class="tag" type="button" data-day="${i}"><span class="d">${d.d}</span><small id="tagS${i}"></small></button>`).join('');
+  $('week').addEventListener('click',e=>{const b=e.target.closest('[data-day]');if(!b)return;openDay(+b.dataset.day)});
+}
+function openDay(i){
+  if(!S.opened.includes(i))S.opened.push(i);
+  S.day=i;save();render();
+  const g=$('gift');g.classList.remove('pop');void g.offsetWidth;g.classList.add('pop');
+}
+function renderWeek(){
+  DAYS.forEach((d,i)=>{
+    const b=document.querySelector(`[data-day="${i}"]`);
+    b.classList.toggle('opened',S.opened.includes(i));
+    b.setAttribute('aria-pressed',String(S.day===i));
+    $('tagS'+i).textContent=S.opened.includes(i)?d.title:'선물';
+    b.setAttribute('aria-label',`${d.d}요일 ${S.opened.includes(i)?d.title:'열지 않은 선물'}`);
+  });
+  const g=$('gift');
+  if(S.day===null){g.className='gift empty';g.textContent='아직 열어 본 선물이 없어요. 월요일부터 열어 보세요.';return}
+  const d=DAYS[S.day];g.className='gift';
+  g.innerHTML=`<div class="fig">${giftFig(S.day)}</div><div><h3>${d.d}요일 · ${d.title}</h3><p>${d.text}</p>
+    <dl><dt>선물</dt><dd>${d.gift}</dd><dt>놓인 곳</dt><dd>${d.where}</dd><dt>쪽지 종이</dt><dd>${d.paper}</dd></dl></div>`;
+}
+
+/* ---------- evidence ---------- */
+function photoSVG(){
+  // Photo taken facing the kids: a kid's right hand appears on the viewer's left.
+  const seat=[
+    {k:'jia',write:'R'},{k:'junho',write:'L'},{k:'seoyun',write:'R'},{k:'harin',write:'L',bandage:true,blanket:true},{k:'dohyun',write:'R'}
+  ];
+  const W=140;
+  const kids=seat.map((s,i)=>{
+    const cx=70+i*W,c=KIDS[s.k];
+    const rightX=cx-30,leftX=cx+30; // viewer side positions of the kid's right and left hands
+    const penX=s.write==='R'?rightX:leftX, restX=s.write==='R'?leftX:rightX;
+    const hand=(x,y,band)=>band
+      ?`<g><circle cx="${x}" cy="${y}" r="10" fill="#ffffff" stroke="#c9c9d1" stroke-width="1.2"/><path d="M${x-9} ${y-3} h18 M${x-9} ${y+2} h18 M${x-7} ${y+6} h14" stroke="#c9c9d1" stroke-width="1.2"/></g>`
+      :`<circle cx="${x}" cy="${y}" r="8.5" fill="var(--skin)"/>`;
+    const handBand=(x)=>s.bandage&&x===rightX;
+    const blanket=s.blanket?`<path d="M${cx-38} 128 q38 -16 76 0 l6 62 h-88z" fill="#8b8d99"/>${[[-22,150],[16,146],[-6,172],[26,176],[-28,180]].map(([dx,dy])=>`<g fill="#c9cad3" transform="translate(${cx+dx},${dy})"><circle r="3.6"/><circle cx="-4" cy="-5" r="1.6"/><circle cx="0" cy="-6.5" r="1.6"/><circle cx="4" cy="-5" r="1.6"/></g>`).join('')}`:'';
+    const sheet=`<rect x="${penX-24}" y="196" width="40" height="22" rx="1" fill="#ffffff" transform="rotate(${s.write==='R'?-6:6} ${penX-4} 207)"/>`;
+    return `<g>
+      ${c.style==='pony'?`<path d="M${cx+18} 78 q14 8 6 26" stroke="${c.hair}" stroke-width="7" fill="none" stroke-linecap="round"/>`:''}
+      ${c.style==='bun'?`<circle cx="${cx}" cy="58" r="9" fill="${c.hair}"/>`:''}
+      <path d="M${cx-42} 200 q0 -66 42 -66 q42 0 42 66z" fill="${c.shirt}"/>
+      ${blanket}
+      <circle cx="${cx}" cy="98" r="27" fill="var(--skin)"/>
+      ${c.style==='spike'?`<path d="M${cx-27} 96 l3 -20 l8 8 l6 -16 l8 11 l8 -13 l7 14 l8 -8 l2 24 q-14 -12 -25 -9 q-13 -3 -25 9z" fill="${c.hair}"/>`
+        :c.style==='bob'?`<path d="M${cx-30} 110 q-3 -40 30 -40 q33 0 30 40 l-7 0 q0 -20 -6 -26 q-17 7 -34 0 q-6 6 -6 26z" fill="${c.hair}"/>`
+        :`<path d="M${cx-27} 94 q3 -27 27 -27 q24 0 27 27 q-13 -13 -27 -10 q-14 -3 -27 10z" fill="${c.hair}"/>`}
+      ${c.style==='band'?`<path d="M${cx-26} 86 q26 -12 52 0" stroke="#e8e8ee" stroke-width="6" fill="none"/>`:''}
+      <circle cx="${cx-9}" cy="100" r="2.6" fill="#222"/><circle cx="${cx+9}" cy="100" r="2.6" fill="#222"/>
+      <path d="M${cx-7} 111 q7 5 14 0" stroke="#8a4a2a" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+      <path d="M${rightX+2} 150 L${rightX} ${s.write==='R'?204:212}" stroke="${c.shirt}" stroke-width="14" stroke-linecap="round"/>
+      <path d="M${leftX-2} 150 L${leftX} ${s.write==='L'?204:212}" stroke="${c.shirt}" stroke-width="14" stroke-linecap="round"/>
+      ${sheet}
+      ${hand(restX,214,handBand(restX))}
+      ${hand(penX,204,handBand(penX))}
+      <path d="M${penX+(s.write==='R'?4:-4)} 200 l${s.write==='R'?14:-14} -22" stroke="#e2b23a" stroke-width="4" stroke-linecap="round"/>
+      <rect x="${cx-26}" y="234" width="52" height="20" rx="10" fill="#ffffff" opacity=".9"/>
+      <text x="${cx}" y="249" text-anchor="middle" font-family="Jua,sans-serif" font-size="14" fill="#2b2b38">${c.name}</text>
+    </g>`;
+  }).join('');
+  return `<svg viewBox="0 0 700 270" role="img" aria-label="화요일 국어 시간 사진. 왼쪽부터 지아, 준호, 서윤, 하린, 도현. 지아·서윤·도현은 오른손으로 연필을 쥐었고, 준호는 왼손으로 쓰고 있어요. 하린이는 오른손에 붕대를 감고 왼손으로 쓰고 있고, 회색 발바닥 무늬 담요를 어깨에 두르고 있어요.">
+    <rect width="700" height="270" fill="var(--wall)"/>
+    <rect x="40" y="16" width="250" height="40" rx="3" fill="#2f5a4b"/>
+    <text x="165" y="42" text-anchor="middle" font-family="Jua,sans-serif" font-size="17" fill="#f4f1dc">국어 · 친구에게 편지 쓰기</text>
+    <rect x="560" y="14" width="34" height="34" rx="17" fill="#ffffff" stroke="#8b5e3c" stroke-width="3"/>
+    <path d="M577 31 v-11 M577 31 l8 3" stroke="#222" stroke-width="2.4" stroke-linecap="round"/>
+    <rect x="0" y="216" width="700" height="18" fill="var(--desk)"/>
+    <rect x="0" y="232" width="700" height="38" fill="var(--desk-2)"/>
+    ${kids}
+  </svg>`;
+}
+
+function docHTML(id){
+  if(id==='att')return `<p class="doc-cap">보건 선생님이 쓰는 수요일 아침 등교 기록이에요. 교문을 지난 시각과 교실에 들어온 시각이 따로 적혀 있어요.</p>
+    <div class="tbl-wrap"><table class="rec"><thead><tr><th>번호</th><th>이름</th><th>교문 통과</th><th>교실 도착</th><th>비고</th></tr></thead><tbody>
+    <tr><td>14</td><td>이준호</td><td class="t">7:25</td><td class="t">8:30</td><td>축구부 아침 훈련 (운동장) · 코치 확인</td></tr>
+    <tr><td>22</td><td>정하린</td><td class="t">7:38</td><td class="t">7:40</td><td></td></tr>
+    <tr><td>3</td><td>김서윤</td><td class="t">7:52</td><td class="t">7:55</td><td></td></tr>
+    <tr><td>11</td><td>오민재</td><td class="t">7:58</td><td class="t">8:00</td><td>주번</td></tr>
+    <tr><td>8</td><td>박도현</td><td class="t">8:18</td><td class="t">8:20</td><td></td></tr>
+    <tr><td>17</td><td>나</td><td class="t">8:24</td><td class="t">8:26</td><td></td></tr>
+    <tr><td>19</td><td>최지아</td><td class="t">8:41</td><td class="t">8:43</td><td>늦잠</td></tr>
+    </tbody></table></div>`;
+  if(id==='photo')return `<p class="doc-cap">화요일 3교시에 선생님이 찍은 사진이에요. 사진은 친구들을 마주 보고 찍었어요. 그래서 친구의 오른손은 사진에서 왼쪽에 보여요.</p>
+    <figure class="photo" style="margin:0"><div class="photo-scroll">${photoSVG()}</div><div class="swipe">← 옆으로 밀어서 다섯 명을 모두 보세요 →</div><figcaption>10월 21일 (화) 편지 쓰기 시간</figcaption></figure>`;
+  if(id==='acad')return `<p class="doc-cap">나와 지아가 다니는 해솔 영어학원의 출석부예요. 3월 4일 첫 수업은 6학년반과 중1반이 한 교실에 모여 함께 자기소개를 했어요.</p>
+    <div class="tbl-wrap"><table class="rec"><thead><tr><th>반</th><th>이름</th><th>학교</th><th>3월 4일 첫 수업</th></tr></thead><tbody>
+    <tr class="grp"><td colspan="4">6학년반</td></tr>
+    <tr><td>6</td><td>나</td><td>햇빛초 6-2</td><td>출석</td></tr>
+    <tr><td>6</td><td>최지아</td><td>햇빛초 6-2</td><td>출석</td></tr>
+    <tr><td>6</td><td>오세빈</td><td>푸른초 6-1</td><td>출석</td></tr>
+    <tr><td>6</td><td>한유나</td><td>푸른초 6-4</td><td>결석</td></tr>
+    <tr class="grp"><td colspan="4">중1반</td></tr>
+    <tr><td>중1</td><td>정하늘</td><td>햇빛중 1-3</td><td>출석</td></tr>
+    <tr><td>중1</td><td>문태오</td><td>햇빛중 1-1</td><td>출석</td></tr>
+    <tr><td>중1</td><td>강민지</td><td>햇빛중 1-5</td><td>출석</td></tr>
+    </tbody></table></div>`;
+  if(id==='store')return `<p class="doc-cap">매점 아주머니가 이번 주 영수증 가운데 우리 반 번호가 찍힌 것만 모아 주셨어요. 영수증에는 학년-반-번호가 찍혀요.</p>
+    <div class="receipts">
+      <div class="rcpt"><b>햇빛초 매점</b><hr><div class="r"><span>10/20 (월)</span><span>12:44</span></div><div class="r"><span>학생</span><span>6-2-14</span></div><hr><div class="r"><span>이온음료</span><span>1,200</span></div><hr><div class="r"><span>합계</span><span>1,200</span></div></div>
+      <div class="rcpt"><b>햇빛초 매점</b><hr><div class="r"><span>10/23 (목)</span><span>12:41</span></div><div class="r"><span>학생</span><span>6-2-08</span></div><hr><div class="r"><span>스마일 메모지</span><span>1,500</span></div><div class="r"><span>포도 젤리</span><span>800</span></div><hr><div class="r"><span>합계</span><span>2,300</span></div></div>
+      <div class="rcpt"><b>햇빛초 매점</b><hr><div class="r"><span>10/23 (목)</span><span>12:47</span></div><div class="r"><span>학생</span><span>6-2-19</span></div><hr><div class="r"><span>딸기우유</span><span>900</span></div><hr><div class="r"><span>합계</span><span>900</span></div></div>
+    </div>`;
+  // talk
+  const q=S.talk?`<div class="quote"><span class="by">${KIDS[S.talk].name}</span>“${SAYS[S.talk]}”</div>`:`<div class="quote hint">친구를 눌러 한 마디씩 들어 보세요.</div>`;
+  return `<div class="talks">${ORDER.map(k=>`<button class="who${S.heard.includes(k)?' heard':''}" type="button" data-talk="${k}" aria-pressed="${S.talk===k}">${face(k)}<b>${KIDS[k].name}</b><small></small></button>`).join('')}</div>${q}`;
+}
+function buildTabs(){
+  $('tabs').innerHTML=DOCS.map(d=>`<button class="tab" type="button" role="tab" id="tab-${d.id}" data-doc="${d.id}">${d.name}</button>`).join('');
+  $('tabs').addEventListener('click',e=>{const b=e.target.closest('[data-doc]');if(!b)return;S.doc=b.dataset.doc;markSeen();save();render()});
+  $('doc').addEventListener('click',e=>{const b=e.target.closest('[data-talk]');if(!b)return;S.talk=b.dataset.talk;if(!S.heard.includes(S.talk))S.heard.push(S.talk);if(S.heard.length===5&&!S.seen.includes('talk'))S.seen.push('talk');save();render()});
+}
+function markSeen(){if(S.doc!=='talk'&&!S.seen.includes(S.doc))S.seen.push(S.doc)}
+function renderDocs(){
+  DOCS.forEach(d=>{const b=$('tab-'+d.id);b.setAttribute('aria-selected',String(S.doc===d.id));b.classList.toggle('seen',S.seen.includes(d.id))});
+  $('doc').setAttribute('aria-labelledby','tab-'+S.doc);
+  $('doc').innerHTML=docHTML(S.doc);
+}
+
+/* ---------- suspects ---------- */
+function buildSus(){
+  $('sus').innerHTML=ORDER.map(k=>`<li>${face(k)}<div><b>${KIDS[k].full}<span>${KIDS[k].no}번</span></b><p>${KIDS[k].about}</p></div></li>`).join('');
+}
+
+/* ---------- answer ---------- */
+function buildAnswer(){
+  $('pickName').innerHTML=ORDER.map(k=>`<button class="chip" type="button" data-name="${k}">${KIDS[k].name}</button>`).join('');
+  $('pickClue').innerHTML=DAYS.map((d,i)=>`<button class="chip" type="button" data-clue="${i}">${d.d}<small>${d.title}</small></button>`).join('');
+  $('pickName').addEventListener('click',e=>{const b=e.target.closest('[data-name]');if(!b||S.ending)return;S.name=S.name===b.dataset.name?null:b.dataset.name;clearFb();save();renderAnswer()});
+  $('pickClue').addEventListener('click',e=>{const b=e.target.closest('[data-clue]');if(!b||S.ending)return;const i=+b.dataset.clue;
+    if(S.clues.includes(i))S.clues=S.clues.filter(x=>x!==i);else{S.clues.push(i);if(S.clues.length>2)S.clues.shift()}
+    clearFb();save();renderAnswer()});
+  $('submit').addEventListener('click',submit);
+  $('wait').addEventListener('click',e=>{const b=e.target.closest('[data-w]');if(!b)return;const w=b.dataset.w;
+    if(w==='show'){showEnd();return}
+    if(w==='ask')S.askWait=true;else if(w==='no')S.askWait=false;else if(w==='yes'){S.ending='wait';S.askWait=false}
+    save();render();if(w==='yes')showEnd()});
+}
+function clearFb(){$('fb').textContent='';$('fb').className='fb'}
+function decisive(pair){
+  // A pair is decisive when only one kid fits both clues.
+  if(pair.length!==2)return false;
+  const [a,b]=pair.map(i=>WHY[i]);
+  if(a.fake||b.fake)return false;
+  return a.who.filter(k=>b.who.includes(k)).length===1;
+}
+function submit(){
+  if(!S.name||S.clues.length!==2)return;
+  if(S.name===ANSWER&&decisive(S.clues)){S.ending='win';save();render();showEnd();return}
+  S.tries++;save();
+  const fb=$('fb');fb.className='fb bad';fb.textContent='아직 아니에요.';
+  const a=$('answer');a.classList.remove('shake');void a.offsetWidth;a.classList.add('shake');
+}
+function renderAnswer(){
+  document.querySelectorAll('[data-name]').forEach(b=>b.setAttribute('aria-pressed',String(S.name===b.dataset.name)));
+  document.querySelectorAll('[data-clue]').forEach(b=>b.setAttribute('aria-pressed',String(S.clues.includes(+b.dataset.clue))));
+  $('clueN').textContent=S.clues.length;
+  $('submit').disabled=!(S.name&&S.clues.length===2)||!!S.ending;
+  const w=$('wait');
+  w.hidden=false;
+  if(S.ending){w.innerHTML=`<span>추리가 끝났어요.</span><button class="ghost" type="button" data-w="show">결과 다시 보기</button>`;return}
+  w.innerHTML=S.askWait
+    ?`<span class="ask">추리를 멈추고 내일 공개일을 기다릴까요? 마니또가 공개되지만 명탐정 배지와 해설은 받을 수 없어요.</span><span class="ask"><button class="ghost danger" type="button" data-w="yes">기다릴게요</button><button class="ghost" type="button" data-w="no">더 추리할래요</button></span>`
+    :`<span>도저히 모르겠다면</span><button class="ghost" type="button" data-w="ask">공개일까지 기다리기</button>`;
+}
+
+/* ---------- endings ---------- */
+function renderEnd(){
+  const el=$('end');
+  if(!S.ending){if($('endDlg').open)$('endDlg').close();el.innerHTML='';return}
+  if(S.ending==='wait'){
+    el.innerHTML=`<h2>금요일 다음 날, 마니또 공개일</h2>
+      <p>선생님이 "자, 이제 마니또를 공개해요!" 하고 말하자 교실이 시끌시끌해졌어요. 내 앞으로 걸어온 친구는 하린이었어요.</p>
+      <div class="scene">${face('harin')}<div class="bubble">“나였어! 끝까지 몰랐지? 일주일 동안 들킬까 봐 엄청 조마조마했어.”</div></div>
+      <p>명탐정 배지는 다른 친구가 받아 갔어요. 하린이는 어떻게 들키지 않았을까요? 처음부터 다시 추리해 보면 단서가 다르게 보일 거예요.</p>
+      <div class="end-actions"><button class="again" type="button" id="again">처음부터 다시 추리하기</button><a class="to-list" href="../index.html">게임 목록</a></div>`;
+  }else{
+    const pick=S.clues.slice().sort();
+    const rows=WHY.map((w,i)=>`<tr class="${w.fake?'fake':''}"><td class="c">${DAYS[i].d} · ${DAYS[i].title}</td><td class="c">${w.fake?'가짜 단서':w.who.map(k=>KIDS[k].name).join(', ')}</td><td>${w.why}</td></tr>`).join('');
+    el.innerHTML=`<span class="stamp">명탐정 배지</span>
+      <h2>${S.tries===0?'한 번에':S.tries+1+'번 만에'} 맞혔어요. 나의 마니또는 하린이에요!</h2>
+      <div class="scene">${face('harin')}<div class="bubble">“들켰네! 어떻게 알았어? 내일까지 비밀로 하려고 했는데.”</div></div>
+      <p>하린이가 웃으면서 하늘색 편지 한 장을 건네줬어요.</p>
+      <div class="letter"><div class="w">
+        월요일 사탕은 우리 언니 덕분이야. 언니가 학원 자기소개 때 네가 딸기를 제일 좋아한다고 했다고 알려 줬거든.<br>
+        화요일엔 오른손을 다쳐서 왼손으로 썼어. 글씨 엉망이었지?<br>
+        수요일엔 아무도 없을 때 놓고 싶어서 평소보다 더 일찍 왔어.<br>
+        목요일 포장지의 고양이 털은 지아한테 빌린 담요 때문이야.<br>
+        금요일 쪽지는 내 거 아니야! 도현이가 장난친 거래.<br>
+        일주일 동안 정말 재밌었어. 앞으로도 친하게 지내자!</div><span class="sign">- 너의 마니또 하린</span></div>
+      <div class="why"><h3>해설: 날마다 선물을 보낼 수 있었던 친구</h3>
+        <div class="tbl-wrap"><table><thead><tr><th>단서</th><th>가능한 친구</th><th>근거</th></tr></thead><tbody>${rows}</tbody></table></div>
+        <ul>
+          <li>내가 고른 결정적 단서는 <b>${DAYS[pick[0]].d}요일 ${DAYS[pick[0]].title}</b>와 <b>${DAYS[pick[1]].d}요일 ${DAYS[pick[1]].title}</b>예요. 두 단서에 모두 들어맞는 친구는 하린이 한 명뿐이에요.</li>
+          <li>지아는 학원, 고양이, 금요일 쪽지가 다 들어맞아 보였어요. 하지만 지아는 오른손으로 글씨를 쓰고, 수요일엔 8시 43분에 교실에 왔어요. 금요일 쪽지는 도현이의 장난이었어요.</li>
+          <li>왼손잡이 준호는 수요일에 7시 25분에 학교에 왔지만 운동장에서 훈련하고 8시 30분에야 교실에 들어왔어요.</li>
+          <li>서윤이는 수요일 아침 일찍 왔지만 오른손으로 쓰고 다친 데도 없어요. 도현이는 오른손잡이이고 수요일엔 8시 20분에 왔어요.</li>
+        </ul></div>
+      <div class="end-actions"><button class="again" type="button" id="again">처음부터 다시 하기</button><a class="to-list" href="../index.html">게임 목록</a></div>`;
+  }
+  $('again').addEventListener('click',()=>{S=fresh();save();render();setView('case');window.scrollTo({top:0,behavior:'smooth'})});
+}
+
+// On a phone the five sections become five views; on a wide screen they are all on the page
+// at once and setView only brings the matching one into sight.
+const PANE={case:'pCase',doc:'pDoc',sus:'pSus',ans:'pAns'};
+const onePane=()=>getComputedStyle($('vtabs')).display!=='none';
+function setView(v,quiet){
+  $('app').dataset.view=v;
+  $('vtabs').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===v)));
+  if(quiet) return;
+  const pane=$(PANE[v]);
+  if(onePane()) pane.scrollTop=0;
+  else if(v==='case') window.scrollTo({top:0,behavior:'smooth'});
+  else pane.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function showEnd(){ setView('ans',true); const d=$('endDlg'); if(!d.open) d.showModal(); d.scrollTop=0; }
+$('endClose').addEventListener('click',()=>$('endDlg').close());
+$('endDlg').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.close()});
+$('vtabs').addEventListener('click',e=>{const b=e.target.closest('[data-view]');if(b)setView(b.dataset.view)});
+
+function render(){
+  $('nGift').textContent=S.opened.length;$('nDoc').textContent=S.seen.length;
+  renderWeek();renderDocs();renderAnswer();renderEnd();
+  $('ansDot').hidden=!S.ending;
+}
+
+S=load();
+buildWeek();buildTabs();buildSus();buildAnswer();
+markSeen();
+render();
+setView('case',true);
+})();
+</script>
+
+</body>
+</html>

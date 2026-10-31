@@ -1,0 +1,649 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#e34477">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>고백 쪽지의 주인은?</title>
+<meta name="description" content="책상 서랍에서 발견된 고백 쪽지. 문장을 눌러 그때 장면을 떠올리고 증거와 맞춰 쪽지의 주인을 찾는 친구 찾기 추리 게임.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="개구쟁이들">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:title" content="고백 쪽지의 주인은?">
+<meta property="og:description" content="책상 서랍에서 발견된 고백 쪽지. 문장을 눌러 그때 장면을 떠올리고 증거와 맞춰 쪽지의 주인을 찾는 친구 찾기 추리 게임.">
+<meta name="twitter:card" content="summary">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&family=Gowun+Dodum&family=Nanum+Pen+Script&display=swap">
+<style>
+/* Layout: the confession note on top (tap each sentence to recall the scene), then the evidence folder,
+   then the suspects and the ○/✕ notebook, and at the bottom the answer slip.
+   Heart pink marks actions, pale pink ruled paper is the note, fluorescent green is the gel-pen ink. */
+:root{
+  --bg:#fdf4f7; --surface:#ffffff; --paper:#fffafc; --ink:#25202a; --muted:#6a6170; --line:#f0dde4;
+  --heart:#e34477; --heart-ink:#ffffff; --heart-soft:#ffe3ec;
+  --note:#fff2f5; --note-line:#f3c9d5; --note-ink:#33242b; --gel:#11a24e;
+  --card:#fffdf6; --cork:#c89c6c; --cork-2:#b88a5a;
+  --ok:#2a8a5c; --bad:#c8432e; --note-o:#2f6fc4; --note-x:#c8432e;
+  --table:#e9dcc6; --table-2:#cdb999; --skin:#f3c9a0;
+  --shadow:0 1px 0 rgba(37,32,42,.05),0 6px 18px rgba(37,32,42,.09);
+  --f-display:"Black Han Sans","Gowun Dodum",sans-serif;
+  --f-body:"Gowun Dodum","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-talk:"Jua","Gowun Dodum",sans-serif;
+  --f-hand:"Nanum Pen Script","Jua",cursive;
+}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--heart);outline-offset:2px}
+html,body{height:100%}
+.app{max-width:1000px;margin:0 auto;padding-block:12px 36px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:14px}
+/* Wide screens keep the single long column; narrow screens show one pane at a time. */
+.panes{display:flex;flex-direction:column;gap:14px;min-width:0}
+.pane,.lscroll{display:contents}
+.vtabs{display:none}
+
+/* Header */
+.hud{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:8px 16px}
+.brand small{display:block;font-size:12px;letter-spacing:.08em;color:var(--muted)}
+.brand h1{margin:0;font-family:var(--f-display);font-weight:400;font-size:28px;line-height:1.1;text-wrap:balance}
+.brand h1 em{font-style:normal;color:var(--heart)}
+.count{display:flex;gap:14px;font-variant-numeric:tabular-nums;font-size:13px;color:var(--muted)}
+.count b{font-family:var(--f-display);font-weight:400;font-size:22px;color:var(--ink);margin-right:2px}
+.intro{margin:0;color:var(--muted);font-size:14px;max-width:64ch}
+
+.sec-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin:0 0 10px}
+.sec-h h2{margin:0;font-family:var(--f-talk);font-weight:400;font-size:21px}
+.sec-h small{color:var(--muted);font-size:12.5px}
+.panel{background:var(--surface);border-radius:10px;box-shadow:var(--shadow);padding:14px;min-width:0}
+
+/* The note (paper stays light in both themes, like real paper) */
+.notewrap{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px;align-items:start}
+.letter{position:relative;background:var(--note);color:var(--note-ink);border-radius:3px;padding:14px 16px 12px 22px;transform:rotate(-1deg);
+  background-image:linear-gradient(90deg,transparent 12px,#f2a7bb 12px 13.5px,transparent 13.5px),repeating-linear-gradient(transparent 0 29px,var(--note-line) 29px 30px);
+  box-shadow:0 2px 8px rgba(0,0,0,.14)}
+.letter::before{content:"";position:absolute;top:-9px;left:50%;width:70px;height:20px;margin-left:-35px;background:rgba(255,236,170,.75);transform:rotate(3deg)}
+.letter .w{font-family:var(--f-hand);font-size:24px;line-height:30px;color:var(--gel);text-shadow:0 0 .5px var(--gel)}
+.letter .w p{margin:0}
+.sent{background:none;border:0;padding:0 1px;margin:0;color:inherit;font:inherit;line-height:inherit;text-align:left;display:inline;border-radius:3px;
+  text-decoration:underline dotted color-mix(in srgb,var(--note-ink) 35%,transparent);text-underline-offset:5px}
+.sent sup{font-family:var(--f-talk);font-size:13px;color:#fff;background:var(--note-ink);border-radius:9px;padding:0 5px;margin-right:3px;vertical-align:4px;text-shadow:none}
+.sent.seen sup{background:#b9839a}
+.sent[aria-pressed="true"]{background:rgba(255,226,120,.7);text-decoration:none}
+.letter .tag6{display:inline-block;margin-top:6px;font-family:var(--f-talk);font-size:13.5px;color:var(--note-ink);text-shadow:none;
+  background:#fff;border:1.5px dashed #b9839a;border-radius:14px;padding:3px 10px;min-height:32px}
+.letter .tag6[aria-pressed="true"]{background:rgba(255,226,120,.85);border-style:solid}
+.recall{border-radius:8px;background:var(--paper);border:1px solid var(--line);padding:14px;min-height:150px}
+.recall.empty{color:var(--muted);font-size:14px}
+.recall h3{margin:0 0 6px;font-family:var(--f-talk);font-weight:400;font-size:19px;color:var(--heart)}
+.recall p{margin:0 0 6px;max-width:62ch}
+.recall .q{font-size:13.5px;color:var(--muted);margin:8px 0 0;padding-top:8px;border-top:1px dashed var(--line)}
+.pop{animation:pop .35s ease-out}
+@keyframes pop{from{transform:translateY(4px);opacity:.6}to{transform:none;opacity:1}}
+
+/* Evidence folder */
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.tab{border:1.5px solid var(--line);background:var(--paper);border-radius:18px;padding:5px 14px;min-height:40px;font-family:var(--f-talk);font-size:16px}
+.tab.seen{border-color:color-mix(in srgb,var(--ink) 30%,var(--line))}
+.tab[aria-selected="true"]{background:var(--heart);color:var(--heart-ink);border-color:var(--heart)}
+.doc{min-width:0}
+.doc-cap{margin:0 0 8px;color:var(--muted);font-size:13.5px;max-width:70ch}
+.doc-foot{margin:8px 0 0;color:var(--muted);font-size:13px;max-width:70ch}
+.tbl-wrap{overflow-x:auto}
+table.rec{border-collapse:collapse;width:100%;min-width:440px;font-size:14px;font-variant-numeric:tabular-nums}
+.rec th,.rec td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;white-space:nowrap}
+.rec thead th{font-size:12.5px;color:var(--muted);font-weight:400;border-bottom:2px solid var(--ink)}
+.rec td.t{font-family:var(--f-talk);font-size:16px}
+.rec tr.me td{color:var(--muted)}
+.seat{max-width:640px;overflow-x:auto}
+.seat svg{display:block;width:100%;min-width:540px;height:auto}
+.swipe{display:none;font-size:12.5px;color:var(--muted);margin:4px 0 0}
+.board{background:var(--cork);border-radius:6px;padding:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;
+  background-image:radial-gradient(var(--cork-2) 1px,transparent 1.5px);background-size:9px 9px}
+.card{position:relative;background:var(--card);color:#2a2630;border-radius:2px;padding:14px 12px 10px;box-shadow:0 2px 6px rgba(0,0,0,.22)}
+.card:nth-child(odd){transform:rotate(-1.2deg)}
+.card:nth-child(even){transform:rotate(1.3deg)}
+.card::before{content:"";position:absolute;top:5px;left:50%;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:#d64545;box-shadow:0 1px 2px rgba(0,0,0,.4)}
+.card small{display:block;font-size:11.5px;color:#6b6574;margin-bottom:2px}
+.card .w{font-family:var(--f-hand);font-size:23px;line-height:1.2}
+.talks{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.who{display:grid;justify-items:center;gap:2px;background:var(--paper);border:1.5px solid var(--line);border-radius:8px;padding:8px 4px 6px}
+.who svg{width:50px;height:50px}
+.who b{font-family:var(--f-talk);font-weight:400;font-size:16px}
+.who[aria-pressed="true"]{border-color:var(--ink);border-width:2.5px}
+.who.heard small::after{content:"들음";font-size:11px;color:var(--muted)}
+.who small{min-height:1.2em}
+.quote{margin:10px 0 0;padding:12px 14px;border-radius:8px;background:var(--paper);border:1px solid var(--line);font-family:var(--f-talk);font-size:17.5px;line-height:1.5;min-height:3.4em}
+.quote .by{display:block;font-family:var(--f-body);font-size:12.5px;color:var(--muted);margin-bottom:2px}
+.quote.hint{font-family:var(--f-body);font-size:14px;color:var(--muted)}
+
+/* Suspects + notebook */
+.sus{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.sus li{display:grid;grid-template-columns:48px 1fr;gap:10px;align-items:center;padding:8px 10px;border-radius:8px;background:var(--paper)}
+.sus svg{width:48px;height:48px}
+.sus b{font-family:var(--f-talk);font-weight:400;font-size:17px}
+.sus b span{font-family:var(--f-body);font-size:12px;color:var(--muted);margin-left:6px}
+.sus p{margin:0;font-size:13.5px;line-height:1.45;color:var(--muted)}
+.ghost{background:none;border:1px solid var(--line);border-radius:16px;padding:4px 12px;min-height:34px;font-size:13px;color:var(--muted)}
+
+/* Answer slip */
+.answer{background:var(--surface);border-radius:10px;box-shadow:var(--shadow);padding:16px;display:grid;gap:14px;border-top:6px solid var(--heart)}
+.answer h2{margin:0;font-family:var(--f-display);font-weight:400;font-size:22px}
+.answer .sub{margin:-8px 0 0;color:var(--muted);font-size:13.5px}
+.pick{display:grid;gap:6px}
+.pick > span{font-size:13.5px;color:var(--muted)}
+.pick > span b{color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1.5px solid var(--ink);background:var(--surface);border-radius:18px;padding:4px 14px;font-family:var(--f-talk);font-size:17px;min-height:40px}
+.chip[aria-pressed="true"]{background:var(--heart);border-color:var(--heart);color:var(--heart-ink)}
+.chip small{font-family:var(--f-body);font-size:12px;opacity:.8;margin-left:4px}
+.go{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.submit{background:var(--heart);color:var(--heart-ink);border:0;border-radius:22px;padding:8px 24px;font-family:var(--f-talk);font-size:19px;min-height:46px}
+.submit:disabled{opacity:.45;cursor:not-allowed}
+.fb{font-size:15px;min-height:1.4em;font-family:var(--f-talk)}
+.fb.bad{color:var(--bad)}
+.shake{animation:shake .35s}
+@keyframes shake{0%,100%{transform:none}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.wait{border-top:1px dashed var(--line);padding-top:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13.5px;color:var(--muted)}
+.wait .ask{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.wait .ghost.danger{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 40%,var(--line))}
+
+/* Endings: shown in a modal over the board */
+.end-dlg{width:min(760px,calc(100% - 32px));max-height:calc(100dvh - 32px);padding:0;border:0;border-radius:10px;
+  background:var(--surface);color:var(--ink);box-shadow:var(--shadow);overflow:auto;overscroll-behavior:contain}
+.end-dlg::backdrop{background:rgba(20,14,10,.55)}
+.end-dlg[open]{animation:pop .2s ease-out}
+@keyframes pop{from{opacity:0;transform:translateY(8px)}}
+.end-x{position:sticky;top:8px;float:right;margin:8px 8px 0 0;z-index:1;width:36px;height:36px;border-radius:50%;
+  border:1px solid var(--line);background:var(--surface);color:var(--muted);font-size:16px;line-height:1}
+.end{border-radius:10px;padding:18px;display:grid;gap:14px;background:var(--surface)}
+.end .stamp{justify-self:start;font-family:var(--f-display);font-size:28px;color:var(--heart);border:4px solid var(--heart);border-radius:8px;padding:0 14px;transform:rotate(-4deg)}
+.end h2{margin:0;font-family:var(--f-talk);font-weight:400;font-size:22px}
+.end p{margin:0;max-width:68ch}
+.scene{display:grid;grid-template-columns:64px 1fr;gap:12px;align-items:start}
+.scene svg{width:64px;height:64px}
+.bubble{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-family:var(--f-talk);font-size:18px}
+.bubble.blush{background:var(--heart-soft);border-color:color-mix(in srgb,var(--heart) 30%,var(--line))}
+.why{display:grid;gap:8px}
+.why h3{margin:0;font-size:16px}
+.why table{border-collapse:collapse;width:100%;min-width:480px;font-size:13.5px}
+.why th,.why td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+.why thead th{white-space:nowrap;font-weight:400;color:var(--muted);font-size:12.5px;border-bottom:2px solid var(--ink)}
+.why td.c{font-family:var(--f-talk);font-size:15px;white-space:nowrap}
+.why .fake td{color:var(--muted)}
+.why ul{margin:0;padding-left:1.2em;display:grid;gap:4px;max-width:70ch}
+.end-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.again.list{background:none;border:1.5px solid var(--ink);color:var(--ink);text-decoration:none;display:inline-flex;align-items:center}
+.again{justify-self:start;background:var(--ink);color:var(--bg);border:0;border-radius:20px;padding:6px 18px;font-family:var(--f-talk);font-size:17px;min-height:44px}
+
+@media (max-width:760px){
+  .notewrap{grid-template-columns:1fr}
+  .brand h1{font-size:25px}
+}
+@media (max-width:520px){
+  .letter{padding:14px 12px 12px 20px}
+  .letter .w{font-size:22px}
+  .talks{grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
+  .who svg{width:40px;height:40px}
+  .who b{font-size:15px}
+  .tab{padding:4px 11px;font-size:15px}
+  .swipe{display:block}
+  .board{grid-template-columns:1fr 1fr;padding:10px;gap:10px}
+  .card .w{font-size:20px}
+  .why table,.why tbody,.why tr,.why td{display:block;min-width:0}
+  .why thead{display:none}
+  .why tr{padding:8px 0;border-bottom:1px solid var(--line)}
+  .why td{border:0;padding:2px 0}
+  .why td.c{display:inline-block;margin-right:10px}
+}
+/* ---------- one-screen layout for phones: no page scroll, one pane at a time ---------- */
+@media (max-width:760px),(max-height:620px) and (max-width:1100px){
+  body{overflow:hidden}
+  .app{height:100%;max-width:none;position:relative;overflow:hidden;gap:7px;padding-block:8px 0}
+
+  .hub-back{position:absolute;top:7px;right:max(16px,env(safe-area-inset-right,0px));margin:0;z-index:4}
+  .hub-back a{padding:4px 9px;font-size:11.5px}
+  .hud{display:block;padding-right:96px}
+  .brand small{display:none}
+  .brand h1{font-size:20px}
+  .count{gap:12px;font-size:11.5px;margin-top:1px}
+  .count b{font-size:15px}
+  /* the opening blurb stays on the first view until a scene is recalled, then the note takes the room */
+  .intro{display:none;font-size:12.5px;line-height:1.45}
+  .app[data-view="case"]:has(.recall.empty) .intro{display:block}
+
+  .panes{flex:1;min-height:0;gap:0}
+  .pane{display:none}
+  .app[data-view="case"] #pCase,.app[data-view="doc"] #pDoc,.app[data-view="sus"] #pSus,
+  .app[data-view="ans"] #pAns{
+    display:flex;flex-direction:column;height:100%;gap:10px;
+    overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}
+  .panel,.answer,.end{flex:none}
+  .panel{padding:11px}
+  .sec-h{margin:0 0 8px}
+  .sec-h h2{font-size:18px}
+  .sec-h small{font-size:11.5px}
+
+  /* the note scrolls, the recalled scene stays pinned under it */
+  .app[data-view="case"] #pCase{overflow:hidden}
+  #pCase .panel{flex:1;min-height:0;display:flex;flex-direction:column}
+  #pCase .notewrap{flex:1;min-height:0;display:grid;align-items:stretch;
+    grid-template-rows:minmax(0,1.05fr) minmax(0,1fr);gap:10px}
+  #pCase .notewrap:has(.recall.empty){grid-template-rows:minmax(0,1fr) auto}
+  .lscroll{display:block;min-height:0;overflow:auto;padding:10px 2px 2px}
+  .letter{margin-top:0}
+  .letter .w{font-size:21px;line-height:27px}
+  .recall{padding:10px 12px;min-height:0;overflow:auto}
+  .recall h3{font-size:17px}
+
+  .tabs{gap:5px;margin-bottom:9px}
+  .tab{padding:4px 11px;min-height:36px;font-size:15px}
+  .doc-cap,.doc-foot{font-size:12.5px}
+  .quote{font-size:16px;padding:10px 12px}
+
+  .sus li{padding:6px 8px;gap:8px;grid-template-columns:40px 1fr}
+  .sus svg{width:40px;height:40px}
+  .sus b{font-size:16px}
+  .sus p{font-size:12.5px;line-height:1.4}
+
+  .answer{padding:12px;gap:10px}
+  .answer h2{font-size:20px}
+  .answer .sub{font-size:12.5px}
+  .chip{padding:3px 12px;min-height:38px;font-size:16px}
+  .submit{min-height:42px;padding:7px 20px;font-size:18px}
+  .end{padding:12px;gap:10px}
+  .end .stamp{font-size:24px}
+  .end h2{font-size:20px}
+
+  .vtabs{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;flex:none;
+    background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px;
+    margin-bottom:max(6px,env(safe-area-inset-bottom,0px))}
+  .vtabs button{border:0;background:none;border-radius:10px;min-height:40px;color:var(--muted);
+    font-family:var(--f-talk);font-size:14px;display:flex;align-items:center;justify-content:center;gap:4px}
+  .vtabs button[aria-pressed="true"]{background:var(--heart);color:var(--heart-ink)}
+  .vtabs .dot{width:7px;height:7px;border-radius:50%;background:var(--heart)}
+  .vtabs button[aria-pressed="true"] .dot{background:var(--heart-ink)}
+}
+/* phone turned sideways: the pane is short, so use the width */
+@media (max-height:620px) and (max-width:1100px) and (orientation:landscape){
+  .sus{grid-template-columns:1fr 1fr}
+  .chips{gap:6px}
+}
+@media (max-width:760px) and (max-height:700px){
+  .app{gap:5px}
+  .brand h1{font-size:18px}
+  .count{font-size:11px}
+  .count b{font-size:13px}
+  .letter .w{font-size:19px;line-height:25px}
+  .board{padding:9px;gap:8px}
+  .card{padding:11px 10px 8px}
+  .card .w{font-size:19px}
+  .sus svg{width:36px;height:36px}
+  .sus p{font-size:12px}
+  .vtabs button{min-height:36px;font-size:13px}
+  .vtabs{padding:3px;margin-bottom:max(4px,env(safe-area-inset-bottom,0px))}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<style>
+.hub-back{display:block;margin-bottom:2px}
+.hub-back a{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;line-height:1;
+  color:var(--muted);text-decoration:none;padding:6px 11px;border:1px solid var(--line);
+  border-radius:999px;background:var(--surface)}
+.hub-back a:hover{color:var(--ink)}
+.hub-back a:focus-visible{outline:3px solid var(--heat,var(--ink));outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="app" id="app" data-view="case">
+<nav class="hub-back" aria-label="게임 목록"><a href="../index.html">← 게임 목록</a></nav>
+  <header class="hud">
+    <div class="brand">
+      <small>6학년 3반 · 월요일 아침 · 답장 기한은 금요일</small>
+      <h1><em>고백 쪽지</em>의 주인은?</h1>
+    </div>
+    <div class="count" aria-live="polite">
+      <span><b id="nClue">0</b>/6 단서</span>
+      <span><b id="nDoc">0</b>/6 자료</span>
+    </div>
+  </header>
+  <p class="intro">월요일 아침, 책상 서랍에서 이름 없는 쪽지를 발견했어요. 우리 반 남학생 중 한 명이 보낸 것 같아요. 쪽지에 적힌 장면을 하나씩 떠올려 보고, 증거 자료와 맞대어 보세요. 금요일 전에 쪽지의 주인을 찾아야 해요.</p>
+
+  <div class="panes">
+  <div class="pane" id="pCase">
+  <section class="panel" aria-labelledby="noteH">
+    <div class="sec-h"><h2 id="noteH">책상 서랍 속 쪽지</h2><small>번호가 붙은 문장을 눌러 그때 일을 떠올려 보세요</small></div>
+    <div class="notewrap">
+      <div class="lscroll"><div class="letter"><div class="w" id="letter"></div></div></div>
+      <div class="recall empty" id="recall" aria-live="polite">아직 떠올린 장면이 없어요. 쪽지의 ① 문장부터 눌러 보세요.</div>
+    </div>
+  </section>
+  </div>
+
+  <div class="pane" id="pDoc">
+  <section class="panel" aria-labelledby="docH">
+    <div class="sec-h"><h2 id="docH">증거 자료</h2><small>선생님과 친구들에게 빌려 온 자료예요</small></div>
+    <div class="tabs" id="tabs" role="tablist" aria-label="증거 자료"></div>
+    <div class="doc" id="doc" role="tabpanel"></div>
+  </section>
+  </div>
+
+  <div class="pane" id="pSus">
+  <section class="panel" aria-labelledby="susH">
+    <div class="sec-h"><h2 id="susH">후보</h2><small>우리 반 남학생 다섯 명</small></div>
+    <ul class="sus" id="sus"></ul>
+  </section>
+  </div>
+
+  <div class="pane" id="pAns">
+  <section class="answer" id="answer" aria-labelledby="ansH">
+    <h2 id="ansH">쪽지 주인 맞히기</h2>
+    <p class="sub">쪽지를 보낸 친구 한 명과, 그 친구라고 확신하게 만든 결정적 단서 두 개를 골라 제출하세요.</p>
+    <div class="pick"><span>쪽지의 주인은</span><div class="chips" id="pickName"></div></div>
+    <div class="pick"><span>결정적 단서 <b id="clueN">0</b>/2</span><div class="chips" id="pickClue"></div></div>
+    <div class="go"><button class="submit" id="submit" type="button" disabled>제출하기</button><span class="fb" id="fb" aria-live="polite"></span></div>
+    <div class="wait" id="wait"></div>
+  </section>
+
+  </div>
+  </div>
+
+  <nav class="vtabs" id="vtabs" aria-label="화면 바꾸기">
+    <button type="button" data-view="case" aria-pressed="true">쪽지</button>
+    <button type="button" data-view="doc" aria-pressed="false">자료</button>
+    <button type="button" data-view="sus" aria-pressed="false">후보</button>
+    <button type="button" data-view="ans" aria-pressed="false">누구?<span class="dot" id="ansDot" hidden></span></button>
+  </nav>
+</div>
+
+<dialog class="end-dlg" id="endDlg" aria-labelledby="endH">
+  <button class="end-x" type="button" id="endX" aria-label="닫기">✕</button>
+  <section class="end" id="end"></section>
+</dialog>
+
+<script>
+(function(){
+const KIDS={
+  woojin:{name:'우건',full:'김우건',no:2,about:'조용하고 책 읽는 걸 좋아해요. 지난주에 계단에서 넘어져 오른팔을 다쳤어요.',hair:'#3a2a20',shirt:'#5b8fc9',style:'part'},
+  jiho:{name:'지명',full:'박지명',no:9,about:'축구부예요. 우건이와 1학년 때부터 단짝이에요. 반짝이는 형광 젤펜을 모아요.',hair:'#1f1f2e',shirt:'#2f9a68',style:'band'},
+  minhyuk:{name:'지안',full:'이지안',no:13,about:'우리 반에서 키가 제일 커요. 농구를 좋아해요.',hair:'#2a221c',shirt:'#d0633a',style:'short'},
+  taeyang:{name:'태양',full:'최태양',no:20,about:'장난꾸러기 분위기 메이커예요. 뭐든 "나야~" 하고 끼어들어요.',hair:'#262626',shirt:'#e6b02e',style:'spike'},
+  seojun:{name:'무준',full:'정무준',no:22,about:'도서부예요. 코딩을 좋아해서 방과 후 코딩교실에 다녀요.',hair:'#3b2a1e',shirt:'#8c6bc2',style:'glasses'}
+};
+const ORDER=['woojin','jiho','minhyuk','taeyang','seojun'];
+const ANSWER='woojin';
+
+// The note's sentences; clue 6 is the ink itself, not a sentence.
+const CLUES=[
+  {n:'①',short:'비 오던 날 교문',text:'지난주 비 오던 날, 네가 우산 없는 1학년 동생을 교문까지 씌워 주는 거 봤어. 그때부터 자꾸 네 생각이 나.',
+   recall:'지난주 화요일, 비가 쏟아졌어요. 나는 2시 40분 정규 하교 때 우산이 없어서 울상이던 1학년 동생을 교문까지 씌워 줬어요. 교문 앞에서 동생 엄마를 만나고 바로 집에 갔어요.',
+   q:'이 장면을 보려면 그날 2시 40분쯤 교문 근처에 있어야 해요.'},
+  {n:'②',short:'도서관 『어린 왕자』',text:'도서관에서 『어린 왕자』 읽다가 혼자 웃는 모습도 좋았고,',
+   recall:'지난주 목요일 점심시간에 도서관 창가 자리에서 『어린 왕자』를 읽다가, 여우가 나오는 장면에서 웃음이 터졌어요. 도서관에 몇 명이 더 있었는데 누구였는지는 잘 기억이 안 나요.',
+   q:'그 점심시간에 도서관에 있었던 사람만 볼 수 있어요.'},
+  {n:'③',short:'체육 시간',text:'체육 시간에 넘어졌는데 툭툭 털고 다시 뛰는 것도 멋있었어.',
+   recall:'지난주 금요일 3교시 체육 시간, 운동장에서 이어달리기를 하다가 곡선 주로에서 꽈당 넘어졌어요. 무릎을 털고 다시 달려서 바통을 넘겼어요.',
+   q:'그 시간에 운동장에 있었던 사람이라면 누구든 볼 수 있었어요. 달리기를 한 사람만 본 건 아니에요.'},
+  {n:'④',short:'급식 당근',text:'그리고 네가 급식 때 당근만 몰래 나한테… 아니다, 이건 비밀 ㅎㅎ',
+   recall:'나는 당근을 정말 싫어해요. 그래서 급식 때 선생님 몰래 당근을 친구 식판에 슬쩍 옮겨요. 들킬까 봐 바로 옆자리나 바로 맞은편 친구한테만 줄 수 있어요. 급식 자리는 이번 달 내내 그대로예요.',
+   q:'당근을 받은 사람은 급식 때 내 바로 옆이나 맞은편에 앉아요.'},
+  {n:'⑤',short:'사물함 맨 위 칸',text:'나랑 사귈래? 금요일까지 답장 줘. 교실 뒤 사물함 맨 위 칸 오른쪽 끝에 넣어 주면 되.',
+   recall:'교실 뒤 사물함 맨 위 칸은 꽤 높아요. 나는 까치발을 해야 겨우 손이 닿아요. 이렇게 높은 칸을 고른 걸 보면 키가 큰 사람일까요?',
+   q:'사물함은 번호마다 주인이 정해져 있어요. 그 칸이 누구 것인지는 아직 몰라요.'},
+  {n:'⑥',short:'형광 젤펜 글씨',
+   recall:'쪽지는 반짝이는 형광 초록색 젤펜으로 썼어요. 그리고 마지막 줄에 "넣어 주면 되"라고 썼는데, 맞는 말은 "넣어 주면 돼"예요. 글씨를 쓴 사람의 버릇일지도 몰라요.',
+   q:'글씨와 맞춤법은 쪽지를 "쓴" 사람을 알려 줘요.'}
+];
+
+const DOCS=[
+  {id:'tue',name:'화요일 하교 기록'},
+  {id:'lib',name:'도서관 출입 기록'},
+  {id:'pe',name:'금요일 체육 출결'},
+  {id:'seat',name:'급식 자리표'},
+  {id:'board',name:'게시판 다짐 카드'},
+  {id:'talk',name:'친구들 말'}
+];
+
+const SAYS={
+  woojin:'쪽지? 나… 나는 요즘 오른팔 깁스 때문에 글씨도 못 써. 알림장도 지명이 대신 써 주고 있단 말이야.',
+  jiho:'형광 젤펜? 그, 그런 건 문구점에서 아무나 사잖아! 아무튼 그건 내 마음 아니야. 진짜야!',
+  minhyuk:'키 크면 다 나야? 사물함은 번호대로 주인이 정해져 있잖아. 내 건 맨 아래 칸이야. 그리고 목요일 점심엔 운동장에서 피구했어.',
+  taeyang:'나야~ 내가 보냈지롱! …농담, 농담이야. 화요일엔 치과 가느라 점심 먹고 바로 갔고, 금요일엔 할머니 댁 가서 학교도 안 왔어.',
+  seojun:'목요일 점심엔 도서부 당번이라 도서관에 있었어. 너 『어린 왕자』 읽으면서 웃던데? 그래도 쪽지는 진짜 나 아니야. 화요일엔 4시까지 코딩교실이었고.'
+};
+
+// Who fits each clue, for the explanation and for checking the accusation.
+const WHY=[
+  {who:['woojin','minhyuk'],why:'화요일 2시 40분 정규 하교 때 정문 쪽에 있던 사람은 우건이와 지안이뿐이에요. 지명은 체육관, 무준이는 3층 컴퓨터실에 있었고, 태양이는 12시 30분에 조퇴했어요.'},
+  {who:['woojin','taeyang','seojun'],why:'목요일 점심 도서관 출입 기록에 있는 남학생은 무준, 우건, 태양이에요. 지안이와 지명은 운동장에 있었어요.'},
+  {who:['woojin','jiho','minhyuk','seojun'],why:'금요일에 결석한 태양이만 볼 수 없었어요. 우건이는 견학이었지만 운동장 스탠드에 앉아 있었으니 오히려 제일 잘 보였어요.'},
+  {who:['woojin','minhyuk'],why:'급식 자리표에서 내 바로 옆은 우건, 바로 맞은편은 지안이에요.'},
+  {who:[],why:'키와는 상관없는 함정이에요. 맨 위 칸 오른쪽 끝은 2번, 우건이 자기 사물함이에요. 답장을 남이 볼 수 없게 자기 칸에 넣어 달라고 한 거예요.',fake:true},
+  {who:[],why:'글씨를 쓴 사람은 지명이에요. 오른팔을 다친 우건이가 불러 주는 말을 지명이 받아 적었어요. 글씨 주인과 마음의 주인이 달랐던 거예요.',fake:true}
+];
+
+const $=id=>document.getElementById(id);
+// every visit starts a fresh case; drop what older versions saved
+try{ localStorage.removeItem('confession-note-v1'); }catch(e){}
+let S;
+function fresh(){return {clue:null,seen:[],recalled:[],doc:'tue',heard:[],talk:null,name:null,clues:[],tries:0,ending:null,askWait:false}}
+
+function face(k,size){
+  const c=KIDS[k];
+  const top=c.style==='spike'
+    ?`<path d="M15 29 l2 -12 l5 5 l4 -10 l5 7 l5 -8 l4 9 l5 -5 l1 14 q-8 -7 -15 -5 q-8 -2 -16 5z" fill="${c.hair}"/>`
+    :c.style==='part'
+    ?`<path d="M15 30 q0 -18 17 -18 q17 0 17 18 q-4 -9 -12 -10 q-10 1 -22 10z" fill="${c.hair}"/>`
+    :c.style==='short'
+    ?`<path d="M16 26 q2 -14 16 -14 q14 0 16 14 q-16 -5 -32 0z" fill="${c.hair}"/>`
+    :`<path d="M16 28 q2 -16 16 -16 q14 0 16 16 q-8 -8 -16 -6 q-8 -2 -16 6z" fill="${c.hair}"/>`;
+  const band=c.style==='band'?`<path d="M16.5 24 q15.5 -7 31 0" stroke="#e8e8ee" stroke-width="4" fill="none"/>`:'';
+  const glasses=c.style==='glasses'?`<g stroke="#333" stroke-width="1.6" fill="none"><circle cx="25" cy="31" r="4.6"/><circle cx="39" cy="31" r="4.6"/><path d="M29.6 31 h4.8"/></g>`:'';
+  return `<svg viewBox="0 0 64 64" aria-hidden="true"${size?` width="${size}" height="${size}"`:''}><path d="M10 64 q0 -16 22 -16 q22 0 22 16z" fill="${c.shirt}"/><circle cx="32" cy="30" r="16" fill="var(--skin)"/>${top}${band}<circle cx="25" cy="31" r="1.8" fill="#222"/><circle cx="39" cy="31" r="1.8" fill="#222"/>${glasses}<path d="M27 38 q5 3 10 0" stroke="#8a4a2a" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`;
+}
+
+/* ---------- the note ---------- */
+function buildLetter(){
+  const s=i=>`<button class="sent" type="button" data-c="${i}"><sup>${CLUES[i].n}</sup>${CLUES[i].text}</button>`;
+  $('letter').innerHTML=`<p>안녕, 갑자기 이런 쪽지 받아서 놀랐지?</p><p>${s(0)}</p><p>${s(1)} ${s(2)}</p><p>${s(3)}</p><p>${s(4)}</p>
+    <button class="tag6" type="button" data-c="5">⑥ 쪽지의 글씨 살펴보기</button>`;
+  $('letter').addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(!b)return;const i=+b.dataset.c;
+    S.clue=i;if(!S.recalled.includes(i))S.recalled.push(i);renderLetter(true);$('nClue').textContent=S.recalled.length});
+}
+function renderLetter(anim){
+  document.querySelectorAll('#letter [data-c]').forEach(b=>{const i=+b.dataset.c;b.setAttribute('aria-pressed',String(S.clue===i));b.classList.toggle('seen',S.recalled.includes(i))});
+  const r=$('recall');
+  if(S.clue===null){r.className='recall empty';r.textContent='아직 떠올린 장면이 없어요. 쪽지의 ① 문장부터 눌러 보세요.';return}
+  const c=CLUES[S.clue];
+  r.className='recall'+(anim?' pop':'');
+  r.innerHTML=`<h3>${c.n} ${c.short}</h3><p>${c.recall}</p><p class="q">${c.q}</p>`;
+}
+
+/* ---------- evidence ---------- */
+function seatSVG(){
+  // Three lunch tables, six seats each. Seat labels sit on light chips so they read in both themes.
+  const T=[
+    {x:20,label:'1모둠',top:['지명','유나','태양'],bot:['소율','건우','채원']},
+    {x:225,label:'2모둠',top:['수아','나','우건'],bot:['하은','지안','다인']},
+    {x:430,label:'3모둠',top:['예린','무준','시우'],bot:['지안','도윤','민서']}
+  ];
+  const chip=(x,y,t)=>{const me=t==='나';return `<g><rect x="${x-26}" y="${y-14}" width="52" height="28" rx="14" fill="${me?'var(--heart)':'#fffaf2'}" stroke="${me?'none':'#b9a68a'}"/><text x="${x}" y="${y+5}" text-anchor="middle" font-family="Jua,sans-serif" font-size="15" fill="${me?'#fff':'#2a2630'}">${t}</text></g>`};
+  return `<svg viewBox="0 0 625 210" role="img" aria-label="급식 자리표. 2모둠 위쪽 줄 가운데가 나, 왼쪽이 수아, 오른쪽이 우건. 아래쪽 줄은 하은, 지안, 다인이고 지안이 나의 바로 맞은편이에요. 1모둠에 지명과 태양, 3모둠에 무준이 앉아요.">
+    <text x="312" y="16" text-anchor="middle" font-family="Jua,sans-serif" font-size="13" fill="var(--muted)">▲ 배식대 쪽</text>
+    ${T.map(t=>`<g><text x="${t.x+87}" y="44" text-anchor="middle" font-family="Jua,sans-serif" font-size="14" fill="var(--ink)">${t.label}</text>
+      <rect x="${t.x}" y="94" width="175" height="54" rx="6" fill="var(--table)" stroke="var(--table-2)" stroke-width="2"/>
+      ${t.top.map((n,j)=>chip(t.x+30+j*57.5,72,n)).join('')}${t.bot.map((n,j)=>chip(t.x+30+j*57.5,170,n)).join('')}</g>`).join('')}
+    <text x="312" y="204" text-anchor="middle" font-family="Gowun Dodum,sans-serif" font-size="12" fill="var(--muted)">위아래로 마주 보고 앉아요</text></svg>`;
+}
+function docHTML(id){
+  if(id==='tue')return `<p class="doc-cap">지난주 화요일(비) 우리 반 남학생 하교 기록이에요. 담임 선생님 출석부와 방과 후 강사님 출석부를 합쳤어요. 방과 후 활동이 있는 친구는 2시 40분에 교실에서 곧장 활동 장소로 이동했어요.</p>
+    <div class="tbl-wrap"><table class="rec"><thead><tr><th>이름</th><th>하교 방법</th><th>시간</th><th>있던 곳</th></tr></thead><tbody>
+    <tr><td class="t">김우건</td><td>정규 하교</td><td>14:40</td><td>정문으로 나감</td></tr>
+    <tr><td class="t">박지명</td><td>축구부 (비가 와서 실내 연습)</td><td>14:50~16:30</td><td>체육관</td></tr>
+    <tr><td class="t">이지안</td><td>정규 하교</td><td>14:40</td><td>정문으로 나감</td></tr>
+    <tr><td class="t">최태양</td><td>조퇴 (치과)</td><td>12:30</td><td>엄마와 함께 하교</td></tr>
+    <tr><td class="t">정무준</td><td>방과 후 코딩교실</td><td>14:50~16:00</td><td>3층 컴퓨터실</td></tr>
+    </tbody></table></div><p class="doc-foot">체육관과 3층 컴퓨터실 창문으로는 정문이 보이지 않아요.</p>`;
+  if(id==='lib')return `<p class="doc-cap">지난주 목요일 점심시간(12:40~13:20) 도서관 출입 기록이에요. 들어오고 나갈 때 학생증을 찍어요.</p>
+    <div class="tbl-wrap"><table class="rec"><thead><tr><th>시각</th><th>이름</th><th>출입</th><th>메모</th></tr></thead><tbody>
+    <tr><td>12:41</td><td class="t">정무준</td><td>들어옴</td><td>도서부 당번</td></tr>
+    <tr><td>12:42</td><td class="t">김우건</td><td>들어옴</td><td></td></tr>
+    <tr><td>12:47</td><td class="t">최태양</td><td>들어옴</td><td>만화 코너</td></tr>
+    <tr class="me"><td>12:50</td><td class="t">(나)</td><td>들어옴</td><td>창가 자리</td></tr>
+    <tr><td>13:05</td><td class="t">최태양</td><td>나감</td><td></td></tr>
+    <tr><td>13:18</td><td class="t">김우건</td><td>나감</td><td></td></tr>
+    <tr class="me"><td>13:20</td><td class="t">(나)</td><td>나감</td><td></td></tr>
+    <tr><td>13:20</td><td class="t">정무준</td><td>나감</td><td>당번 끝</td></tr>
+    </tbody></table></div>`;
+  if(id==='pe')return `<p class="doc-cap">지난주 금요일 출결과 3교시 체육(이어달리기, 운동장) 기록이에요. 보건 선생님 메모도 붙어 있어요.</p>
+    <div class="tbl-wrap"><table class="rec"><thead><tr><th>이름</th><th>출결</th><th>3교시 체육</th></tr></thead><tbody>
+    <tr><td class="t">김우건</td><td>출석</td><td>견학 (운동장 스탠드 벤치)</td></tr>
+    <tr><td class="t">박지명</td><td>출석</td><td>참여 · 1모둠 주자</td></tr>
+    <tr><td class="t">이지안</td><td>출석</td><td>참여 · 2모둠 주자</td></tr>
+    <tr><td class="t">최태양</td><td>결석 (교외 체험학습)</td><td>없음</td></tr>
+    <tr><td class="t">정무준</td><td>출석</td><td>참여 · 3모둠 주자</td></tr>
+    </tbody></table></div><p class="doc-foot">보건실 메모: 김우건, 지난주 수요일 계단에서 넘어져 오른팔 골절. 깁스 4주, 오른손 사용 금지.</p>`;
+  if(id==='seat')return `<p class="doc-cap">이번 달 급식 자리표예요. 한 달 동안 자리가 바뀌지 않아요.</p><div class="seat">${seatSVG()}</div><p class="swipe">← 옆으로 밀어서 다른 모둠도 보세요 →</p>`;
+  if(id==='board')return `<p class="doc-cap">3월에 교실 뒤 게시판에 붙인 "올해의 다짐" 카드예요. 남학생 다섯 명의 카드를 찾아왔어요. 저마다 늘 쓰는 펜으로 썼어요.</p>
+    <div class="board">
+      <div class="card"><small>김우건 · 연필</small><div class="w" style="color:#4a4a52">올해는 책 50권 읽기! 하루 10쪽씩이면 돼.</div></div>
+      <div class="card"><small>박지명 · 형광 초록 젤펜</small><div class="w" style="color:#11a24e">축구 대회 꼭 우승! 포기하면 안 되.</div></div>
+      <div class="card"><small>이지안 · 검정 볼펜</small><div class="w" style="color:#222">농구 슛 하루 100개. 키 크는 건 덤!</div></div>
+      <div class="card"><small>최태양 · 빨강 사인펜</small><div class="w" style="color:#c8322b">우리 반 웃음 담당 1등 하기 ㅋㅋ</div></div>
+      <div class="card"><small>정무준 · 파랑 볼펜</small><div class="w" style="color:#2856b0">코딩 대회 나가기. 떨어져도 괜찮아, 또 하면 돼.</div></div>
+    </div>`;
+  return `<p class="doc-cap">쪽지 이야기를 꺼내자 다들 한마디씩 했어요. 친구를 눌러 말을 들어 보세요.</p>
+    <div class="talks">${ORDER.map(k=>`<button class="who${S.heard.includes(k)?' heard':''}" type="button" data-talk="${k}" aria-pressed="${S.talk===k}">${face(k)}<b>${KIDS[k].name}</b><small></small></button>`).join('')}</div>
+    <div class="quote${S.talk?'':' hint'}" aria-live="polite">${S.talk?`<span class="by">${KIDS[S.talk].full}</span>“${SAYS[S.talk]}”`:'누구 말부터 들어 볼까요?'}</div>`;
+}
+function buildTabs(){
+  $('tabs').innerHTML=DOCS.map(d=>`<button class="tab" type="button" role="tab" data-doc="${d.id}">${d.name}</button>`).join('');
+  $('tabs').addEventListener('click',e=>{const b=e.target.closest('[data-doc]');if(!b)return;S.doc=b.dataset.doc;markSeen();renderDocs();$('nDoc').textContent=S.seen.length});
+  $('doc').addEventListener('click',e=>{const b=e.target.closest('[data-talk]');if(!b)return;S.talk=b.dataset.talk;
+    if(!S.heard.includes(S.talk))S.heard.push(S.talk);if(!S.seen.includes('talk'))S.seen.push('talk');renderDocs();$('nDoc').textContent=S.seen.length});
+}
+function markSeen(){if(S.doc!=='talk'&&!S.seen.includes(S.doc))S.seen.push(S.doc)}
+function renderDocs(){
+  document.querySelectorAll('[data-doc]').forEach(b=>{b.setAttribute('aria-selected',String(S.doc===b.dataset.doc));b.classList.toggle('seen',S.seen.includes(b.dataset.doc))});
+  $('doc').innerHTML=docHTML(S.doc);
+  const seat=$('doc').querySelector('.seat');if(seat)seat.scrollLeft=(seat.scrollWidth-seat.clientWidth)/2;
+}
+
+/* ---------- suspects + notebook ---------- */
+function buildSus(){
+  $('sus').innerHTML=ORDER.map(k=>`<li>${face(k)}<div><b>${KIDS[k].full}<span>${KIDS[k].no}번</span></b><p>${KIDS[k].about}</p></div></li>`).join('');
+}
+
+/* ---------- answer ---------- */
+function buildAnswer(){
+  $('pickName').innerHTML=ORDER.map(k=>`<button class="chip" type="button" data-name="${k}">${KIDS[k].name}</button>`).join('');
+  $('pickClue').innerHTML=CLUES.map((c,i)=>`<button class="chip" type="button" data-clue="${i}">${c.n}<small>${c.short}</small></button>`).join('');
+  $('pickName').addEventListener('click',e=>{const b=e.target.closest('[data-name]');if(!b||S.ending)return;S.name=S.name===b.dataset.name?null:b.dataset.name;clearFb();renderAnswer()});
+  $('pickClue').addEventListener('click',e=>{const b=e.target.closest('[data-clue]');if(!b||S.ending)return;const i=+b.dataset.clue;
+    if(S.clues.includes(i))S.clues=S.clues.filter(x=>x!==i);else{S.clues.push(i);if(S.clues.length>2)S.clues.shift()}
+    clearFb();renderAnswer()});
+  $('submit').addEventListener('click',submit);
+  $('wait').addEventListener('click',e=>{const b=e.target.closest('[data-w]');if(!b)return;const w=b.dataset.w;
+    if(w==='ask')S.askWait=true;else if(w==='no')S.askWait=false;else if(w==='yes'){S.ending='wait';S.askWait=false}
+    render();if(w==='yes'||w==='show')showEnd()});
+}
+function clearFb(){$('fb').textContent='';$('fb').className='fb'}
+function decisive(pair){
+  // A pair is decisive when only one boy fits both clues.
+  if(pair.length!==2)return false;
+  const [a,b]=pair.map(i=>WHY[i]);
+  if(a.fake||b.fake)return false;
+  return a.who.filter(k=>b.who.includes(k)).length===1;
+}
+function submit(){
+  if(!S.name||S.clues.length!==2)return;
+  if(S.name===ANSWER&&decisive(S.clues)){S.ending='win';render();showEnd();return}
+  S.tries++;
+  const fb=$('fb');fb.className='fb bad';fb.textContent='아직 아니에요.';
+  const a=$('answer');a.classList.remove('shake');void a.offsetWidth;a.classList.add('shake');
+}
+function renderAnswer(){
+  document.querySelectorAll('[data-name]').forEach(b=>b.setAttribute('aria-pressed',String(S.name===b.dataset.name)));
+  document.querySelectorAll('[data-clue]').forEach(b=>b.setAttribute('aria-pressed',String(S.clues.includes(+b.dataset.clue))));
+  $('clueN').textContent=S.clues.length;
+  $('submit').disabled=!(S.name&&S.clues.length===2)||!!S.ending;
+  const w=$('wait');
+  if(S.ending){w.innerHTML=`<span>추리를 마쳤어요.</span><button class="ghost" type="button" data-w="show">결과 다시 보기</button>`;return}
+  w.innerHTML=S.askWait
+    ?`<span class="ask">추리를 멈추고 금요일까지 기다릴까요? 쪽지 주인은 알게 되지만 해설은 볼 수 없어요.</span><span class="ask"><button class="ghost danger" type="button" data-w="yes">기다릴게요</button><button class="ghost" type="button" data-w="no">더 추리할래요</button></span>`
+    :`<span>도저히 모르겠다면</span><button class="ghost" type="button" data-w="ask">금요일까지 기다리기</button>`;
+}
+
+/* ---------- endings ---------- */
+function renderEnd(){
+  const el=$('end');
+  if(!S.ending){if($('endDlg').open)$('endDlg').close();el.innerHTML='';return}
+  if(S.ending==='wait'){
+    el.innerHTML=`<h2 id="endH">금요일 방과 후, 텅 빈 교실</h2>
+      <p>끝내 답장을 넣지 못하고 가방을 싸는데, 누군가 쭈뼛쭈뼛 다가왔어요. 오른팔에 깁스를 한 우건이었어요.</p>
+      <div class="scene">${face('woojin')}<div class="bubble blush">“저기… 사물함 확인해 봤는데 아무것도 없길래. 그 쪽지, 사실 내가 보낸 거야. 글씨는 지명이 대신 써 줬고.”</div></div>
+      <p>우건이 귀가 새빨개졌어요. 어떻게 하면 우건이라는 걸 미리 알아챌 수 있었을까요? 처음부터 다시 추리해 보면 단서가 다르게 보일 거예요.</p>
+      <div class="end-row"><button class="again" type="button" id="again">처음부터 다시 추리하기</button><a class="again list" href="../index.html">게임 목록</a></div>`;
+  }else{
+    const pick=S.clues.slice().sort();
+    const rows=WHY.map((w,i)=>`<tr class="${w.fake?'fake':''}"><td class="c">${CLUES[i].n} ${CLUES[i].short}</td><td class="c">${w.fake?'함정':w.who.map(k=>KIDS[k].name).join(', ')}</td><td>${w.why}</td></tr>`).join('');
+    el.innerHTML=`<span class="stamp">찾았다!</span>
+      <h2 id="endH">${S.tries===0?'한 번에':S.tries+1+'번 만에'} 맞혔어요. 쪽지의 주인은 우건이에요!</h2>
+      <div class="scene">${face('woojin')}<div class="bubble blush">“어… 들켰다. 응, 나야. 팔 때문에 글씨를 못 써서, 지명한테 불러 주고 대신 써 달라고 했어.”</div></div>
+      <div class="scene">${face('jiho')}<div class="bubble">“맞춤법 틀린 건 내 잘못이야… 미안! 나는 받아 적기만 했어. 진짜야!”</div></div>
+      <div class="scene">${face('woojin')}<div class="bubble blush">“사물함 맨 위 칸 오른쪽 끝은 내 사물함이야. 답장은… 천천히 줘도 괜찮아.”</div></div>
+      <p>우건이는 그 말만 하고 도망치듯 자리로 돌아갔어요. 답장을 어떻게 쓸지는 이제 너의 마음에 달렸어요.</p>
+      <div class="why"><h3>해설: 문장마다 그 장면을 볼 수 있었던 친구</h3>
+        <div class="tbl-wrap"><table><thead><tr><th>단서</th><th>들어맞는 친구</th><th>근거</th></tr></thead><tbody>${rows}</tbody></table></div>
+        <ul>
+          <li>내가 고른 결정적 단서는 <b>${CLUES[pick[0]].n} ${CLUES[pick[0]].short}</b>와 <b>${CLUES[pick[1]].n} ${CLUES[pick[1]].short}</b>예요. 두 단서에 모두 들어맞는 친구는 우건이 한 명뿐이에요.</li>
+          <li>지명은 글씨 주인이라 제일 수상해 보였어요. 하지만 화요일 2시 40분엔 체육관에 있어서 교문 장면을 볼 수 없었고, 급식 자리도 멀어요. 쪽지 내용은 우건이가 불러 준 거예요.</li>
+          <li>지안이는 비 오던 날, 체육 시간, 급식 자리가 다 들어맞고 키도 커요. 하지만 목요일 점심엔 도서관에 없었어요.</li>
+          <li>무준이는 도서관에서 나를 봤지만, 화요일 하교 때는 컴퓨터실에 있었어요. 태양이는 장난으로 나섰을 뿐, 화요일엔 조퇴하고 금요일엔 결석했어요.</li>
+          <li>체육 견학이라서 우건이를 지웠다면 함정에 빠진 거예요. 견학하는 친구는 스탠드에 앉아 운동장 전체를 볼 수 있어요.</li>
+        </ul></div>
+      <div class="end-row"><button class="again" type="button" id="again">처음부터 다시 하기</button><a class="again list" href="../index.html">게임 목록</a></div>`;
+  }
+  $('again').addEventListener('click',()=>{S=fresh();render();setView('case');window.scrollTo({top:0,behavior:'smooth'})});
+}
+
+// On a phone the sections become four views (suspects and the notebook share one); on a wide screen they are all on the page
+// at once and setView only brings the matching one into sight.
+const PANE={case:'pCase',doc:'pDoc',sus:'pSus',ans:'pAns'};
+const onePane=()=>getComputedStyle($('vtabs')).display!=='none';
+function setView(v,quiet){
+  $('app').dataset.view=v;
+  $('vtabs').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===v)));
+  if(quiet) return;
+  const pane=$(PANE[v]);
+  if(onePane()) pane.scrollTop=0;
+  else if(v==='case') window.scrollTo({top:0,behavior:'smooth'});
+  else pane.scrollIntoView({behavior:'smooth',block:'start'});
+}
+// The result opens in its own window over the board; closing it leaves the answer slip in view.
+function showEnd(){ setView('ans',true); const d=$('endDlg'); if(!d.open) d.showModal(); d.scrollTop=0; }
+$('endX').addEventListener('click',()=>$('endDlg').close());
+$('endDlg').addEventListener('click',e=>{ if(e.target===e.currentTarget) e.currentTarget.close(); });
+$('vtabs').addEventListener('click',e=>{const b=e.target.closest('[data-view]');if(b)setView(b.dataset.view)});
+
+function render(){
+  $('nClue').textContent=S.recalled.length;$('nDoc').textContent=S.seen.length;
+  renderLetter();renderDocs();renderAnswer();renderEnd();
+  $('ansDot').hidden=!S.ending;
+}
+
+S=fresh();
+buildLetter();buildTabs();buildSus();buildAnswer();
+markSeen();
+render();
+setView('case',true);
+})();
+</script>
+</body>
+</html>

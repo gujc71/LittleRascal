@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#e23a58">
+<title>개구쟁이들 · 어린이 추리 게임 8편</title>
+<meta name="description" content="변명 속 모순을 짚어 설득하고, 쪽지를 보낸 친구를 찾고, ○✕ 격자를 채우는 어린이 추리 게임 8편. 설치도 로그인도 없이 브라우저에서 한 편당 5~10분.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="개구쟁이들">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:title" content="개구쟁이들 · 어린이 추리 게임 8편">
+<meta property="og:description" content="변명 속 모순을 짚어 설득하고, 쪽지를 보낸 친구를 찾고, ○✕ 격자를 채우는 어린이 추리 게임 8편. 설치도 로그인도 없이 브라우저에서 한 편당 5~10분.">
+<meta name="twitter:card" content="summary">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&family=Gowun+Dodum&display=swap">
+<style>
+:root{
+  --bg:#f3f7fd; --surface:#ffffff; --paper:#fbfcff; --ink:#231f2c; --muted:#6a6578;
+  --line:#e2e6f0; --heat:#e23a58; --ok:#1f93b8;
+  --shadow:0 1px 0 rgba(35,31,28,.06),0 6px 18px rgba(35,31,28,.08);
+  --shadow-lift:0 2px 0 rgba(35,31,28,.06),0 14px 30px rgba(35,31,28,.14);
+  --f-display:"Black Han Sans","Gowun Dodum",sans-serif;
+  --f-body:"Gowun Dodum","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-talk:"Jua","Gowun Dodum",sans-serif;
+  color-scheme:light;
+}
+
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#fff3ea 0,#fdf0f4 180px,var(--bg) 460px) no-repeat,var(--bg);
+  color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.6}
+a{color:inherit}
+.wrap{max-width:1040px;margin:0 auto;
+  padding-block:28px 48px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* Masthead */
+.mast{border-bottom:3px solid var(--heat);padding-bottom:16px;margin-bottom:28px}
+.mast small{display:block;font-size:12px;letter-spacing:.14em;color:var(--muted);margin-bottom:6px}
+.mast h1{margin:0;font-family:var(--f-display);font-weight:400;font-size:clamp(30px,7vw,44px);line-height:1.08;text-wrap:balance}
+.mast h1 em{font-style:normal;color:var(--heat)}
+.mast p{margin:10px 0 0;color:var(--muted);max-width:60ch;text-wrap:pretty}
+
+/* Cards */
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(248px,1fr))}
+.card{position:relative;display:flex;flex-direction:column;gap:8px;
+  background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  padding:16px 16px 18px;text-decoration:none;box-shadow:var(--shadow);
+  transition:transform .18s cubic-bezier(.3,.8,.3,1),box-shadow .18s,border-color .18s}
+.card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift);border-color:var(--muted)}
+.card:focus-visible{outline:3px solid var(--heat);outline-offset:3px}
+.card .ctx{font-size:11.5px;color:var(--muted);letter-spacing:.02em}
+.card h3{margin:0;font-family:var(--f-display);font-weight:400;font-size:20px;line-height:1.2;text-wrap:balance}
+.card h3 em{font-style:normal;color:var(--heat)}
+.card .desc{margin:0;font-size:13.5px;color:var(--muted);text-wrap:pretty}
+.card .go{font-family:var(--f-talk);font-size:13px;color:var(--heat)}
+.card .meta{margin-top:auto;padding-top:10px;display:flex;flex-wrap:wrap;gap:6px}
+.card .tag{font-size:11px;color:var(--muted);border:1px solid var(--line);
+  border-radius:6px;padding:2px 7px;background:var(--paper)}
+
+footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);
+  color:var(--muted);font-size:12.5px;display:flex;flex-wrap:wrap;gap:10px 14px;
+  justify-content:space-between;align-items:center}
+
+@media (prefers-reduced-motion: reduce){.card{transition:none}.card:hover{transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="mast">
+    <small>개구쟁이들</small>
+    <h1>오늘은 또 무슨 일이 벌어졌을까요?</h1>
+    <p>오늘도 어딘가에서 예상치 못한 사건이 벌어졌어요! 이번엔 누가, 어떤 일을 벌였을까요? 설치도 로그인도 필요 없이, 딱 5~10분이면 즐길 수 있는 흥미진진한 이야기를 만나보세요.</p>
+  </header>
+
+  <main id="games" class="grid"></main>
+
+  <footer>
+    <span>모든 게임은 브라우저에서 바로 실행됩니다 · 기록을 저장하지 않습니다</span>
+  </footer>
+
+</div>
+
+<script>
+/* 게임을 추가할 때는 이 배열에 항목 하나만 넣으면 됩니다. 빌드도 서버도 필요 없습니다. */
+var GAMES = [
+  {
+    slug: 'dog-ate-homework',
+    title: '강아지가 먹은 <em>숙제</em>',
+    ctx: '4학년 3반 · 교무실 면담',
+    desc: '숙제를 강아지가 먹었다는 시연이. 5교시 종이 울리기 전에 진짜로 무슨 일이 있었는지 들어 보세요.',
+    tags: ['설득', '4학년', '마감 13:00']
+  },
+  {
+    slug: 'broken-pot',
+    title: '누가 <em>화분</em>을 깼을까',
+    ctx: '5학년 3반 사건 파일',
+    desc: '화분이 깨졌는데 다들 자기는 아니라고 합니다. 증언이 서로 어긋나는 곳을 찾아 사고 친 사람을 짚어내세요.',
+    tags: ['논리 퍼즐', '5학년', '증언 대조']
+  },
+  {
+    slug: 'one-hour-only',
+    title: '딱 <em>한 시간</em>만 했어요',
+    ctx: '6학년 강민재 · 밤 9시 거실',
+    desc: '게임은 딱 한 시간만 했다는 민재. 잘 시간이 되기 전에 실제로 몇 시간을 했는지 알아냅니다.',
+    tags: ['설득', '6학년', '마감 22:00']
+  },
+  {
+    slug: 'manitto',
+    title: '나의 <em>마니또</em>는 누구?',
+    ctx: '6학년 2반 · 공개일 하루 전',
+    desc: '닷새 동안 몰래 선물을 놓고 간 사람이 있습니다. 하나씩 열어 보며 증거를 모아 내 마니또를 알아냅니다.',
+    tags: ['친구 찾기', '6학년', '선물 5개']
+  },
+  {
+    slug: 'he-started-it',
+    title: '<em>걔가</em> 먼저 그랬어요',
+    ctx: '5학년 3반 윤지안 · 방과 후 교실',
+    desc: '먼저 민 건 하준이라고 우기는 지안이. 학원 차가 떠나기 전에 누가 먼저 사고를 쳤는지 가려냅니다.',
+    tags: ['설득', '5학년', '마감 15:00']
+  },
+  {
+    slug: 'already-cracked',
+    title: '<em>깨어진</em> 아빠의 게임기',
+    ctx: '우리 집 거실 · 아빠의 게임기',
+    desc: '금은 원래 가 있었다는 지명이. 엄마가 퇴근하기 전에 아빠 게임기에 무슨 일이 있었는지 알아냅니다.',
+    tags: ['설득', '집', '마감 19:00']
+  },
+  {
+    slug: 'honest-one',
+    title: '정직한 <em>한 명</em>',
+    ctx: '과학실 사건 수첩',
+    desc: '과학실 열쇠가 사라졌습니다. 거짓말쟁이의 말은 뒤집으면 진짜, 그 규칙으로 ○✕ 표를 채워 주인을 찾으세요.',
+    tags: ['논리 퍼즐', '○✕ 격자']
+  },
+  {
+    slug: 'confession-note',
+    title: '<em>고백 쪽지</em>의 주인은?',
+    ctx: '6학년 3반 · 월요일 아침',
+    desc: '책상에 쪽지 한 장이 놓였습니다. 문장을 눌러 장면을 떠올리고, 증거와 맞춰 쓴 사람을 찾으세요.',
+    tags: ['친구 찾기', '6학년', '장면 회상']
+  }
+  
+];
+
+function cardHTML(g) {
+  var tags = g.tags.map(function (t) { return '<span class="tag">' + t + '</span>'; }).join('');
+  return '<a class="card" href="games/' + g.slug + '.html">' +
+         '<span class="ctx">' + g.ctx + '</span>' +
+         '<h3>' + g.title + '</h3>' +
+         '<p class="desc">' + g.desc + '</p>' +
+         '<span class="go">조사 시작 →</span>' +
+         '<span class="meta">' + tags + '</span>' +
+         '</a>';
+}
+
+document.getElementById('games').innerHTML = GAMES.map(cardHTML).join('');
+
+</script>
+</body>
+</html>

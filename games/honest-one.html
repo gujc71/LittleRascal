@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2a6ea0">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>정직한 한 명</title>
+<meta name="description" content="과학실 열쇠를 가진 사람은 누구? 거짓말쟁이의 말은 뒤집으면 진짜가 된다는 규칙으로 ○✕ 표를 채워 푸는 논리 퍼즐.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="개구쟁이들">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:title" content="정직한 한 명">
+<meta property="og:description" content="과학실 열쇠를 가진 사람은 누구? 거짓말쟁이의 말은 뒤집으면 진짜가 된다는 규칙으로 ○✕ 표를 채워 푸는 논리 퍼즐.">
+<meta name="twitter:card" content="summary">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&family=Gowun+Dodum&display=swap">
+<style>
+/* Layout: the science room seen from the front (window side left, door side right) with the empty key hook,
+   then each classmate's two lines, and the answer form.
+   Lab navy frames the room, brass is the missing key, teal/brick are the player's own true/lie marks. */
+:root{
+  --bg:#eef6fb; --surface:#ffffff; --paper:#f8fbfd; --ink:#1b2530; --muted:#586573; --line:#d8e5ee;
+  --lab:#2a6ea0; --lab-ink:#f3faff; --lab-accent:#ffd24a; --brass:#bf8520; --brass-ink:#2a1c03;
+  --true:#2a7f6c; --false:#b44a3a;
+  --wall:#eaf4fb; --wall-2:#d9ebf6; --floor:#cadfe9; --bench:#6b8898; --bench-top:#3d5a69; --glass:#c9ecf8; --frame:#92aebd;
+  --skin:#f2c9a5; --shadow:0 1px 0 rgba(27,37,48,.06),0 6px 18px rgba(27,37,48,.09);
+  --f-display:"Black Han Sans","Gowun Dodum",sans-serif;
+  --f-body:"Gowun Dodum","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-talk:"Jua","Gowun Dodum",sans-serif;
+}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,summary:focus-visible{outline:3px solid var(--brass);outline-offset:2px}
+html,body{height:100%}
+.app{max-width:1000px;margin:0 auto;padding-block:12px 36px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:14px}
+/* On wide screens the panes are just one long column; narrow screens show one at a time. */
+.panes,.pane{display:flex;flex-direction:column;gap:14px;min-width:0}
+.vtabs,.rulebar{display:none}
+h2{margin:0;font-family:var(--f-talk);font-weight:400;font-size:20px}
+
+/* Header */
+.hud{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:8px 16px}
+.brand small{display:block;font-size:12px;letter-spacing:.08em;color:var(--muted)}
+.brand h1{margin:0;font-family:var(--f-display);font-weight:400;font-size:30px;line-height:1.1;text-wrap:balance}
+.brand h1 span{color:var(--brass)}
+.brand p{margin:2px 0 0;font-family:var(--f-talk);font-size:16px;color:var(--muted)}
+.count{display:flex;gap:14px;font-variant-numeric:tabular-nums;font-size:13px;color:var(--muted)}
+.count b{font-family:var(--f-display);font-weight:400;font-size:22px;color:var(--ink);margin-right:2px}
+
+/* Level picker */
+.levels{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center}
+.tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:3px}
+.tab{border:0;background:none;border-radius:18px;padding:6px 12px;font-family:var(--f-talk);font-size:15px;color:var(--muted);min-height:36px}
+.tab[aria-pressed="true"]{background:var(--lab);color:var(--lab-ink)}
+.pips{display:flex;gap:6px}
+.pip{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);font-family:var(--f-talk);font-size:14px;color:var(--muted);display:grid;place-items:center;padding:0}
+.pip[aria-current="true"]{border-color:var(--lab);color:var(--ink);box-shadow:0 0 0 2px color-mix(in srgb,var(--lab) 25%,transparent)}
+.pip.done{background:var(--brass);border-color:var(--brass);color:var(--brass-ink)}
+
+/* Case board */
+.case{background:var(--lab);color:var(--lab-ink);border-radius:10px;padding:14px 16px;display:grid;gap:8px}
+.case h2{color:var(--lab-accent)}
+.case p{margin:0;max-width:66ch}
+.rule{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:15px}
+.rule b{font-family:var(--f-talk);font-weight:400;font-size:17px;border-radius:12px;padding:1px 10px}
+.rule .t{background:var(--true);color:var(--surface)}
+.rule .f{background:var(--false);color:var(--surface)}
+.case details{font-size:14px;border-top:1px dashed color-mix(in srgb,var(--lab-ink) 30%,transparent);padding-top:8px}
+.case summary{cursor:pointer;font-family:var(--f-talk);font-size:15px;color:var(--lab-accent)}
+.case details p{margin-top:6px;opacity:.92}
+.flip{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;margin-top:6px;align-items:baseline}
+.flip span{font-family:var(--f-talk);font-size:13px;opacity:.8}
+
+/* Scene */
+.stage{border-radius:10px;overflow:hidden;box-shadow:var(--shadow);background:var(--wall)}
+.stage svg{display:block;width:100%;height:auto}
+.s-wall{fill:var(--wall)} .s-wall2{fill:var(--wall-2)} .s-floor{fill:var(--floor)}
+.s-glass{fill:var(--glass)} .s-frame{fill:none;stroke:var(--frame);stroke-width:4}
+.s-bench{fill:var(--bench)} .s-top{fill:var(--bench-top)} .s-door{fill:var(--bench)} .s-knob{fill:var(--brass)}
+.s-label{font-family:var(--f-talk);font-size:15px;fill:var(--muted)}
+.s-name{font-family:var(--f-talk);font-size:16px;fill:var(--ink)}
+.s-tag{fill:var(--surface);stroke:var(--line)}
+.s-hookboard{fill:var(--surface);stroke:var(--frame);stroke-width:2}
+.s-hook{fill:none;stroke:var(--frame);stroke-width:2.5;stroke-linecap:round}
+.s-missing{fill:none;stroke:var(--brass);stroke-width:2;stroke-dasharray:4 3}
+.s-key{fill:var(--brass)}
+.s-tiny{font-family:var(--f-body);font-size:10px;fill:var(--muted)}
+.s-zone{fill:none;stroke:var(--frame);stroke-width:1.5;stroke-dasharray:5 6;opacity:.6}
+
+/* Kid cards */
+.kids{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:10px}
+.kid{background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:8px;min-width:0;transition:border-color .2s,background .2s}
+.kid.m-t{border-color:var(--true);background:color-mix(in srgb,var(--true) 7%,var(--surface))}
+.kid.m-f{border-color:var(--false);background:color-mix(in srgb,var(--false) 6%,var(--surface))}
+.kid-h{display:flex;align-items:center;gap:10px}
+.kid-h svg{flex:none;width:46px;height:46px}
+.kid-h .who{flex:1;min-width:0}
+.kid-h b{font-family:var(--f-talk);font-weight:400;font-size:19px;display:block;line-height:1.2}
+.tags{display:flex;gap:4px;flex-wrap:wrap}
+.tag{font-size:12px;border:1px solid var(--line);border-radius:10px;padding:0 7px;color:var(--muted);background:var(--paper)}
+.memo{border:1.5px solid var(--line);background:var(--paper);border-radius:16px;padding:4px 12px;min-height:36px;min-width:64px;font-family:var(--f-talk);font-size:15px;color:var(--muted)}
+.kid.m-t .memo{border-color:var(--true);color:var(--true)}
+.kid.m-f .memo{border-color:var(--false);color:var(--false)}
+.says{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.says li{position:relative;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:7px 12px;font-family:var(--f-talk);font-size:16.5px;line-height:1.4}
+
+.ghost{border:1px solid var(--line);background:none;border-radius:16px;padding:4px 12px;font-size:13px;color:var(--muted);min-height:32px}
+
+/* Answer */
+.answer{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:10px}
+.pick{display:grid;gap:6px}
+.pick > span{font-size:14px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1.5px solid var(--line);background:var(--paper);border-radius:18px;padding:5px 14px;min-height:38px;font-family:var(--f-talk);font-size:16px}
+.chip[aria-pressed="true"]{background:var(--lab);border-color:var(--lab);color:var(--lab-ink)}
+.chip.key[aria-pressed="true"]{background:var(--brass);border-color:var(--brass);color:var(--brass-ink)}
+.go{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.submit{border:0;background:var(--lab);color:var(--lab-ink);border-radius:20px;padding:8px 22px;min-height:42px;font-family:var(--f-talk);font-size:18px}
+.submit:disabled{opacity:.45;cursor:default}
+.fb{font-size:14.5px;color:var(--muted)}
+.fb.no{color:var(--false)}
+
+/* Solved */
+.done-card{border:2px solid var(--brass);background:color-mix(in srgb,var(--brass) 10%,var(--surface));border-radius:10px;padding:14px 16px;display:grid;gap:10px}
+.done-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.stars{font-size:26px;letter-spacing:2px;color:var(--brass)}
+.stars i{font-style:normal;color:var(--line)}
+.done-top b{font-family:var(--f-display);font-weight:400;font-size:22px}
+.done-top span{color:var(--muted);font-size:14px}
+.why{display:grid;gap:4px;font-size:14.5px}
+.why h3{margin:4px 0 0;font-family:var(--f-talk);font-weight:400;font-size:16px}
+.why ul{margin:0;padding-left:20px;display:grid;gap:3px}
+.why .neg{color:var(--false)} .why .pos{color:var(--true)}
+.done-card details summary{cursor:pointer;font-family:var(--f-talk);font-size:15px}
+.done-card details ul{margin:6px 0 0;padding-left:20px;display:grid;gap:6px;font-size:14px}
+.next-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.submit.list{background:none;border:1.5px solid var(--lab);color:var(--lab);text-decoration:none;display:inline-flex;align-items:center}
+.final{background:var(--lab);color:var(--lab-ink);border-radius:10px;padding:16px;display:grid;gap:4px}
+.final b{font-family:var(--f-display);font-weight:400;font-size:24px;color:var(--brass)}
+
+/* ---------- one-screen layout for phones: no page scroll, one pane at a time ---------- */
+@media (max-width:720px),(max-height:620px) and (max-width:1100px){
+  body{overflow:hidden}
+  .app{height:100%;max-width:none;position:relative;overflow:hidden;gap:7px;
+    padding-block:8px 0}
+
+  /* header: title + score on one stack, list link tucked top-right */
+  .hub-back{position:absolute;top:7px;right:max(16px,env(safe-area-inset-right,0px));margin:0;z-index:4}
+  .hub-back a{padding:4px 9px;font-size:11.5px}
+  .hud{display:block;padding-right:96px}
+  .brand small,.brand p{display:none}
+  .brand h1{font-size:21px}
+  .count{gap:12px;font-size:11.5px;margin-top:1px}
+  .count b{font-size:15px}
+
+  /* level picker on a single swipeable row */
+  .levels{flex-wrap:nowrap;overflow-x:auto;gap:8px 10px;scrollbar-width:none;padding-bottom:1px}
+  .levels::-webkit-scrollbar{display:none}
+  .tabs{flex:none;padding:2px}
+  .tab{padding:5px 10px;font-size:14px;min-height:32px;white-space:nowrap}
+  .pips{flex:none}
+  .pip{width:30px;height:30px;font-size:13px}
+
+  /* the rule the whole puzzle hangs on, kept in sight on every pane */
+  .rulebar{display:flex;gap:6px;align-items:center;flex:none;
+    font-family:var(--f-talk);font-size:13px;color:var(--muted)}
+  .rulebar b{font-weight:400;border-radius:11px;padding:1px 9px;font-size:13.5px}
+  .rulebar .t{background:var(--true);color:var(--surface)}
+  .rulebar .f{background:var(--false);color:var(--surface)}
+
+  /* panes */
+  .panes{flex:1;min-height:0;gap:0}
+  .pane{display:none}
+  .app[data-view="case"] #pCase,.app[data-view="kids"] #pKids,
+  .app[data-view="ans"] #pAns{
+    display:flex;height:100%;gap:8px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}
+
+  .case{padding:11px 13px;gap:6px;flex:none}
+  .case h2{font-size:18px}
+  .case p{font-size:14px}
+  .rule{font-size:14px;gap:4px 8px}
+  .rule b{font-size:15px}
+  .stage{flex:none}
+
+  /* kid cards: avatar column beside a name line and the two statements */
+  .kids{grid-template-columns:1fr;gap:6px;align-content:start}
+  .kid{display:grid;grid-template-columns:auto 1fr auto;
+    grid-template-areas:"av who memo" "av say say";
+    align-items:center;gap:2px 8px;padding:7px 9px;border-radius:12px}
+  .kid-h{display:contents}
+  .kid-h svg{grid-area:av;width:36px;height:36px}
+  .kid-h .who{grid-area:who;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .kid-h b{font-size:16px}
+  .tag{font-size:11px;padding:0 6px}
+  .memo{grid-area:memo;min-height:30px;min-width:50px;padding:2px 10px;font-size:14px;border-radius:14px}
+  .says{grid-area:say;gap:4px}
+  .says li{font-size:14.5px;line-height:1.35;padding:4px 9px;border-radius:9px}
+
+  /* answer + result */
+  .answer{padding:10px;gap:7px;flex:none}
+  .pick{gap:4px}
+  .pick > span{font-size:13px}
+  .chip{padding:4px 12px;min-height:36px;font-size:15px}
+  .submit{min-height:40px;padding:7px 18px;font-size:17px}
+  .done-card{padding:11px 12px;gap:8px;flex:none}
+  .done-top b{font-size:19px}
+  .stars{font-size:22px}
+  .why{font-size:13.5px}
+  .final{padding:12px;flex:none}
+
+  /* bottom view switcher */
+  .vtabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;flex:none;
+    background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px;
+    margin-bottom:max(6px,env(safe-area-inset-bottom,0px))}
+  .vtabs button{border:0;background:none;border-radius:10px;min-height:40px;color:var(--muted);
+    font-family:var(--f-talk);font-size:14.5px;display:flex;align-items:center;justify-content:center;gap:4px}
+  .vtabs button[aria-pressed="true"]{background:var(--lab);color:var(--lab-ink)}
+  .vtabs .dot{width:7px;height:7px;border-radius:50%;background:var(--brass)}
+  .vtabs button[aria-pressed="true"] .dot{background:var(--lab-accent)}
+}
+@media (max-width:400px){
+  .brand h1{font-size:19px}
+  .says li{font-size:14px}
+  .tab{padding:5px 8px;font-size:13px}
+  .pip{width:28px;height:28px}
+}
+/* shorter phones: squeeze once more so the five classmates still land on one screen */
+@media (max-width:720px) and (max-height:730px),
+       (max-height:620px) and (max-width:1100px) and (orientation:landscape){
+  .app{gap:5px}
+  .brand h1{font-size:19px}
+  .case{padding:9px 11px}
+  .case p{font-size:13px}
+  .kids{gap:5px}
+  .kid{padding:6px 9px}
+  .kid-h svg{width:32px;height:32px}
+  .kid-h b{font-size:15px}
+  .says li{font-size:13.5px;padding:3px 8px}
+  .vtabs button{min-height:36px;font-size:13.5px}
+}
+/* small phones: title and score share a line, and every row loses a few more pixels */
+@media (max-width:720px) and (max-height:670px){
+  .hud{display:flex;align-items:baseline;gap:10px;padding-right:96px}
+  .brand h1{font-size:18px}
+  .count{margin-top:0;font-size:11px;gap:8px}
+  .count b{font-size:13px}
+  .levels{gap:6px 8px}
+  .tab{min-height:30px;padding:4px 9px}
+  .pip{width:27px;height:27px;font-size:12px}
+  .rulebar{font-size:12px}
+  .rulebar span{display:none}
+  .rulebar b{font-size:12.5px;padding:0 8px}
+  .memo{min-height:28px}
+  .says{gap:3px}
+  .says li{padding:2px 8px;line-height:1.3}
+  .vtabs{padding:3px;margin-bottom:max(4px,env(safe-area-inset-bottom,0px))}
+  .vtabs button{min-height:34px}
+}
+/* phone turned sideways: the pane is short, so spread the cards and the scene across the width */
+@media (max-height:620px) and (max-width:1100px) and (orientation:landscape){
+  .kids{grid-template-columns:1fr 1fr}
+  .stage{align-self:center;width:min(100%,105vh)}
+  .vtabs button{min-height:34px}
+}
+@media (max-width:720px) and (max-height:650px){
+  .kid{padding:5px 8px}
+  .says li{padding:1px 8px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<style>
+.hub-back{display:block;margin-bottom:2px}
+.hub-back a{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;line-height:1;
+  color:var(--muted);text-decoration:none;padding:6px 11px;border:1px solid var(--line);
+  border-radius:999px;background:var(--surface)}
+.hub-back a:hover{color:var(--ink)}
+.hub-back a:focus-visible{outline:3px solid var(--heat,var(--ink));outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="app" id="app" data-view="case">
+<nav class="hub-back" aria-label="게임 목록"><a href="../index.html">← 게임 목록</a></nav>
+  <header class="hud">
+    <div class="brand">
+      <small>과학실 사건 수첩</small>
+      <h1>정직한 <span>한 명</span></h1>
+      <p>열쇠는 누가 가졌을까</p>
+    </div>
+    <div class="count"><span><b id="solvedN">0</b>/<span id="totalN">0</span> 해결</span><span><b id="starN">0</b>별</span></div>
+  </header>
+
+  <nav class="levels" aria-label="단계 고르기">
+    <div class="tabs" id="tabs"></div>
+    <div class="pips" id="pips"></div>
+  </nav>
+
+  <div class="rulebar" id="ruleMini"></div>
+
+  <div class="panes">
+  <div class="pane" id="pCase">
+  <section class="case" aria-labelledby="caseH">
+    <h2 id="caseH">사건</h2>
+    <p id="story"></p>
+    <div class="rule" id="rule"></div>
+    <details>
+      <summary>거짓말을 뒤집는 법</summary>
+      <p>거짓말쟁이가 한 말은 반대가 진짜예요. 예를 들면 이렇게요.</p>
+      <div class="flip">
+        <span>거짓말</span><div>“우리 반 반장은 키가 커.”</div>
+        <span>뒤집으면</span><div>반장은 키가 크지 않아요.</div>
+        <span>거짓말</span><div>“사과와 배 둘 중 하나가 내 가방에 있어.”</div>
+        <span>뒤집으면</span><div>사과도 배도 가방에 없어요.</div>
+      </div>
+    </details>
+  </section>
+
+  <div class="stage" id="stage"></div>
+  </div>
+
+  <div class="pane" id="pKids">
+  <section class="kids" id="kids" aria-label="친구들의 말"></section>
+  </div>
+
+  <div class="pane" id="pAns">
+  <section class="answer" id="answer" aria-labelledby="ansH">
+    <h2 id="ansH">추리 결과</h2>
+    <div class="pick"><span id="pickHonestLabel">정직한 친구</span><div class="chips" id="pickS"></div></div>
+    <div class="pick"><span>열쇠를 가진 친구</span><div class="chips" id="pickH"></div></div>
+    <div class="go"><button class="submit" id="submit" type="button" disabled>제출하기</button><span class="fb" id="fb" aria-live="polite"></span></div>
+  </section>
+
+  <section class="done-card" id="done" hidden></section>
+  <section class="final" id="final" hidden></section>
+  </div>
+  </div>
+
+  <nav class="vtabs" id="vtabs" aria-label="화면 바꾸기">
+    <button type="button" data-view="case" aria-pressed="true">사건</button>
+    <button type="button" data-view="kids" aria-pressed="false">친구들</button>
+    <button type="button" data-view="ans" aria-pressed="false">누구?<span class="dot" id="ansDot" hidden></span></button>
+  </nav>
+</div>
+
+<script>
+// Puzzle engine: kids, statements, truth, solver
+const CAST = [
+  {id:0, name:'서준', bat:true,  glass:true},
+  {id:1, name:'민지', bat:false, glass:false},
+  {id:2, name:'하은', bat:true,  glass:true},
+  {id:3, name:'도윤', bat:true,  glass:false},
+  {id:4, name:'지아', bat:false, glass:true}
+];
+function nm(i){ const c=CAST[i]; return c.name + (c.bat?'이':''); }
+function inGroup(i,g,side){
+  if(g==='glass') return CAST[i].glass;
+  if(g==='noglass') return !CAST[i].glass;
+  if(g==='win') return side[i]==='w';
+  if(g==='door') return side[i]==='d';
+}
+const GNAME={glass:'안경 쓴 친구',noglass:'안경 안 쓴 친구',win:'창가 쪽 친구',door:'문 쪽 친구'};
+function evalSt(st,S,h,side){
+  switch(st.t){
+    case 'has': return h===st.x;
+    case 'not': return h!==st.x;
+    case 'grp': return inGroup(h,st.g,side)===st.pos;
+    case 'or':  return h===st.a||h===st.b;
+    case 'hon': return S.has(st.x)===st.pos;
+  }
+}
+function stText(st,sp){
+  const who = x => x===sp?'나':nm(x);
+  switch(st.t){
+    case 'has': return st.x===sp?'열쇠는 내가 가지고 있어.':`열쇠는 ${nm(st.x)}가 가지고 있어.`;
+    case 'not': return st.x===sp?'나는 열쇠를 안 가졌어.':`${nm(st.x)}는 열쇠를 안 가졌어.`;
+    case 'grp': return st.pos?`열쇠는 ${GNAME[st.g]}가 가지고 있어.`:`${GNAME[st.g]}는 아무도 열쇠를 안 가졌어.`;
+    case 'or':  return `열쇠는 ${who(st.a)}와 ${who(st.b)} 둘 중 한 명이 가지고 있어.`;
+    case 'hon': return st.pos?`${nm(st.x)}는 진실을 말하고 있어.`:`${nm(st.x)}는 거짓말을 하고 있어.`;
+  }
+}
+function combos(arr,k){ if(k===0) return [[]]; if(arr.length<k) return [];
+  const [f,...r]=arr; return combos(r,k-1).map(c=>[f,...c]).concat(combos(r,k)); }
+function solve(p){
+  const out=[];
+  for(const hs of combos(p.kids,p.honest)){
+    const S=new Set(hs);
+    for(const h of p.kids){
+      let ok=true;
+      for(const k of p.kids){ const want=S.has(k);
+        for(const st of p.says[k]) if(evalSt(st,S,h,p.side)!==want){ok=false;break;}
+        if(!ok) break; }
+      if(ok) out.push({S:hs,h});
+    }
+  }
+  return out;
+}
+
+const PUZ = [{"level":0,"kids":[1,2,4],"side":{"1":"w","2":"d","4":"d"},"says":{"1":[{"t":"has","x":2}],"2":[{"t":"grp","g":"noglass","pos":true}],"4":[{"t":"has","x":1}]},"honest":1,"answer":{"S":[1],"h":2}},{"level":0,"kids":[1,2,4],"side":{"1":"d","2":"d","4":"w"},"says":{"1":[{"t":"has","x":2}],"2":[{"t":"not","x":4}],"4":[{"t":"not","x":2}]},"honest":1,"answer":{"S":[4],"h":4}},{"level":0,"kids":[0,2,3],"side":{"0":"d","2":"d","3":"w"},"says":{"0":[{"t":"hon","x":3,"pos":true}],"2":[{"t":"not","x":0}],"3":[{"t":"grp","g":"win","pos":false}]},"honest":1,"answer":{"S":[2],"h":3}},{"level":1,"kids":[0,1,2,3],"side":{"0":"w","1":"w","2":"d","3":"d"},"says":{"0":[{"t":"grp","g":"glass","pos":false},{"t":"has","x":3}],"1":[{"t":"hon","x":2,"pos":false},{"t":"has","x":1}],"2":[{"t":"hon","x":0,"pos":false},{"t":"grp","g":"noglass","pos":false}],"3":[{"t":"has","x":1},{"t":"not","x":0}]},"honest":1,"answer":{"S":[2],"h":0}},{"level":1,"kids":[0,1,2,4],"side":{"0":"d","1":"w","2":"w","4":"d"},"says":{"0":[{"t":"hon","x":4,"pos":false},{"t":"not","x":0}],"1":[{"t":"has","x":4},{"t":"grp","g":"door","pos":true}],"2":[{"t":"grp","g":"win","pos":false},{"t":"has","x":0}],"4":[{"t":"not","x":1},{"t":"grp","g":"win","pos":false}]},"honest":1,"answer":{"S":[0],"h":1}},{"level":1,"kids":[0,1,2,3],"side":{"0":"d","1":"d","2":"w","3":"d"},"says":{"0":[{"t":"or","a":0,"b":3},{"t":"grp","g":"door","pos":true}],"1":[{"t":"not","x":1},{"t":"or","a":2,"b":3}],"2":[{"t":"hon","x":0,"pos":true},{"t":"grp","g":"noglass","pos":true}],"3":[{"t":"grp","g":"glass","pos":false},{"t":"grp","g":"door","pos":true}]},"honest":1,"answer":{"S":[1],"h":2}},{"level":2,"kids":[0,1,2,3,4],"side":{"0":"w","1":"w","2":"w","3":"w","4":"d"},"says":{"0":[{"t":"hon","x":3,"pos":false},{"t":"not","x":3}],"1":[{"t":"has","x":3},{"t":"grp","g":"win","pos":true}],"2":[{"t":"hon","x":1,"pos":true},{"t":"grp","g":"noglass","pos":true}],"3":[{"t":"grp","g":"glass","pos":false},{"t":"grp","g":"win","pos":true}],"4":[{"t":"has","x":1},{"t":"grp","g":"door","pos":false}]},"honest":1,"answer":{"S":[0],"h":4}},{"level":2,"kids":[0,1,2,3,4],"side":{"0":"d","1":"w","2":"w","3":"d","4":"w"},"says":{"0":[{"t":"or","a":1,"b":4},{"t":"not","x":2}],"1":[{"t":"hon","x":2,"pos":true},{"t":"hon","x":3,"pos":false}],"2":[{"t":"has","x":3},{"t":"grp","g":"door","pos":true}],"3":[{"t":"or","a":0,"b":2},{"t":"not","x":4}],"4":[{"t":"or","a":1,"b":4},{"t":"not","x":2}]},"honest":1,"answer":{"S":[3],"h":2}},{"level":2,"kids":[0,1,2,3,4],"side":{"0":"d","1":"w","2":"w","3":"d","4":"d"},"says":{"0":[{"t":"grp","g":"door","pos":false},{"t":"not","x":3}],"1":[{"t":"grp","g":"glass","pos":true},{"t":"grp","g":"win","pos":true}],"2":[{"t":"grp","g":"door","pos":false},{"t":"not","x":3}],"3":[{"t":"has","x":2},{"t":"grp","g":"glass","pos":true}],"4":[{"t":"hon","x":1,"pos":false},{"t":"grp","g":"glass","pos":false}]},"honest":1,"answer":{"S":[4],"h":3}},{"level":3,"kids":[0,1,2,3,4],"side":{"0":"d","1":"w","2":"d","3":"d","4":"w"},"says":{"0":[{"t":"has","x":0},{"t":"hon","x":4,"pos":false}],"1":[{"t":"not","x":2},{"t":"has","x":3}],"2":[{"t":"or","a":0,"b":3},{"t":"has","x":3}],"3":[{"t":"grp","g":"noglass","pos":false},{"t":"grp","g":"door","pos":true}],"4":[{"t":"grp","g":"win","pos":false},{"t":"not","x":4}]},"honest":2,"answer":{"S":[3,4],"h":2}},{"level":3,"kids":[0,1,2,3,4],"side":{"0":"d","1":"d","2":"w","3":"w","4":"w"},"says":{"0":[{"t":"hon","x":2,"pos":true},{"t":"not","x":1}],"1":[{"t":"grp","g":"door","pos":true},{"t":"not","x":3}],"2":[{"t":"grp","g":"glass","pos":true},{"t":"grp","g":"door","pos":false}],"3":[{"t":"has","x":3},{"t":"grp","g":"door","pos":false}],"4":[{"t":"or","a":0,"b":1},{"t":"not","x":4}]},"honest":2,"answer":{"S":[1,4],"h":1}}];
+const LEVEL_NAMES=['1단계','2단계','3단계','도전'];
+const RANK=['','탐정 견습생','탐정','명탐정'];
+const LOOK={
+  0:{hair:'#3a2a1f',shirt:'#4f7cc9',style:'short'},
+  1:{hair:'#2b1d17',shirt:'#d0607f',style:'pony'},
+  2:{hair:'#5a3a25',shirt:'#d99a33',style:'bob'},
+  3:{hair:'#1e1a17',shirt:'#3f9a72',style:'spike'},
+  4:{hair:'#6a4530',shirt:'#8a68cf',style:'long'}
+};
+
+/* ---------- drawing ---------- */
+function hairPath(style){
+  switch(style){
+    case 'short': return 'M-21,-4 C-22,-26 22,-26 21,-4 C16,-14 -14,-16 -21,-4Z';
+    case 'spike': return 'M-21,-3 L-18,-20 L-10,-15 L-6,-26 L1,-17 L8,-27 L11,-16 L19,-21 L21,-3 C12,-12 -12,-12 -21,-3Z';
+    case 'bob':   return 'M-23,10 C-28,-30 28,-30 23,10 L17,10 C18,-6 12,-12 0,-12 C-12,-12 -18,-6 -17,10Z';
+    case 'pony':  return 'M-21,0 C-24,-28 24,-28 21,0 C14,-12 -14,-12 -21,0Z M18,-10 C34,-8 32,16 24,22 C26,8 24,0 18,-4Z';
+    case 'long':  return 'M-23,22 C-30,-30 30,-30 23,22 L17,22 C18,0 14,-8 10,-10 C2,-6 -8,-8 -12,-10 C-16,-6 -18,4 -17,22Z';
+  }
+}
+function face(id,cx,cy,s){
+  const L=LOOK[id];
+  const g=CAST[id].glass
+    ? `<g fill="none" stroke="#2d2a28" stroke-width="2"><circle cx="-8" cy="2" r="6"/><circle cx="8" cy="2" r="6"/><path d="M-2,2 H2"/></g>`
+    : '';
+  return `<g transform="translate(${cx},${cy}) scale(${s})">
+    <path d="M-20,46 C-20,30 -12,24 0,24 C12,24 20,30 20,46Z" fill="${L.shirt}"/>
+    <circle r="20" fill="var(--skin)"/>
+    <path d="${hairPath(L.style)}" fill="${L.hair}"/>
+    <circle cx="-8" cy="3" r="2.2" fill="#2d2a28"/><circle cx="8" cy="3" r="2.2" fill="#2d2a28"/>
+    <path d="M-5,11 Q0,14 5,11" fill="none" stroke="#2d2a28" stroke-width="1.8" stroke-linecap="round"/>
+    ${g}</g>`;
+}
+function avatar(id){
+  return `<svg viewBox="-26 -28 52 56" aria-hidden="true"><clipPath id="av${id}"><circle r="26"/></clipPath>
+    <circle r="26" fill="color-mix(in srgb, ${LOOK[id].shirt} 18%, var(--paper))"/>
+    <g clip-path="url(#av${id})">${face(id,0,-2,0.9)}</g></svg>`;
+}
+function scene(p){
+  const W=640,H=270, win=p.kids.filter(k=>p.side[k]==='w'), door=p.kids.filter(k=>p.side[k]==='d');
+  const place=(arr,x0,x1)=>arr.map((k,i)=>({k,x:x0+(x1-x0)*(i+1)/(arr.length+1)}));
+  const pos=[...place(win,40,300),...place(door,340,600)];
+  const kids=pos.map(({k,x})=>`${face(k,x,170,1.25)}
+    <rect class="s-tag" x="${x-30}" y="232" width="60" height="24" rx="12"/>
+    <text class="s-name" x="${x}" y="249" text-anchor="middle">${CAST[k].name}</text>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="과학실. 창가 쪽에 ${win.map(k=>CAST[k].name).join(', ')}, 문 쪽에 ${door.map(k=>CAST[k].name).join(', ')}이(가) 서 있어요. 열쇠 걸이는 비어 있어요.">
+    <rect class="s-wall" width="${W}" height="${H}"/>
+    <rect class="s-wall2" y="0" width="${W}" height="16"/>
+    <rect class="s-floor" y="205" width="${W}" height="${H-205}"/>
+    <rect class="s-glass" x="14" y="34" width="120" height="110" rx="2"/>
+    <rect class="s-frame" x="14" y="34" width="120" height="110" rx="2"/>
+    <path class="s-frame" d="M74,34 V144 M14,89 H134"/>
+    <text class="s-label" x="74" y="28" text-anchor="middle">창가</text>
+    <rect class="s-door" x="540" y="40" width="78" height="165" rx="3"/>
+    <rect class="s-glass" x="556" y="56" width="46" height="44" rx="2"/>
+    <circle class="s-knob" cx="606" cy="128" r="5"/>
+    <text class="s-label" x="579" y="30" text-anchor="middle">문</text>
+    <rect class="s-hookboard" x="284" y="30" width="72" height="62" rx="4"/>
+    <text class="s-tiny" x="320" y="44" text-anchor="middle">과학실 열쇠</text>
+    <path class="s-hook" d="M320,52 v8 a5,5 0 1 0 5,5"/>
+    <g class="s-missing" transform="translate(320,74)"><circle r="7"/><path d="M0,7 v12 M0,14 h5 M0,18 h4"/></g>
+    <rect class="s-top" x="170" y="112" width="300" height="10" rx="2"/>
+    <rect class="s-bench" x="180" y="122" width="280" height="40"/>
+    <g class="s-frame" style="stroke-width:2"><path d="M210,112 v-22 h12 v22 M262,112 l6,-24 h8 l6,24 M420,112 v-30 a8,8 0 0 1 16,0 v30"/></g>
+    <line class="s-zone" x1="320" y1="130" x2="320" y2="${H}"/>
+    ${kids}
+  </svg>`;
+}
+
+/* ---------- explanation text (narrator voice, shown after solving) ---------- */
+function claim(st,sp,truth){
+  const N=x=>nm(x);
+  switch(st.t){
+    case 'has': return truth?`${N(st.x)}가 열쇠를 가졌어요.`:`${N(st.x)}는 열쇠를 안 가졌어요.`;
+    case 'not': return truth?`${N(st.x)}는 열쇠를 안 가졌어요.`:`${N(st.x)}가 열쇠를 가졌어요.`;
+    case 'grp': { const pos=truth===st.pos;
+      return pos?`열쇠는 ${GNAME[st.g]}가 가지고 있어요.`:`${GNAME[st.g]}는 아무도 열쇠를 안 가졌어요.`; }
+    case 'or':  return truth?`열쇠는 ${N(st.a)}와 ${N(st.b)} 둘 중 한 명에게 있어요.`:`${N(st.a)}와 ${N(st.b)}는 둘 다 열쇠를 안 가졌어요.`;
+    case 'hon': { const pos=truth===st.pos; return pos?`${N(st.x)}는 정직해요.`:`${N(st.x)}는 거짓말쟁이예요.`; }
+  }
+}
+const listNames=a=>a.map(k=>CAST[k].name).join('·');
+function whyNot(p,hs){
+  const S=new Set(hs), who=hs.map(nm).join('와 ');
+  for(const k of p.kids) for(const st of p.says[k]) if(st.t==='hon'){
+    const want=S.has(k), real=evalSt(st,S,0,p.side);
+    if(real!==want) return `${who}가 정직하다면 ${nm(k)}는 ${want?'정직하니':'거짓말쟁이니'} “${stText(st,k)}”는 ${want?'참':'거짓'}이어야 해요. 그런데 ${nm(st.x)}는 ${S.has(st.x)?'정직해서':'거짓말쟁이라서'} 맞지 않아요.`;
+  }
+  let cand=p.kids.slice();
+  for(const k of p.kids) for(const st of p.says[k]){
+    if(st.t==='hon') continue;
+    const want=S.has(k), next=cand.filter(h=>evalSt(st,S,h,p.side)===want);
+    if(next.length===0) return `${who}가 정직하다면, 열쇠를 가질 수 있는 친구는 ${listNames(cand)}만 남는데 ${nm(k)}의 말을 ${want?'그대로':'뒤집어'} 읽으면 “${claim(st,k,want)}” 그러면 남는 친구가 없어요.`;
+    cand=next;
+  }
+  return '';
+}
+
+/* ---------- state ---------- */
+// every visit starts from the first case; drop what older versions saved
+try{ localStorage.removeItem('honest-key-v1'); }catch(e){}
+const st={
+  cur: 0,
+  stars: {},                        // puzzle index -> stars earned
+  tries: {},                        // puzzle index -> wrong attempts so far
+  memo: {},                         // puzzle index -> {cards:{}}
+  pickS: [], pickH: null
+};
+const memo=i=>st.memo[i]||(st.memo[i]={cards:{}});
+const levelOf=i=>PUZ[i].level;
+const inLevel=lv=>PUZ.map((p,i)=>i).filter(i=>PUZ[i].level===lv);
+
+const $=id=>document.getElementById(id);
+
+function renderTop(){
+  const n=Object.keys(st.stars).length, s=Object.values(st.stars).reduce((a,b)=>a+b,0);
+  $('solvedN').textContent=n; $('totalN').textContent=PUZ.length; $('starN').textContent=s;
+  const lv=levelOf(st.cur);
+  $('tabs').innerHTML=LEVEL_NAMES.map((t,i)=>`<button class="tab" type="button" data-lv="${i}" aria-pressed="${i===lv}">${t}</button>`).join('');
+  $('pips').innerHTML=inLevel(lv).map((pi,j)=>`<button class="pip${st.stars[pi]?' done':''}" type="button" data-p="${pi}" aria-current="${pi===st.cur}" aria-label="${LEVEL_NAMES[lv]} ${j+1}번 사건">${j+1}</button>`).join('');
+}
+
+function renderPuzzle(){
+  const p=PUZ[st.cur], m=memo(st.cur), lv=p.level, two=p.honest===2;
+  const names=p.kids.map(k=>nm(k));
+  $('caseH').textContent=`${LEVEL_NAMES[lv]} · ${inLevel(lv).indexOf(st.cur)+1}번 사건`;
+  $('story').textContent=`청소 시간이 끝나고 과학실 열쇠 걸이가 비어 있어요. 열쇠는 ${p.kids.map(k=>CAST[k].name).join(', ')} 중 한 명의 주머니에 있어요. 모두 ${p.says[p.kids[0]].length>1?'두 마디씩':'한마디씩'} 했는데, 이상하게도 정직한 친구는 ${two?'두 명':'한 명'}뿐이에요.`;
+  $('rule').innerHTML=`<b class="t">정직 ${two?2:1}명</b><span>${two?'두 친구는':'한 친구는'} 모든 말이 참이에요.</span><b class="f">거짓 ${p.kids.length-p.honest}명</b><span>나머지 친구는 ${p.says[p.kids[0]].length>1?'두 마디 모두':'말이'} 거짓이에요.</span>`;
+  // same rule, shrunk to one line: on a phone it is the only part of the case that stays on screen
+  $('ruleMini').innerHTML=`<b class="t">정직 ${two?2:1}명</b><b class="f">거짓 ${p.kids.length-p.honest}명</b><span>거짓말은 뒤집으면 참</span>`;
+  $('stage').innerHTML=scene(p);
+
+  $('kids').innerHTML=p.kids.map(k=>{
+    const mk=m.cards[k]||'';
+    return `<article class="kid ${mk?'m-'+mk:''}" data-k="${k}">
+      <div class="kid-h">${avatar(k)}
+        <div class="who"><b>${CAST[k].name}</b><div class="tags"><span class="tag">${p.side[k]==='w'?'창가 쪽':'문 쪽'}</span><span class="tag">${CAST[k].glass?'안경 씀':'안경 안 씀'}</span></div></div>
+        <button class="memo" type="button" data-memo="${k}" aria-label="${CAST[k].name} 메모: ${mk==='t'?'정직':mk==='f'?'거짓':'모름'}">${mk==='t'?'정직':mk==='f'?'거짓':'?'}</button>
+      </div>
+      <ul class="says">${p.says[k].map(s=>`<li>“${stText(s,k)}”</li>`).join('')}</ul>
+    </article>`;
+  }).join('');
+
+  $('pickHonestLabel').textContent=two?'정직한 친구 두 명':'정직한 친구';
+  renderPicks();
+  renderDone();
+}
+
+function renderPicks(){
+  const p=PUZ[st.cur], solved=!!st.stars[st.cur];
+  $('pickS').innerHTML=p.kids.map(k=>`<button class="chip" type="button" data-ps="${k}" aria-pressed="${st.pickS.includes(k)}">${CAST[k].name}</button>`).join('');
+  $('pickH').innerHTML=p.kids.map(k=>`<button class="chip key" type="button" data-ph="${k}" aria-pressed="${st.pickH===k}">${CAST[k].name}</button>`).join('');
+  $('submit').disabled=solved||st.pickS.length!==p.honest||st.pickH===null;
+  $('answer').hidden=solved;
+}
+
+function renderDone(){
+  const i=st.cur, p=PUZ[i], s=st.stars[i], el=$('done');
+  $('ansDot').hidden=!s;
+  if(!s){ el.hidden=true; $('fb').textContent=''; $('fb').className='fb'; renderFinal(); return; }
+  const S=new Set(p.answer.S), ans=p.answer;
+  const honestLines=p.kids.filter(k=>S.has(k)).flatMap(k=>p.says[k].filter(x=>x.t!=='hon').map(x=>`<li class="pos">${CAST[k].name}(정직): ${claim(x,k,true)}</li>`));
+  const liarLines=p.kids.filter(k=>!S.has(k)).flatMap(k=>p.says[k].filter(x=>x.t!=='hon').map(x=>`<li class="neg">${CAST[k].name}(거짓) 뒤집기: ${claim(x,k,false)}</li>`));
+  const others=combos(p.kids,p.honest).filter(r=>r.join()!==ans.S.join()).map(r=>`<li>${whyNot(p,r)}</li>`).join('');
+  const lv=p.level, idx=inLevel(lv), j=idx.indexOf(i);
+  const nextI = j<idx.length-1 ? idx[j+1] : (lv<LEVEL_NAMES.length-1 ? inLevel(lv+1)[0] : null);
+  el.innerHTML=`<div class="done-top"><span class="stars" aria-label="별 ${s}개">${'★'.repeat(s)}<i>${'★'.repeat(3-s)}</i></span><b>${RANK[s]}</b><span>${(st.tries[i]||0)+1}번 만에 해결</span></div>
+    <div class="why"><h3>${ans.S.map(nm).join('와 ')}가 정직하고,열쇠는 ${nm(ans.h)}가 가졌어요.</h3>
+      <ul>${honestLines.join('')}${liarLines.join('')}</ul>
+      <p style="margin:2px 0 0">이 말들을 모두 만족하는 친구는 ${CAST[ans.h].name}뿐이에요.</p></div>
+    <details><summary>${p.honest>1?'다른 두 친구가':'다른 친구가'} 정직하면 왜 안 될까?</summary><ul>${others}</ul></details>
+    <div class="next-row">${nextI!==null?`<button class="submit" type="button" data-go="${nextI}">다음 사건</button>`:''}<a class="submit list" href="../index.html">게임 목록</a></div>`;
+  el.hidden=false;
+  renderFinal();
+}
+
+function renderFinal(){
+  const all=PUZ.length, n=Object.keys(st.stars).length, el=$('final');
+  if(n<all){ el.hidden=true; return; }
+  const s=Object.values(st.stars).reduce((a,b)=>a+b,0), max=all*3;
+  const title = s>=max-2?'과학실 명탐정': s>=Math.round(max*.7)?'믿음직한 탐정':'성장하는 탐정';
+  el.innerHTML=`<span>모든 사건 해결! 별 ${s}개 / ${max}개</span><b>${title}</b><span>처음부터 다시 풀려면 아래 버튼을 누르세요.</span><button class="ghost" style="justify-self:start;color:var(--lab-ink);border-color:currentColor" type="button" id="resetAll">기록 지우기</button>`;
+  el.hidden=false;
+}
+
+// On a phone the three sections become three views; on a wide screen they are all on the page
+// at once and setView only moves the matching section into sight.
+const onePane=()=>getComputedStyle($('vtabs')).display!=='none';
+function setView(v,quiet){
+  $('app').dataset.view=v;
+  $('vtabs').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===v)));
+  const pane=$({case:'pCase',kids:'pKids',ans:'pAns'}[v]);
+  if(quiet) return;
+  if(onePane()) pane.scrollTop=0;
+  else if(v==='case') window.scrollTo({top:0,behavior:'smooth'});
+  else pane.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function go(i){ st.cur=i; st.pickS=[]; st.pickH=null; renderTop(); renderPuzzle();
+  setView(st.stars[i]?'ans':'case'); }
+
+document.addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  const p=PUZ[st.cur], m=memo(st.cur);
+  if(b.dataset.view!==undefined){ setView(b.dataset.view); return; }
+  if(b.dataset.lv!==undefined){ go(inLevel(+b.dataset.lv).find(i=>!st.stars[i]) ?? inLevel(+b.dataset.lv)[0]); return; }
+  if(b.dataset.p!==undefined){ go(+b.dataset.p); return; }
+  if(b.dataset.go!==undefined){ go(+b.dataset.go); return; }
+  if(b.dataset.memo!==undefined){ const k=b.dataset.memo, order=['','t','f']; m.cards[k]=order[(order.indexOf(m.cards[k]||'')+1)%3]; renderPuzzleKeepScroll(); return; }
+  if(b.dataset.ps!==undefined){ const k=+b.dataset.ps;
+    if(st.pickS.includes(k)) st.pickS=st.pickS.filter(x=>x!==k);
+    else { st.pickS.push(k); if(st.pickS.length>p.honest) st.pickS.shift(); }
+    renderPicks(); return; }
+  if(b.dataset.ph!==undefined){ const k=+b.dataset.ph; st.pickH = st.pickH===k?null:k; renderPicks(); return; }
+  if(b.id==='submit'){
+    const okS=st.pickS.slice().sort((a,c)=>a-c).join()===p.answer.S.join(), okH=st.pickH===p.answer.h;
+    if(okS&&okH){ const t=st.tries[st.cur]||0; st.stars[st.cur]=t===0?3:t===1?2:1; renderTop(); renderPicks(); renderDone(); setView('ans'); }
+    else { st.tries[st.cur]=(st.tries[st.cur]||0)+1; $('fb').textContent=`아직 맞지 않아요. 다시 따져 보세요. (틀린 횟수 ${st.tries[st.cur]})`; $('fb').className='fb no'; }
+    return;
+  }
+  if(b.id==='resetAll'){ st.stars={}; st.tries={}; st.memo={}; go(0); window.scrollTo({top:0}); }
+});
+// memo taps re-render the whole puzzle, so keep both the page and the pane where they were
+function renderPuzzleKeepScroll(){
+  const y=window.scrollY, panes=[...document.querySelectorAll('.pane')], tops=panes.map(p=>p.scrollTop);
+  const fb=$('fb').textContent, fc=$('fb').className;
+  renderPuzzle();
+  $('fb').textContent=fb; $('fb').className=fc;
+  panes.forEach((p,i)=>{ p.scrollTop=tops[i]; });
+  window.scrollTo(0,y);
+}
+
+renderTop(); renderPuzzle(); setView('case',true);
+// the back button can bring the page back from cache mid-game; start over instead
+window.addEventListener('pageshow',e=>{ if(e.persisted) location.reload(); });
+</script>
+</body>
+</html>

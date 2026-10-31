@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#d93a2b">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>강아지가 먹은 숙제</title>
+<meta name="description" content="강아지가 숙제를 먹었다는 4학년 시연이의 변명. 진술 속 모순을 찾아 증거를 들이대고, 5교시 종이 울리기 전에 진실을 듣는 설득 추리 게임.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="개구쟁이들">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:title" content="강아지가 먹은 숙제">
+<meta property="og:description" content="강아지가 숙제를 먹었다는 4학년 시연이의 변명. 진술 속 모순을 찾아 증거를 들이대고, 5교시 종이 울리기 전에 진실을 듣는 설득 추리 게임.">
+<meta name="twitter:card" content="summary">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gaegu:wght@400;700&family=Gowun+Dodum&display=swap">
+<style>
+/* Layout: chalkboard stage on top (the student talks in chalk), a teacher's desk below with the
+   testimony written on notebook lines and an evidence file; red grading pen is the only accent. */
+:root{
+  --bg:#f1f8f3; --surface:#ffffff; --paper:#fdfffb; --ink:#1e2a25; --muted:#64756d;
+  --line:#d9e9e1; --margin:#ffc0b5; --red:#d93a2b; --red-ink:#ffffff; --ok:#2f9a68;
+  --board:#36856c; --board-edge:#dda25e; --chalk:#fcfff8; --chalk-red:#ffc7b7; --chalk-yel:#ffe978;
+  --shadow:0 1px 0 rgba(30,42,37,.08),0 6px 18px rgba(30,42,37,.08);
+  --f-display:"Black Han Sans","Gowun Dodum",sans-serif;
+  --f-body:"Gowun Dodum","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-hand:"Gaegu","Gowun Dodum",cursive;
+}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.app{max-width:1040px;margin:0 auto;padding-block:12px 0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:12px}
+
+/* HUD */
+.hud{display:grid;grid-template-columns:1fr auto;gap:10px 16px;align-items:end}
+.brand small{display:block;font-size:12px;letter-spacing:.08em;color:var(--muted)}
+.brand h1{margin:0;font-family:var(--f-display);font-weight:400;font-size:26px;line-height:1.1;text-wrap:balance}
+.brand h1 em{font-style:normal;color:var(--red)}
+.clock{text-align:right;font-variant-numeric:tabular-nums}
+.clock b{font-family:var(--f-display);font-weight:400;font-size:26px;line-height:1}
+.clock small{display:block;font-size:12px;color:var(--muted)}
+.clock.low b{color:var(--red)}
+.gauges{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;font-size:13px}
+.g label{font-weight:700}
+.g .bar{height:12px;border-radius:6px;background:var(--surface);border:1px solid var(--line);overflow:hidden}
+.g .bar i{display:block;height:100%;width:0;transition:width .5s cubic-bezier(.3,.8,.3,1)}
+.g-conf .bar i{background:var(--ok)}
+.g-upset .bar i{background:var(--red)}
+.g b{font-variant-numeric:tabular-nums;min-width:2.2em;text-align:right}
+.g-upset.hot{animation:shake .4s}
+.g small{grid-column:1/-1;color:var(--muted);font-size:11.5px;margin-top:-4px}
+
+/* Board */
+.board{position:relative;background:var(--board);border:10px solid var(--board-edge);border-radius:6px;
+  color:var(--chalk);min-height:clamp(270px,38vh,440px);padding:14px 16px 16px;overflow:hidden;cursor:default;
+  display:flex;flex-direction:column;
+  background-image:radial-gradient(ellipse at 30% 20%,rgba(255,255,255,.06),transparent 60%),
+    radial-gradient(ellipse at 80% 90%,rgba(255,255,255,.04),transparent 50%)}
+.board.adv{cursor:pointer}
+.round{font-family:var(--f-hand);font-size:17px;color:var(--chalk-yel);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.scene{display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:stretch;margin-top:6px;flex:1 1 0;min-height:0}
+#kid{width:150px;height:auto;display:block;align-self:end}
+.talk{min-width:0;padding-bottom:6px;display:flex;flex-direction:column;min-height:0}
+/* 대사가 한 글자씩 써지는 칠판. 문장을 다 쓰면 지난 대사가 위로 밀려 올라간다 */
+.log{flex:1 1 0;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;
+  display:flex;flex-direction:column;
+  -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 28px);
+  mask-image:linear-gradient(180deg,transparent 0,#000 28px)}
+.log::-webkit-scrollbar{display:none}
+.log>:first-child{margin-top:auto}
+.ent{flex:none;font-family:var(--f-hand);font-weight:700;font-size:24px;line-height:1.3;margin:0 0 .45em;text-wrap:pretty}
+.ent:last-child{margin-bottom:0}
+.ent:not(:last-child){opacity:.5}
+.ent .who{display:block;font-family:var(--f-hand);font-weight:700;font-size:16px;opacity:.75}
+.ent.t{color:var(--chalk-red)}
+.ent.n{color:var(--chalk-yel);font-weight:400;font-size:21px}
+.ent.typing .tx::after{content:'';display:inline-block;width:.45em;height:1em;vertical-align:-.14em;
+  background:currentColor;opacity:.5;animation:caret .9s steps(1,end) infinite}
+@keyframes caret{50%{opacity:0}}
+.stamp{position:absolute;right:18px;top:40px;font-family:var(--f-display);font-size:44px;color:var(--chalk-red);
+  border:5px solid var(--chalk-red);border-radius:10px;padding:2px 14px;transform:rotate(-12deg) scale(2);opacity:0;pointer-events:none}
+.stamp.on{animation:stamp 1.6s ease-out forwards}
+@keyframes stamp{0%{opacity:0;transform:rotate(-12deg) scale(2.2)}12%{opacity:1;transform:rotate(-12deg) scale(1)}80%{opacity:1}100%{opacity:0;transform:rotate(-12deg) scale(1)}}
+@keyframes shake{0%,100%{transform:none}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.board.shake{animation:shake .35s}
+
+/* Desk */
+.desk{display:grid;grid-template-columns:1.1fr 1fr;gap:12px;align-items:start}
+.panel{background:var(--surface);border-radius:8px;box-shadow:var(--shadow);padding:14px;min-width:0}
+.panel h2{margin:0 0 8px;font-size:15px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px}
+.panel h2 small{font-weight:400;color:var(--muted);font-size:12.5px}
+.notebook{list-style:none;margin:0;padding:0;background:var(--paper);
+  border-left:2px solid var(--margin);border-radius:2px}
+.notebook li{display:flex;gap:10px;align-items:flex-start;min-height:44px;padding:10px 10px 9px 10px;cursor:pointer;position:relative;border-bottom:1px solid var(--line)}
+.notebook li .n{font-family:var(--f-hand);font-weight:700;color:var(--muted);width:1.2em;flex:none}
+.notebook li .tx{font-family:var(--f-hand);font-size:19px;line-height:1.3;min-width:0}
+.notebook li .pr{margin-left:auto;flex:none;font-size:11.5px;color:var(--muted);align-self:center;white-space:nowrap}
+.notebook li:hover{background:color-mix(in srgb,var(--red) 5%,transparent)}
+.notebook li.sel{background:color-mix(in srgb,var(--red) 12%,transparent)}
+.notebook li.sel .tx{text-decoration:underline wavy var(--red);text-underline-offset:5px;text-decoration-thickness:1.5px}
+.notebook li.sel::before{content:"";position:absolute;left:-2px;top:0;bottom:0;width:4px;background:var(--red)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.card{text-align:left;background:var(--paper);border:1.5px solid var(--line);border-radius:6px;padding:8px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.card b{font-size:13.5px;line-height:1.3}
+.card span{font-size:11.5px;color:var(--muted)}
+.card.sel{border-color:var(--red);box-shadow:0 0 0 2px color-mix(in srgb,var(--red) 30%,transparent)}
+.card.used{opacity:.55}
+.doc{margin-top:10px;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:12px;font-size:14px;min-height:60px}
+.doc .ph{color:var(--muted);font-size:13px}
+.doc h3{margin:0 0 6px;font-size:14px}
+.doc .meta{font-size:12px;color:var(--muted);margin-bottom:8px}
+.doc .hand{font-family:var(--f-hand);font-size:19px;line-height:1.35}
+.doc .hl{background:color-mix(in srgb,var(--red) 16%,transparent);border-radius:3px;padding:0 2px}
+.doc table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+.doc th,.doc td{border-bottom:1px solid var(--line);padding:4px 6px;text-align:left}
+.doc th{font-weight:700;color:var(--muted);font-size:12px}
+.chat{display:flex;flex-direction:column;gap:6px}
+.chat div{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;font-size:13.5px}
+.chat .nm{font-weight:700;font-size:12px;color:var(--muted);grid-column:1/-1}
+.chat .msg{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:4px 10px;justify-self:start}
+.chat .tm{font-size:11px;color:var(--muted);align-self:end}
+.scroll{overflow-x:auto}
+
+/* Mobile drawers (desktop keeps both panels on the desk) */
+.picks{display:none}
+.scrim{display:none}
+.drawer-x{display:none}
+.ev-pick{display:none}
+
+/* Actions */
+.actions{position:sticky;bottom:0;z-index:5;display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:8px;
+  background:var(--bg);padding-block:10px calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line)}
+.actions button{border:1.5px solid var(--ink);background:var(--surface);border-radius:8px;padding:11px 8px;font-weight:700;line-height:1.2}
+.actions button small{display:block;font-weight:400;font-size:11px;color:var(--muted)}
+.actions .primary{background:var(--red);border-color:var(--red);color:var(--red-ink)}
+.actions .primary small{color:inherit;opacity:.8}
+.actions button:disabled{opacity:.4;cursor:not-allowed}
+
+/* Screens */
+.screen{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:color-mix(in srgb,var(--bg) 82%,transparent);
+  backdrop-filter:blur(3px);padding-block:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-bottom,0px));
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));overflow-y:auto}
+.screen[hidden]{display:none!important}
+.sheet{background:var(--paper);max-width:520px;width:100%;border-radius:6px;box-shadow:var(--shadow);padding:22px 22px 20px 30px;
+  border-left:3px solid var(--margin);position:relative}
+.sheet small.k{font-size:12px;letter-spacing:.08em;color:var(--muted)}
+.sheet h2{font-family:var(--f-display);font-weight:400;font-size:30px;margin:2px 0 10px;line-height:1.15;text-wrap:balance}
+.sheet p{margin:0 0 10px}
+.sheet ul{margin:0 0 14px;padding-left:18px;display:grid;gap:4px}
+.sheet .go{width:100%;background:var(--red);color:var(--red-ink);border:0;border-radius:8px;padding:13px;font-weight:700;font-size:16px}
+.sheet .acts{display:flex;gap:8px}
+.sheet .acts .go{flex:1}
+.sheet .acts .list{flex:none;display:flex;align-items:center;justify-content:center;padding:13px 16px;border:1.5px solid var(--ink);border-radius:8px;color:var(--ink);background:transparent;font-weight:700;font-size:16px;text-decoration:none}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:12px 0 16px;text-align:center}
+.stats div{border:1px solid var(--line);border-radius:6px;padding:6px 4px;font-size:12px;color:var(--muted)}
+.stats b{display:block;font-size:20px;color:var(--ink);font-variant-numeric:tabular-nums}
+.grade{position:absolute;right:16px;top:14px;width:86px;height:86px;border-radius:50%;border:4px double var(--red);color:var(--red);
+  display:grid;place-items:center;text-align:center;font-family:var(--f-display);font-size:17px;line-height:1.1;transform:rotate(14deg)}
+.grade[hidden]{display:none!important}
+
+@media (max-width:720px){
+  .desk{grid-template-columns:1fr}
+  .scene{grid-template-columns:96px 1fr;gap:10px}
+  #kid{width:96px}
+  .ent{font-size:21px}
+  .brand h1,.clock b{font-size:22px}
+  .board{min-height:230px;border-width:8px}
+  .gauges{grid-template-columns:1fr}
+  /* 핑계 아래 두 버튼으로 진술/증거를 열고, 패널은 좌·우에서 미끄러져 들어온다 */
+  .picks{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .picks button{background:var(--surface);border:1.5px solid var(--ink);border-radius:8px;
+    padding:9px 11px;font-weight:700;line-height:1.25;text-align:left;min-width:0;display:flex;flex-direction:column;gap:1px}
+  .picks button small{font-weight:400;font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .picks button.on{border-color:var(--red);box-shadow:0 0 0 2px color-mix(in srgb,var(--red) 25%,transparent)}
+  .picks button.on small{color:var(--red)}
+  .desk{display:contents}
+  html,body{overflow-x:clip}
+  .app{min-height:100svh}
+  .board{flex:1 1 auto;display:flex;flex-direction:column}
+  .scene{margin-top:auto}
+  .panel{position:fixed;top:0;bottom:0;z-index:15;width:min(90vw,400px);border-radius:0;
+    padding:14px 14px calc(16px + env(safe-area-inset-bottom,0px));overflow-y:auto;overscroll-behavior:contain;
+    visibility:hidden;box-shadow:0 10px 30px rgba(0,0,0,.3);transition:transform .28s ease,visibility 0s linear .28s}
+  #pStatements{left:0;transform:translateX(-101%)}
+  #pEvidence{right:0;transform:translateX(101%)}
+  #pStatements.open,#pEvidence.open{transform:none;visibility:visible;transition:transform .28s ease,visibility 0s}
+  .drawer-x{display:block;position:sticky;top:0;z-index:2;margin:0 0 8px auto;
+    background:var(--surface);border:1.5px solid var(--line);border-radius:999px;padding:5px 13px;font-size:12.5px}
+  .ev-pick{display:block;position:sticky;bottom:0;z-index:2;width:100%;margin-top:10px;background:var(--red);color:var(--red-ink);
+    border:0;border-radius:8px;padding:12px;font-weight:700;font-size:15px;box-shadow:0 -6px 12px var(--paper)}
+  .ev-pick:disabled{opacity:.45;cursor:not-allowed}
+  .scrim{display:block;position:fixed;inset:0;z-index:12;width:100%;border:0;padding:0;
+    background:rgba(0,0,0,.42);-webkit-tap-highlight-color:transparent}
+  .scrim[hidden]{display:none!important}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.stamp.on{opacity:1}}
+</style>
+<style>
+.hub-back{display:block;margin-bottom:2px}
+.hub-back a{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;line-height:1;
+  color:var(--muted);text-decoration:none;padding:6px 11px;border:1px solid var(--line);
+  border-radius:999px;background:var(--surface)}
+.hub-back a:hover{color:var(--ink)}
+.hub-back a:focus-visible{outline:3px solid var(--heat,var(--ink));outline-offset:2px}
+</style>
+</head>
+<body>
+
+<div class="app">
+<nav class="hub-back"><a href="../index.html">← 게임 목록</a></nav>
+  <header class="hud">
+    <div class="brand"><small>4학년 3반 · 교무실 면담</small><h1>강아지가 먹은 <em>숙제</em></h1></div>
+    <div class="clock" id="clockBox"><b id="clock">12:40</b><small>13:00 5교시 종</small></div>
+    <div class="gauges">
+      <div class="g g-conf"><label for="gConf">실토</label><div class="bar"><i id="gConf"></i></div><b id="nConf">0</b><small>100이 되면 시연이가 진실을 털어놓는다</small></div>
+      <div class="g g-upset" id="upsetBox"><label for="gUpset">억울함</label><div class="bar"><i id="gUpset"></i></div><b id="nUpset">0</b><small>100이 되면 울음이 터지고 면담 끝</small></div>
+    </div>
+  </header>
+
+  <section class="board" id="board" aria-live="polite">
+    <div class="round"><span id="roundTag">핑계 1/4</span><span id="roundName">강아지가 먹었어요</span></div>
+    <div class="scene">
+      <svg id="kid" viewBox="0 0 160 190" aria-label="오시연">
+        <path d="M18 190c4-38 28-56 62-56s58 18 62 56z" fill="#2c3d66"/>
+        <path d="M62 136l18 22 18-22z" fill="#f4f6fb"/>
+        <path d="M80 150l-15-7v15zM80 150l15-7v15z" fill="#b8322b"/><circle cx="80" cy="150" r="4.5" fill="#b8322b"/>
+        <path d="M80 24c-33 0-52 23-52 56 0 26 5 48 12 68h20c-8-22-11-43-9-60h58c2 17-1 38-9 60h20c7-20 12-42 12-68 0-33-19-56-52-56z" fill="#2a2120"/>
+        <circle cx="37" cy="116" r="5" fill="#b8322b"/><circle cx="123" cy="116" r="5" fill="#b8322b"/>
+        <rect x="68" y="118" width="24" height="22" fill="#eec4a2"/>
+        <circle cx="34" cy="82" r="10" fill="#eec4a2"/><circle cx="126" cy="82" r="10" fill="#eec4a2"/>
+        <circle cx="80" cy="78" r="47" fill="#f4d3b4"/>
+        <path d="M33 72c-2-30 18-48 47-48 30 0 49 18 47 46-5-10-12-17-22-20-8 8-24 12-44 11-11-1-20-4-26-10-1 6-2 11-2 21z" fill="#2a2120"/>
+        <g data-f="normal sweat pout"><path d="M54 66l16 2M90 68l16-2" stroke="#2a2120" stroke-width="3.5" stroke-linecap="round"/></g>
+        <g data-f="smug"><path d="M53 64l17 5M90 69l17-5" stroke="#2a2120" stroke-width="3.5" stroke-linecap="round"/></g>
+        <g data-f="shock"><path d="M54 58l15-4M91 54l15 4" stroke="#2a2120" stroke-width="3.5" stroke-linecap="round"/></g>
+        <g data-f="cry"><path d="M54 62l16 6M90 68l16-6" stroke="#2a2120" stroke-width="3.5" stroke-linecap="round"/></g>
+        <g data-f="normal pout"><ellipse cx="62" cy="80" rx="5" ry="6.5" fill="#2a2120"/><ellipse cx="98" cy="80" rx="5" ry="6.5" fill="#2a2120"/><circle cx="64" cy="78" r="1.6" fill="#fff"/><circle cx="100" cy="78" r="1.6" fill="#fff"/></g>
+        <g data-f="sweat"><ellipse cx="57" cy="80" rx="5" ry="6.5" fill="#2a2120"/><ellipse cx="93" cy="80" rx="5" ry="6.5" fill="#2a2120"/></g>
+        <g data-f="smug"><path d="M54 81q8-5 16 0M90 81q8-5 16 0" stroke="#2a2120" stroke-width="3.5" fill="none" stroke-linecap="round"/></g>
+        <g data-f="shock"><circle cx="62" cy="79" r="9" fill="#fff" stroke="#2a2120" stroke-width="2.5"/><circle cx="98" cy="79" r="9" fill="#fff" stroke="#2a2120" stroke-width="2.5"/><circle cx="62" cy="79" r="2.8" fill="#2a2120"/><circle cx="98" cy="79" r="2.8" fill="#2a2120"/></g>
+        <g data-f="cry"><path d="M54 79q8 6 16 0M90 79q8 6 16 0" stroke="#2a2120" stroke-width="3.5" fill="none" stroke-linecap="round"/><path d="M58 84q-3 12 0 22M102 84q3 12 0 22" stroke="#7cc4ef" stroke-width="5" fill="none" stroke-linecap="round"/></g>
+        <g data-f="normal"><path d="M70 101q10 8 20 0" stroke="#7a3b2e" stroke-width="3.5" fill="none" stroke-linecap="round"/></g>
+        <g data-f="smug"><path d="M68 100q14 6 24-4" stroke="#7a3b2e" stroke-width="3.5" fill="none" stroke-linecap="round"/></g>
+        <g data-f="sweat"><path d="M68 102q4-3 8 0t8 0 8 0" stroke="#7a3b2e" stroke-width="3.5" fill="none" stroke-linecap="round"/></g>
+        <g data-f="shock"><ellipse cx="80" cy="104" rx="7" ry="9" fill="#7a3b2e"/></g>
+        <g data-f="cry"><path d="M66 106q14-14 28 0z" fill="#7a3b2e"/></g>
+        <g data-f="pout"><path d="M72 104q8-6 16 0" stroke="#7a3b2e" stroke-width="3.5" fill="none" stroke-linecap="round"/></g>
+        <g data-f="cry pout smug"><ellipse cx="50" cy="94" rx="7" ry="4" fill="#f29a8c" opacity=".6"/><ellipse cx="110" cy="94" rx="7" ry="4" fill="#f29a8c" opacity=".6"/></g>
+        <g data-f="sweat shock"><path d="M124 50c-6 9-8 13-8 17a8 8 0 0016 0c0-4-2-8-8-17z" fill="#9fd6f5"/></g>
+      </svg>
+      <div class="talk" id="talk">
+        <div class="log" id="log"></div>
+      </div>
+    </div>
+    <div class="stamp" id="stamp">거짓말!</div>
+  </section>
+
+  <nav class="picks" aria-label="면담 자료">
+    <button id="btnStList" type="button" aria-controls="pStatements" aria-expanded="false">진술 보기<small id="pickStText">문장 고르기</small></button>
+    <button id="btnEvList" type="button" aria-controls="pEvidence" aria-expanded="false">증거 파일<small id="pickEvText">카드 고르기</small></button>
+  </nav>
+
+  <section class="desk">
+    <div class="panel" id="pStatements">
+      <button class="drawer-x" type="button" data-close>닫기 ✕</button>
+      <h2>시연이의 진술 <small>수상한 문장을 고르세요</small></h2>
+      <ol class="notebook" id="stList"></ol>
+    </div>
+    <div class="panel" id="pEvidence">
+      <h2>증거 파일 <small>카드를 눌러 내용을 확인</small></h2>
+      <div class="cards" id="cards"></div>
+      <div class="doc" id="doc"><p class="ph">증거 카드를 고르면 여기에 내용이 펼쳐집니다.</p></div>
+      <button class="ev-pick" id="btnEvPick" type="button" disabled>카드를 먼저 고르세요</button>
+    </div>
+  </section>
+
+  <button class="scrim" id="scrim" type="button" hidden aria-label="닫기"></button>
+
+  <nav class="actions">
+    <button id="btnPress" type="button">추궁하기<small>좀 더 캐묻기 · 1분</small></button>
+    <button id="btnPresent" class="primary" type="button">증거 제시<small>진술 + 증거 · 1분</small></button>
+    <button id="btnCalm" type="button">다독이기<small>억울함 −20 · 1분 · <span id="nCalm">2</span>회</small></button>
+  </nav>
+</div>
+
+<div class="screen" id="screen"></div>
+
+<script>
+(function(){
+const TOTAL = 20;
+const CALM_MAX = 2;  /* 달래기는 한 판에 두 번까지, 연달아 쓸 수 없다 */
+const EV = {
+  intro:{name:'자기소개 카드', sub:'3월 2일 작성', html:`<h3>자기소개 카드</h3><div class="meta">4학년 3반 17번 · 3월 2일 작성 · 교실 뒤 게시판</div>
+    <div class="hand">이름: 오시연<br>좋아하는 것: 돈가스, 롤, 잠<br>장래희망: 프로게이머<br>올해 소원: <span class="hl">강아지 키우기 (엄마가 절대 안 된대요 ㅠㅠ)</span></div>`},
+  chat:{name:'반 단톡방 캡처', sub:'어제 20:11~20:15', html:`<h3>2-3 단톡방 (반장 제보)</h3><div class="meta">10월 26일(월) 저녁</div>
+    <div class="chat">
+      <div><span class="nm">김민서</span><span class="msg">독후감 몇 장 써야 됨?</span><span class="tm">20:11</span></div>
+      <div><span class="nm">오시연 (프로필: 본인 셀카)</span><span class="msg hl">PC방 3번 자리 ㄱㄱ 오늘 랭겜 각 ㅋㅋ</span><span class="tm">20:14</span></div>
+      <div><span class="nm">박도윤</span><span class="msg">독후감은?</span><span class="tm">20:15</span></div>
+      <div><span class="nm">오시연</span><span class="msg">그게 뭔데 ㅋㅋㅋ</span><span class="tm">20:15</span></div>
+    </div>`},
+  lunch:{name:'급식실 리필 명부', sub:'어제 점심', html:`<h3>급식실 추가 배식 명부</h3><div class="meta">10월 26일(월) · 메뉴: 돈가스, 미역국, 깍두기, 요구르트</div>
+    <div class="scroll"><table><thead><tr><th>반</th><th>이름</th><th>품목</th><th>횟수</th></tr></thead><tbody>
+      <tr><td>2-1</td><td>이서준</td><td>밥</td><td>1</td></tr>
+      <tr><td>2-3</td><td>김하은</td><td>미역국</td><td>1</td></tr>
+      <tr class="hl"><td>2-3</td><td>오시연</td><td>돈가스</td><td>3</td></tr>
+      <tr><td>2-5</td><td>정우진</td><td>요구르트</td><td>1</td></tr>
+    </tbody></table></div>`},
+  nurse:{name:'보건실 방문 기록', sub:'어제 하루', html:`<h3>보건실 방문 기록</h3><div class="meta">10월 26일(월) · 보건교사 확인</div>
+    <div class="scroll"><table><thead><tr><th>반</th><th>방문</th><th>비고</th></tr></thead><tbody>
+      <tr><td>2-1</td><td>2명</td><td>두통, 찰과상</td></tr><tr><td>2-2</td><td>1명</td><td>코피</td></tr>
+      <tr class="hl"><td>2-3</td><td>0명</td><td>-</td></tr><tr><td>2-4</td><td>1명</td><td>복통</td></tr>
+    </tbody></table></div>`},
+  notice:{name:'독후감 과제 안내문', sub:'10월 13일 배부', html:`<h3>4학년 국어 독후감 과제</h3><div class="meta">10월 13일 배부 · 가정통신문 겸용</div>
+    <p>지정 도서: <span class="hl">박완서, 「자전거 도둑」</span><br>분량: A4 2장 이상 (손글씨 또는 출력)<br>제출: 10월 27일(화) 아침 조회 때 담임에게</p>`},
+  library:{name:'도서관 대출 기록', sub:'오시연 이력', html:`<h3>학교 도서관 대출 이력</h3><div class="meta">4학년 3반 오시연 · 2학기</div>
+    <div class="scroll"><table><thead><tr><th>도서</th><th>대출</th><th>상태</th></tr></thead><tbody>
+      <tr class="hl"><td>만화 삼국지 3</td><td>10/14</td><td>연체 6일</td></tr>
+    </tbody></table></div><p class="meta" style="margin:6px 0 0">이번 학기 대출은 이 한 권뿐입니다.</p>`},
+  mom:{name:'어머니 카톡', sub:'어제 21:40', html:`<h3>학부모 메시지</h3><div class="meta">10월 26일(월) 21:40 · 시연 어머니</div>
+    <div class="chat"><div><span class="nm">시연 어머니</span><span class="msg">선생님~ 시연이가 오늘 숙제 다 했다고 하네요^^ 요즘 철든 것 같아요 ㅎㅎ</span><span class="tm">21:40</span></div></div>`}
+};
+const EV_ORDER = ['intro','chat','lunch','nurse','notice','library','mom'];
+
+// line: [who, text, face]  who: s=student, t=teacher, n=narration
+const R = [
+  {name:'강아지가 먹었어요',
+   intro:[['t','시연아, 독후감 왜 안 냈니?'],['s','아 선생님, 그게요… 진짜 억울한 일이 있었어요.','sweat'],['s','들어보세요.','normal']],
+   st:[
+    {tx:'어젯밤에 독후감 다 썼어요. 두 장 꽉 채워서요.', press:[['t','두 장이나?'],['s','네. 글씨도 엄청 예쁘게 썼어요.','smug']]},
+    {tx:'다 쓰고 책상 위에 올려두고 잤거든요.', press:[['t','가방에 바로 안 넣고?'],['s','아침에 넣으려고 했죠. 그게 실수였어요…','sweat']]},
+    {tx:'아침에 보니까 우리 집 강아지 초코가 공책을 다 씹어놨어요.', press:[['t','초코? 무슨 종인데?'],['s','골든 리트리버요. 엄청 커요. 종이를 진짜 좋아해요.','smug'],['n','(우리 집 강아지라… 시연이가 강아지를 키웠던가?)']]},
+    {tx:'남은 조각은 엄마가 다 버렸어요. 그래서 증거가 없어요.', press:[['t','어머니가 버리셨구나.'],['s','네! 엄마한테 물어보셔도… 아, 바쁘시니까 안 물어보셔도 돼요.','sweat']]}
+   ],
+   ok:{st:2, ev:'intro', lines:[['t','시연아, 3월에 쓴 자기소개 카드 기억나? 교실 뒤에 아직 붙어 있어.'],['t','"올해 소원: 강아지 키우기. 엄마가 절대 안 된대요 ㅠㅠ"'],['s','헉.','shock'],['s','아… 그게… 우리 집 강아지가 아니라요…','sweat']]},
+   near:{'3:mom':[['t','어머니는 어제 숙제 다 했다고만 하셨는데. 강아지 얘기는 없으시던데?'],['s','엄마가 놀라실까 봐 제가 말 안 했어요!','sweat'],['n','(틀린 말은 아닌데… 결정타는 아니다.)']]}},
+  {name:'사촌 오빠네 강아지였어요',
+   intro:[['s','사실 어제 사촌 오빠네 집에서 숙제했거든요. 그 집 강아지요!','sweat'],['s','이번엔 진짜예요.','normal']],
+   st:[
+    {tx:'학원 끝나고 바로 사촌 오빠네 집에 갔어요.', press:[['t','학원은 몇 시에 끝나?'],['s','7시요. 끝나자마자 달려갔어요.','normal']]},
+    {tx:'저녁 7시부터 10시까지 쉬지도 않고 독후감만 썼어요.', press:[['t','세 시간 동안 한 번도 안 쉬고?'],['s','네. 폰도 꺼놨어요. 집중하려고요.','smug'],['n','(폰을 꺼놨다… 어제 저녁에 반 단톡방이 꽤 시끄러웠는데.)']]},
+    {tx:'오빠네 강아지가 가방을 뒤져서 공책을 먹었어요.', press:[['t','그 강아지는 이름이 뭔데?'],['s','어… 초코… 2호요.','sweat']]}
+   ],
+   ok:{st:1, ev:'chat', lines:[['t','폰을 꺼놨다고? 어제 저녁 8시 14분 반 단톡방이야.'],['t','"PC방 3번 자리 ㄱㄱ 오늘 랭겜 각 ㅋㅋ" 이거 누가 보냈지?'],['s','그, 그건 오빠가 제 폰으로 보낸 거예요!','shock'],['t','"독후감은?" 물으니까 "그게 뭔데 ㅋㅋㅋ"라고 답했더라.'],['s','……','sweat']]},
+   near:{}},
+  {name:'아파서 못 했어요',
+   intro:[['s','솔직히 말할게요. 어제 너무 아파서 아무것도 못 했어요.','pout'],['s','PC방도 아파서 잠깐 누워 있으러 간 거예요.','sweat']],
+   st:[
+    {tx:'아침부터 배가 너무 아팠어요. 하루 종일요.', press:[['t','보건실은 갔어?'],['s','참았어요. 참으면 낫는다고 아빠가 그랬어요.','smug']]},
+    {tx:'점심도 거의 못 먹었어요. 한 숟가락 먹고 내려놨어요.', press:[['t','어제 메뉴가 뭐였더라?'],['s','돈가스요. 제일 좋아하는 건데도 못 먹었어요. 그만큼 아팠다고요.','pout'],['n','(어제 돈가스 날 급식실이 꽤 붐볐지…)']]},
+    {tx:'집에 가자마자 쓰러져서 잤어요.', press:[['t','그럼 PC방은 언제 간 건데?'],['s','쓰러졌다가… 일어나서… 다시 쓰러지기 전에요.','sweat']]}
+   ],
+   ok:{st:1, ev:'lunch', lines:[['t','어제 급식실 추가 배식 명부야. "4학년 3반 오시연, 돈가스 3회."'],['s','그, 그건 기력 보충이에요!','shock'],['t','한 숟가락 먹고 내려놨다며.'],['s','…내려놨다가 다시 들었어요.','sweat']]},
+   near:{'0:nurse':[['t','어제 보건실에 우리 반은 아무도 안 갔다던데.'],['s','그러니까요. 보건실도 못 갈 만큼 참았다니까요!','smug'],['n','(아프지 않았다는 증거로는 약하다. 다른 걸 찾자.)']]}},
+  {name:'책은 진짜 읽었어요',
+   intro:[['s','알았어요, 숙제 안 한 건 맞아요.','pout'],['s','근데 책은 진짜 다 읽었어요! 그럼 반은 해온 거나 마찬가지잖아요.','cry']],
+   st:[
+    {tx:'지난주에 도서관에서 빌려서 이틀 만에 다 읽었어요.', press:[['t','재밌었어?'],['s','완전요. 제 인생 책이에요.','smug']]},
+    {tx:'어린 왕자가 장미랑 헤어지는 장면에서 진짜 울었어요.', press:[['t','그 책 지은이가 누구더라?'],['s','생… 생텍쥐… 페리요. 맞죠?','sweat'],['n','(작가는 맞혔다. 그런데 이번 과제 책이 그거였나?)']]},
+    {tx:'그러니까 내일까지 쓰면 반만 감점해 주시면 안 돼요?', press:[['t','협상은 진실부터야.'],['s','진실이에요. 진짜로요.','pout']]}
+   ],
+   ok:{st:1, ev:'notice', lines:[['t','시연아, 이번 독후감 지정 도서가 뭐였지? 안내문에 적혀 있어.'],['t','박완서, 「자전거 도둑」.'],['s','……어린 왕자 아니었어요?','shock'],['t','아니었어.'],['s','죄송해요… 사실 어제 그냥 놀았어요. 책도 안 읽었어요.','cry'],['t','말해줘서 고마워. 내일 아침까지 해올 수 있지?'],['s','네. 자전거 도둑이요. 이번엔 진짜로요.','normal']]},
+   near:{'0:library':[['t','도서관 기록엔 이번 학기에 「만화 삼국지 3」 한 권만 빌렸던데. 그것도 6일 연체.'],['s','집에 있는 책으로 읽었어요! 도서관은 비유적으로 말한 거예요.','sweat'],['n','(빠져나갔다. 책 내용 쪽을 찔러 봐야겠다.)']]}}
+];
+const WRONG = [
+  [['s','그게 지금 이거랑 무슨 상관인데요?','pout']],
+  [['s','선생님 지금 저 의심하시는 거죠? 너무해요.','cry']],
+  [['s','…네? 그거 아무 관계 없는데요.','smug'],['n','(헛짚었다. 시연이 표정이 점점 굳어 간다.)']],
+  [['s','선생님은 제 말을 안 믿으시는구나…','cry']]
+];
+const REPRESS = [['t','한 번만 더 말해 볼래?'],['s','아까 말했잖아요. 똑같은 거 자꾸 물어보시면 기분 나빠요.','pout']];
+
+const $ = id => document.getElementById(id);
+let S, Q = [], Qdone = null, timer = null;
+/* CHAR_MS: 글자 하나가 더 찍히는 간격. LOG_MAX: 화면에 남겨 두는 대사 수 */
+const CHAR_MS = 55, LOG_MAX = 30;
+/* 모션을 줄인 설정에서도 글자는 한 자씩 찍고, 스크롤만 단번에 옮긴다 */
+const noAnim = window.matchMedia('(prefers-reduced-motion:reduce)');
+let typer = null, cur = null, scrollAt = -1;
+function clearTimer(){
+  if(timer){ clearTimeout(timer); timer = null; }
+  if(typer){ clearInterval(typer); typer = null; }
+}
+
+function fresh(){ return {round:0, conf:0, upset:0, maxUpset:0, time:TOTAL, sel:-1, ev:null, pressed:{}, near:{}, mistakes:0, calms:0, lastCalm:false, busy:false, over:false, started:false, face:'normal'}; }
+
+function setFace(f){ S.face=f; document.querySelectorAll('#kid [data-f]').forEach(g=>{ g.style.display = g.dataset.f.split(' ').includes(f)?'':'none'; }); }
+function clockText(){ const m = 40 + (TOTAL - S.time); return (m>=60? '13:'+String(m-60).padStart(2,'0') : '12:'+String(m).padStart(2,'0')); }
+
+function hud(){
+  $('gConf').style.width = S.conf+'%'; $('nConf').textContent = S.conf;
+  $('gUpset').style.width = S.upset+'%'; $('nUpset').textContent = S.upset;
+  $('clock').textContent = clockText();
+  $('clockBox').classList.toggle('low', S.time<=5);
+  $('roundTag').textContent = '핑계 '+(S.round+1)+'/4';
+  $('roundName').textContent = '"'+R[S.round].name+'"';
+  const idle = !S.busy && !S.over && S.started;
+  $('btnPress').disabled = !idle || S.sel<0;
+  $('btnPresent').disabled = !idle || S.sel<0 || !S.ev;
+  $('btnCalm').disabled = !idle || S.calms>=CALM_MAX || S.lastCalm;
+  $('nCalm').textContent = CALM_MAX - S.calms;
+  $('board').classList.toggle('adv', S.busy);
+  renderPicks();
+}
+/* Mobile: the desk panels become drawers — 진술 slides in from the left, 증거 파일 from the right */
+const MQ = window.matchMedia('(max-width:720px)');
+const DRAWER = {st:'pStatements', ev:'pEvidence'};
+function renderPicks(){
+  const st = S.sel<0 ? null : R[S.round].st[S.sel];
+  $('pickStText').textContent = st ? st.tx : '문장 고르기';
+  $('btnStList').title = st ? st.tx : '';
+  $('pickEvText').textContent = S.ev ? EV[S.ev].name : '카드 고르기';
+  $('btnStList').classList.toggle('on', S.sel>=0);
+  $('btnEvList').classList.toggle('on', !!S.ev);
+}
+function closeDrawers(){
+  $('pStatements').classList.remove('open'); $('pEvidence').classList.remove('open');
+  $('scrim').hidden = true;
+  $('btnStList').setAttribute('aria-expanded','false');
+  $('btnEvList').setAttribute('aria-expanded','false');
+}
+function openDrawer(w){
+  closeDrawers();
+  $(DRAWER[w]).classList.add('open'); $('scrim').hidden = false;
+  $(w==='st'?'btnStList':'btnEvList').setAttribute('aria-expanded','true');
+}
+function toggleDrawer(w){ if($(DRAWER[w]).classList.contains('open')) closeDrawers(); else openDrawer(w); }
+function renderStatements(){
+  const r = R[S.round];
+  $('stList').innerHTML = r.st.map((s,i)=>`<li tabindex="0" data-i="${i}" class="${S.sel===i?'sel':''}"><span class="n">${i+1}</span><span class="tx">${s.tx}</span>${S.pressed[S.round+':'+i]?'<span class="pr">추궁함</span>':''}</li>`).join('');
+}
+function renderCards(){
+  $('cards').innerHTML = EV_ORDER.map(k=>`<button type="button" class="card ${S.ev===k?'sel':''}" data-k="${k}"><b>${EV[k].name}</b><span>${EV[k].sub}</span></button>`).join('');
+  $('doc').innerHTML = S.ev ? EV[S.ev].html : '<p class="ph">증거 카드를 고르면 여기에 내용이 펼쳐집니다.</p>';
+  $('btnEvPick').disabled = !S.ev;
+  $('btnEvPick').textContent = S.ev ? '「'+EV[S.ev].name+'」 선택' : '카드를 먼저 고르세요';
+}
+function speaker(w){ return w==='s'?'시연': w==='t'?'나 (담임)':''; }
+function typing(){ return !!cur; }
+/* 늘어난 만큼만 부드럽게 내려가면, 다 찍힌 대사가 위로 밀려 올라간다 */
+function scrollLog(){
+  const g = $('log'), top = Math.max(0, g.scrollHeight - g.clientHeight);
+  if(top === scrollAt) return;
+  scrollAt = top;
+  g.scrollTo({top, behavior: noAnim.matches?'auto':'smooth'});
+}
+function resetLog(){ $('log').textContent = ''; cur = null; scrollAt = -1; }
+/* 문장을 끝까지 드러낸다 — 저절로 다 찍혔거나, 화면을 눌러 건너뛰었을 때 */
+function endLine(){
+  if(typer){ clearInterval(typer); typer = null; }
+  if(!cur) return;
+  cur.tx.textContent = cur.t;
+  cur.tx.removeAttribute('aria-hidden');
+  cur.el.classList.remove('typing');
+  cur = null;
+  scrollLog();
+}
+function show(w,t,f){
+  if(f) setFace(f);
+  endLine();
+  const g = $('log'), prev = g.lastElementChild, txt = String(t);
+  if(prev && prev.dataset.w===w && prev.dataset.t===txt) return;  /* 막 한 말은 다시 쌓지 않는다 */
+  const el = document.createElement('p');
+  el.className = 'ent '+w+' typing'; el.dataset.w = w; el.dataset.t = txt;
+  const who = speaker(w);
+  if(who){ const b = document.createElement('b'); b.className = 'who'; b.textContent = who; el.appendChild(b); }
+  const tx = document.createElement('span');
+  tx.className = 'tx';
+  tx.setAttribute('aria-hidden','true');  /* 한 글자씩 바뀔 때마다 읽어 주지 않도록 */
+  el.appendChild(tx); g.appendChild(el);
+  while(g.children.length > LOG_MAX) g.removeChild(g.firstElementChild);
+  cur = {el, tx, t:txt, i:0};
+  scrollLog();
+  typer = setInterval(()=>{
+    if(!cur){ clearInterval(typer); typer = null; return; }
+    cur.tx.textContent = cur.t.slice(0, ++cur.i);
+    if(cur.i >= cur.t.length) endLine(); else scrollLog();
+  }, CHAR_MS);
+}
+function say(lines, done){ Q = lines.slice(); Qdone = done||null; S.busy = true; step(); }
+function step(){
+  clearTimer();
+  if(!Q.length){ S.busy=false; const d=Qdone; Qdone=null; hud(); if(d) d(); return; }
+  const [w,t,f] = Q.shift(); show(w,t,f);
+  const n = String(t).length;
+  const read = Math.min(6000, Math.max(1600, 1200 + n*85));
+  timer = setTimeout(step, Math.max(read, n*CHAR_MS + 1200));
+  hud();
+}
+/* 한 번 누르면 문장을 끝까지, 다시 누르면 다음 대사로 */
+function advance(){
+  if(typing()){ clearTimer(); endLine(); if(S.busy) timer = setTimeout(step, 1200); return; }
+  if(S.busy) step();
+}
+function bump(dc, du){
+  S.conf = Math.max(0, Math.min(100, S.conf+dc));
+  S.upset = Math.max(0, Math.min(100, S.upset+du));
+  S.maxUpset = Math.max(S.maxUpset, S.upset);
+  if(du>0){ const b=$('upsetBox'); b.classList.remove('hot'); void b.offsetWidth; b.classList.add('hot'); }
+  hud();
+}
+function check(){
+  if(S.over) return;
+  if(S.upset>=100) return say([['s','으아앙! 선생님 미워요!!','cry'],['n','시연이가 교무실이 떠나가라 울기 시작했다. 옆자리 선생님들이 일제히 돌아본다.'],['n','문이 열리고 교감 선생님이 들어온다. "무슨 일이에요?"']], ()=>end('upset'));
+  if(S.time<=0) return say([['n','딩동댕동. 5교시 시작종이 울렸다.'],['s','앗, 다음 시간 체육이에요! 안녕히 계세요!','smug'],['n','시연이는 바람처럼 사라졌다. 진실도 함께.']], ()=>end('bell'));
+  idleLine();
+}
+function idleLine(){
+  const f = S.upset>=70?'cry': S.upset>=40?'pout':'normal';
+  show('n', S.upset>=70 ? '(시연이 눈가가 촉촉하다. 한 번만 더 헛짚으면 터질 것 같다.)' : '(진술 중에 증거와 어긋나는 문장이 있다. 찾아서 증거를 들이밀자.)', f);
+}
+function press(){
+  if(S.busy||S.sel<0) return;
+  const key = S.round+':'+S.sel; S.time--; S.lastCalm = false;
+  if(S.pressed[key]){ bump(0,12); say(REPRESS, check); }
+  else { S.pressed[key]=true; bump(3,5); renderStatements(); say(R[S.round].st[S.sel].press, check); }
+}
+function calm(){
+  if(S.busy||S.calms>=CALM_MAX||S.lastCalm) return; S.calms++; S.lastCalm = true; S.time--;
+  if(S.upset<10){ say([['t','괜찮아, 선생님 화난 거 아니야.'],['s','저 멀쩡한데요? 그럼 이제 가도 돼요?','smug']], check); return; }
+  bump(0,-20);
+  say([['t','괜찮아. 혼내려는 거 아니야. 있었던 일만 듣고 싶어.'],['s','…(훌쩍) 네.','pout']], check);
+}
+function stamp(){ const s=$('stamp'); s.classList.remove('on'); void s.offsetWidth; s.classList.add('on'); const b=$('board'); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); }
+function present(){
+  if(S.busy||S.sel<0||!S.ev) return;
+  const r = R[S.round], si = S.sel, ek = S.ev; S.time--; S.lastCalm = false;
+  const lead = ['t','이걸 한번 볼래? '+EV[ek].name+'이야.'];
+  if(r.ok.st===si && r.ok.ev===ek){
+    stamp(); bump(S.round===3?100:22, -8);
+    say(r.ok.lines, ()=>{
+      if(S.round===3){ S.conf=100; hud(); end('win'); return; }
+      S.round++; S.sel=-1; S.ev=null; renderStatements(); renderCards(); hud();
+      say(R[S.round].intro, check);
+    });
+    return;
+  }
+  const nk = si+':'+ek;
+  if(r.near[nk]){
+    const first = !S.near[S.round+':'+nk]; S.near[S.round+':'+nk]=true;
+    bump(first?5:0, first?0:8); say([lead, ...r.near[nk]], check); return;
+  }
+  S.mistakes++;
+  if(ek==='mom'){ bump(-5,14); say([lead,['s','거봐요! 엄마도 제가 다 했대잖아요!','smug'],['n','(오히려 시연이 편을 들어 준 꼴이 됐다.)']], check); return; }
+  bump(0,22);
+  say([lead, ...WRONG[(S.mistakes-1)%WRONG.length]], check);
+}
+
+function grade(){
+  if(S.mistakes===0 && S.maxUpset<50) return '참\n잘했어요';
+  if(S.mistakes<=2 && S.maxUpset<80) return '잘했어요';
+  return '노력\n하세요';
+}
+function end(kind){
+  clearTimer(); closeDrawers(); S.over = true; hud();
+  const used = TOTAL - S.time;
+  const T = {
+    win:{k:'면담 종료 · '+clockText(), h:'진실을 받아냈다', p:'강아지도, 사촌 오빠도, 배탈도 없었다. 시연이는 내일 아침까지 「자전거 도둑」 독후감을 내기로 약속했다.'},
+    upset:{k:'면담 중단 · '+clockText(), h:'시연이가 울어 버렸다', p:'너무 몰아붙였다. 교감 선생님이 시연이를 데리고 나갔고, 오후에 학부모 전화가 올 예정이다. 다독이기로 억울함을 관리해 보자.'},
+    bell:{k:'13:00 · 5교시 종', h:'점심시간이 끝났다', p:'핑계를 다 깨기 전에 종이 울렸다. 확실한 문장에만 시간을 쓰고, 이미 들은 말은 다시 묻지 말자.'}
+  }[kind];
+  const g = kind==='win' ? grade() : '';
+  $('screen').innerHTML = `<div class="sheet" role="dialog" aria-labelledby="endH">
+    <div class="grade" ${g?'':'hidden'}>${g.replace('\n','<br>')}</div>
+    <small class="k">${T.k}</small><h2 id="endH">${T.h}</h2><p>${T.p}</p>
+    <div class="stats"><div><b>${used}분</b>사용한 시간</div><div><b>${S.mistakes}번</b>헛짚은 증거</div><div><b>${S.maxUpset}</b>최고 억울함</div></div>
+    <div class="acts"><button class="go" id="again" type="button">다시 면담하기</button><a class="list" href="../index.html">게임 목록</a></div></div>`;
+  $('screen').hidden = false;
+  $('again').onclick = start;
+  setFace(kind==='win'?'normal':kind==='upset'?'cry':'smug');
+}
+function intro(){
+  $('screen').innerHTML = `<div class="sheet" role="dialog" aria-labelledby="inH">
+    <small class="k">10월 27일(화) 12:40 · 교무실</small>
+    <h2 id="inH">독후감, 시연이만 안 냈다</h2>
+    <p>오늘 아침 마감인 국어 독후감을 4학년 3반에서 오시연만 내지 않았다. 점심시간 20분 동안 불러다 이유를 물어보자. 시연이는 핑계를 네 번 바꿀 것이다.</p>
+    <ul>
+      <li>진술 중 증거와 어긋나는 <b>한 문장</b>을 고르고, 맞는 증거를 <b>제시</b>하면 핑계가 무너진다.</li>
+      <li><b>추궁하기</b>로 힌트를 얻을 수 있지만 같은 말을 또 물으면 시연이가 짜증을 낸다.</li>
+      <li>엉뚱한 증거를 들이밀면 <b>억울함</b>이 오른다. 100이 되면 울음이 터진다. <b>다독이기</b>로 달래자. 단, 연달아 쓸 수 없고 한 판에 두 번까지만.</li>
+      <li>모든 행동은 1분. 13:00 종이 울리면 시연이는 체육복 들고 도망간다.</li>
+      <li>대화는 한 글자씩 찍힌다. 칠판을 누르면 문장을 한 번에, 한 번 더 누르면 다음 대사로.</li>
+    </ul>
+    <button class="go" id="begin" type="button">면담 시작</button></div>`;
+  $('screen').hidden = false;
+  $('begin').onclick = ()=>{ $('screen').hidden = true; S.started = true; say(R[0].intro, check); };
+}
+function start(){ clearTimer(); closeDrawers();
+  S = fresh(); Q=[]; Qdone=null; resetLog(); setFace('normal'); $('stamp').classList.remove('on');
+  renderStatements(); renderCards(); show('n','(교무실 문이 열리고 시연이가 쭈뼛쭈뼛 들어온다.)','sweat');
+  hud(); intro();
+}
+
+$('stList').addEventListener('click', e=>{ const li=e.target.closest('li'); if(!li||S.over) return; S.sel = +li.dataset.i; renderStatements(); hud(); if(MQ.matches) closeDrawers(); });
+$('stList').addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); e.target.closest('li')?.click(); } });
+$('cards').addEventListener('click', e=>{ const c=e.target.closest('.card'); if(!c) return; S.ev = S.ev===c.dataset.k? null : c.dataset.k; renderCards(); hud(); });
+$('board').addEventListener('click', advance);
+$('btnStList').onclick = ()=> toggleDrawer('st');
+$('btnEvList').onclick = ()=> toggleDrawer('ev');
+$('btnEvPick').onclick = ()=>{ if(S.ev) closeDrawers(); };
+$('scrim').onclick = closeDrawers;
+document.querySelectorAll('[data-close]').forEach(b=>{ b.onclick = closeDrawers; });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeDrawers(); });
+MQ.addEventListener('change', closeDrawers);
+document.addEventListener('keydown', e=>{ if((e.key==='Enter'||e.key===' ') && (S.busy||typing()) && !e.target.closest('button,li')){ e.preventDefault(); advance(); } });
+$('btnPress').onclick = press; $('btnPresent').onclick = present; $('btnCalm').onclick = calm;
+
+window.claude?.hot?.snapshot?.(()=>({S}));
+const boot = data => {
+  if(data && data.S && data.S.started && !data.S.over){
+    S = Object.assign(fresh(), data.S, {busy:false}); setFace(S.face||'normal');
+    renderStatements(); renderCards(); $('screen').hidden = true; check();
+  } else start();
+};
+window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
+})();
+</script>
+
+</body>
+</html>

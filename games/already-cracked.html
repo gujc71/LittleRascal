@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#e03a58">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>깨어진 아빠의 게임기</title>
+<meta name="description" content="아빠 게임기에 원래 금이 가 있었다는 지명이의 말. 엄마가 퇴근하기 전에 거실에서 무슨 일이 있었는지 알아내는 설득 추리 게임.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="개구쟁이들">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:title" content="깨어진 아빠의 게임기">
+<meta property="og:description" content="아빠 게임기에 원래 금이 가 있었다는 지명이의 말. 엄마가 퇴근하기 전에 거실에서 무슨 일이 있었는지 알아내는 설득 추리 게임.">
+<meta name="twitter:card" content="summary">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&family=Gowun+Dodum&display=swap">
+<style>
+/* Layout: an evening living room on top (지명 on the sofa, the display shelf with dad's cracked
+   handheld behind, warm floor-lamp light), below it dad's side: 지명's statements and an evidence
+   pile of photos, receipts, the console's own save screen and notes. One red accent marks what is wrong. */
+:root{
+  --bg:#f7f3fb; --surface:#ffffff; --paper:#fdfaff; --ink:#231f2c; --muted:#6b6478;
+  --line:#e4dced; --heat:#e03a58; --heat-ink:#ffffff; --ok:#1f93b8;
+  --room:#f0e8ff; --room-2:#fff4e8; --lamp:#ffc45c; --room-tag:#7d4bb3; --room-ink:#2b2440; --mom:#b85628; --narr:#6a6383;
+  --shadow:0 1px 0 rgba(35,31,28,.06),0 6px 18px rgba(35,31,28,.08);
+  --f-display:"Black Han Sans","Gowun Dodum",sans-serif;
+  --f-body:"Gowun Dodum","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-talk:"Jua","Gowun Dodum",sans-serif;
+}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--heat);outline-offset:2px}
+.app{max-width:1040px;margin:0 auto;padding-block:12px 0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:12px}
+
+/* HUD */
+.hud{display:grid;grid-template-columns:1fr auto;gap:10px 16px;align-items:end}
+.brand small{display:block;font-size:12px;letter-spacing:.08em;color:var(--muted)}
+.brand h1{margin:0;font-family:var(--f-display);font-weight:400;font-size:26px;line-height:1.1;text-wrap:balance}
+.brand h1 em{font-style:normal;color:var(--heat)}
+.clock{text-align:right;font-variant-numeric:tabular-nums}
+.clock b{font-family:var(--f-display);font-weight:400;font-size:26px;line-height:1}
+.clock small{display:block;font-size:12px;color:var(--muted)}
+.clock.low b{color:var(--heat)}
+.gauges{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;font-size:13px}
+.g label{font-weight:700}
+.g .bar{height:12px;border-radius:6px;background:var(--surface);border:1px solid var(--line);overflow:hidden}
+.g .bar i{display:block;height:100%;width:0;transition:width .5s cubic-bezier(.3,.8,.3,1)}
+.g-conf .bar i{background:var(--ok)}
+.g-upset .bar i{background:var(--heat)}
+.g b{font-variant-numeric:tabular-nums;min-width:2.2em;text-align:right}
+.g-upset.hot{animation:shake .4s}
+.g small{grid-column:1/-1;color:var(--muted);font-size:11.5px;margin-top:-4px}
+
+/* Living room stage */
+.room{position:relative;border-radius:10px;color:var(--room-ink);min-height:clamp(270px,38vh,440px);padding:14px 16px 16px;overflow:hidden;cursor:default;
+  display:flex;flex-direction:column;
+  background:
+    radial-gradient(circle at 6% 30%,color-mix(in srgb,var(--lamp) 30%,transparent),transparent 42%),
+    linear-gradient(180deg,var(--room-2),var(--room) 70%)}
+.room::after{content:"";position:absolute;left:0;right:0;bottom:0;height:42px;background:#dba878;opacity:.5;pointer-events:none}
+.room.adv{cursor:pointer}
+.shelf{position:absolute;right:16px;top:44px;width:118px;opacity:.9;pointer-events:none}
+.round{position:relative;z-index:1;font-family:var(--f-talk);font-size:16px;color:var(--room-tag);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.scene{position:relative;z-index:1;display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:stretch;margin-top:6px;flex:1 1 0;min-height:0;padding-right:120px}
+#kid{width:150px;height:auto;display:block;align-self:end}
+.talk{min-width:0;padding-bottom:6px;display:flex;flex-direction:column;min-height:0}
+/* 대사가 한 글자씩 쌓이는 창. 문장을 다 쓰면 지난 대사가 위로 밀려 올라간다 */
+.log{flex:1 1 0;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;
+  display:flex;flex-direction:column;
+  -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 28px);
+  mask-image:linear-gradient(180deg,transparent 0,#000 28px)}
+.log::-webkit-scrollbar{display:none}
+.log>:first-child{margin-top:auto}
+.ent{flex:none;font-family:var(--f-talk);font-size:23px;line-height:1.35;margin:0 0 .45em;text-wrap:pretty}
+.ent:last-child{margin-bottom:0}
+.ent:not(:last-child){opacity:.5}
+.ent .who{display:block;font-family:var(--f-talk);font-size:15px;opacity:.75}
+.ent.t{color:var(--mom)}
+.ent.n{color:var(--narr);font-family:var(--f-body);font-size:18px}
+.ent.typing .tx::after{content:'';display:inline-block;width:.45em;height:1em;vertical-align:-.14em;
+  background:currentColor;opacity:.5;animation:caret .9s steps(1,end) infinite}
+@keyframes caret{50%{opacity:0}}
+.stamp{position:absolute;z-index:2;right:18px;top:40px;font-family:var(--f-display);font-size:42px;color:var(--heat);background:rgba(255,255,255,.72);
+  border:5px solid var(--heat);border-radius:10px;padding:2px 14px;transform:rotate(-12deg) scale(2);opacity:0;pointer-events:none}
+.stamp.on{animation:stamp 1.6s ease-out forwards}
+@keyframes stamp{0%{opacity:0;transform:rotate(-12deg) scale(2.2)}12%{opacity:1;transform:rotate(-12deg) scale(1)}80%{opacity:1}100%{opacity:0;transform:rotate(-12deg) scale(1)}}
+@keyframes shake{0%,100%{transform:none}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.room.shake{animation:shake .35s}
+
+/* Dad's side */
+.desk{display:grid;grid-template-columns:1.1fr 1fr;gap:12px;align-items:start}
+.panel{background:var(--surface);border-radius:8px;box-shadow:var(--shadow);padding:14px;min-width:0}
+.panel h2{margin:0 0 8px;font-size:15px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px}
+.panel h2 small{font-weight:400;color:var(--muted);font-size:12.5px}
+.says{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.says li{display:flex;gap:10px;align-items:flex-start;min-height:44px;padding:9px 12px;cursor:pointer;
+  background:var(--paper);border:1.5px solid var(--line);border-radius:4px 14px 14px 14px}
+.says li .n{font-family:var(--f-talk);color:var(--muted);width:1.1em;flex:none}
+.says li .tx{font-family:var(--f-talk);font-size:17px;line-height:1.35;min-width:0}
+.says li .pr{margin-left:auto;flex:none;font-size:11.5px;color:var(--muted);align-self:center;white-space:nowrap}
+.says li:hover{border-color:color-mix(in srgb,var(--heat) 45%,var(--line))}
+.says li.sel{border-color:var(--heat);background:color-mix(in srgb,var(--heat) 10%,var(--paper))}
+.says li.sel .tx{text-decoration:underline wavy var(--heat);text-underline-offset:5px;text-decoration-thickness:1.5px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.card{text-align:left;background:var(--paper);border:1.5px solid var(--line);border-radius:6px;padding:8px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.card b{font-size:13.5px;line-height:1.3}
+.card span{font-size:11.5px;color:var(--muted)}
+.card.sel{border-color:var(--heat);box-shadow:0 0 0 2px color-mix(in srgb,var(--heat) 30%,transparent)}
+.doc{margin-top:10px;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:12px;font-size:14px;min-height:60px}
+.doc .ph{color:var(--muted);font-size:13px;margin:0}
+.doc h3{margin:0 0 6px;font-size:14px}
+.doc p{margin:0 0 6px}
+.doc .meta{font-size:12px;color:var(--muted);margin-bottom:8px}
+.doc .hl{background:color-mix(in srgb,var(--heat) 18%,transparent);border-radius:3px;padding:0 2px}
+.doc table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+.doc th,.doc td{border-bottom:1px solid var(--line);padding:4px 6px;text-align:left;vertical-align:top}
+.doc th{font-weight:700;color:var(--muted);font-size:12px}
+.doc dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0;font-size:13.5px}
+.doc dt{color:var(--muted)} .doc dd{margin:0}
+.chat{display:flex;flex-direction:column;gap:6px}
+.chat div{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;font-size:13.5px}
+.chat .nm{font-weight:700;font-size:12px;color:var(--muted);grid-column:1/-1}
+.chat .msg{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:4px 10px;justify-self:start}
+.chat .tm{font-size:11px;color:var(--muted);align-self:end;font-variant-numeric:tabular-nums}
+.chat .sys{font-size:12.5px;color:var(--ok);font-weight:700}
+.lcd{background:#1f2a1c;color:#bfe3a0;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;border-radius:6px;padding:10px 12px;line-height:1.6}
+.lcd .hl{background:rgba(255,120,120,.28);color:#fff}
+.scroll{overflow-x:auto}
+
+/* Mobile drawers (desktop keeps both panels on the desk) */
+.picks{display:none}
+.scrim{display:none}
+.drawer-x{display:none}
+.ev-pick{display:none}
+
+/* Actions */
+.actions{position:sticky;bottom:0;z-index:5;display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:8px;
+  background:var(--bg);padding-block:10px calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line)}
+.actions button{border:1.5px solid var(--ink);background:var(--surface);border-radius:8px;padding:11px 8px;font-weight:700;line-height:1.2}
+.actions button small{display:block;font-weight:400;font-size:11px;color:var(--muted)}
+.actions .primary{background:var(--heat);border-color:var(--heat);color:var(--heat-ink)}
+.actions .primary small{color:inherit;opacity:.8}
+.actions button:disabled{opacity:.4;cursor:not-allowed}
+
+/* Screens */
+.screen{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:color-mix(in srgb,var(--bg) 82%,transparent);
+  backdrop-filter:blur(3px);padding-block:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-bottom,0px));
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));overflow-y:auto}
+.screen[hidden],.next[hidden]{display:none!important}
+.sheet{background:var(--surface);max-width:520px;width:100%;border-radius:10px;box-shadow:var(--shadow);padding:22px;
+  border-top:6px solid var(--heat);position:relative}
+.sheet small.k{font-size:12px;letter-spacing:.08em;color:var(--muted)}
+.sheet h2{font-family:var(--f-display);font-weight:400;font-size:30px;margin:2px 0 10px;line-height:1.15;text-wrap:balance;padding-right:90px}
+.sheet p{margin:0 0 10px}
+.sheet ul{margin:0 0 14px;padding-left:18px;display:grid;gap:4px}
+.sheet .go{width:100%;background:var(--heat);color:var(--heat-ink);border:0;border-radius:8px;padding:13px;font-weight:700;font-size:16px}
+.sheet .acts{display:flex;gap:8px}
+.sheet .acts .go{flex:1}
+.sheet .acts .list{flex:none;display:flex;align-items:center;justify-content:center;padding:13px 16px;border:1.5px solid var(--ink);border-radius:8px;color:var(--ink);background:transparent;font-weight:700;font-size:16px;text-decoration:none}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:12px 0 16px;text-align:center}
+.stats div{border:1px solid var(--line);border-radius:6px;padding:6px 4px;font-size:12px;color:var(--muted)}
+.stats b{display:block;font-size:20px;color:var(--ink);font-variant-numeric:tabular-nums}
+.grade{position:absolute;right:16px;top:18px;width:86px;height:86px;border-radius:50%;border:4px double var(--heat);color:var(--heat);
+  display:grid;place-items:center;text-align:center;font-family:var(--f-display);font-size:16px;line-height:1.1;transform:rotate(14deg)}
+
+@media (max-width:720px){
+  .desk{grid-template-columns:1fr}
+  .scene{grid-template-columns:96px 1fr;gap:10px;padding-right:0}
+  #kid{width:96px}
+  .shelf{display:none}
+  .ent{font-size:20px}
+  .brand h1,.clock b{font-size:22px}
+  .room{min-height:230px}
+  .gauges{grid-template-columns:1fr}
+  /* 좁은 화면: 말·증거 패널을 좌우 서랍으로 빼고 버튼으로 연다 */
+  .picks{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .picks button{background:var(--surface);border:1.5px solid var(--ink);border-radius:8px;
+    padding:9px 11px;font-weight:700;line-height:1.25;text-align:left;min-width:0;display:flex;flex-direction:column;gap:1px}
+  .picks button small{font-weight:400;font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .picks button.on{border-color:var(--heat);box-shadow:0 0 0 2px color-mix(in srgb,var(--heat) 25%,transparent)}
+  .picks button.on small{color:var(--heat)}
+  .desk{display:contents}
+  html,body{overflow-x:clip}
+  .app{min-height:100svh}
+  .room{flex:1 1 auto;display:flex;flex-direction:column}
+  .scene{margin-top:auto}
+  .panel{position:fixed;top:0;bottom:0;z-index:15;width:min(90vw,400px);border-radius:0;
+    padding:14px 14px calc(16px + env(safe-area-inset-bottom,0px));overflow-y:auto;overscroll-behavior:contain;
+    visibility:hidden;box-shadow:0 10px 30px rgba(0,0,0,.3);transition:transform .28s ease,visibility 0s linear .28s}
+  #pStatements{left:0;transform:translateX(-101%)}
+  #pEvidence{right:0;transform:translateX(101%)}
+  #pStatements.open,#pEvidence.open{transform:none;visibility:visible;transition:transform .28s ease,visibility 0s}
+  .drawer-x{display:block;position:sticky;top:0;z-index:2;margin:0 0 8px auto;
+    background:var(--surface);border:1.5px solid var(--line);border-radius:999px;padding:5px 13px;font-size:12.5px}
+  .ev-pick{display:block;position:sticky;bottom:0;z-index:2;width:100%;margin-top:10px;background:var(--heat);color:var(--heat-ink);
+    border:0;border-radius:8px;padding:12px;font-weight:700;font-size:15px;box-shadow:0 -6px 12px var(--paper)}
+  .ev-pick:disabled{opacity:.45;cursor:not-allowed}
+  .scrim{display:block;position:fixed;inset:0;z-index:12;width:100%;border:0;padding:0;
+    background:rgba(0,0,0,.42);-webkit-tap-highlight-color:transparent}
+  .scrim[hidden]{display:none!important}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.stamp.on{opacity:1}}
+</style>
+
+<style>
+.hub-back{display:block;margin-bottom:2px}
+.hub-back a{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;line-height:1;
+  color:var(--muted);text-decoration:none;padding:6px 11px;border:1px solid var(--line);
+  border-radius:999px;background:var(--surface)}
+.hub-back a:hover{color:var(--ink)}
+.hub-back a:focus-visible{outline:3px solid var(--heat,var(--ink));outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="app">
+<nav class="hub-back"><a href="../index.html">← 게임 목록</a></nav>
+  <header class="hud">
+    <div class="brand"><small>우리 집 거실 · 아빠가 아끼던 게임기 사건</small><h1><em>깨어진</em> 아빠의 게임기</h1></div>
+    <div class="clock" id="clockBox"><b id="clock">18:40</b><small>19:00 엄마 퇴근</small></div>
+    <div class="gauges">
+      <div class="g g-conf"><label>실토</label><div class="bar"><i id="gConf"></i></div><b id="nConf">0</b><small>100이 되면 지명이가 무슨 일이 있었는지 털어놓는다</small></div>
+      <div class="g g-upset" id="upsetBox"><label>삐짐</label><div class="bar"><i id="gUpset"></i></div><b id="nUpset">0</b><small>100이 되면 방에 들어가 문을 잠가 버린다</small></div>
+    </div>
+  </header>
+
+  <section class="room" id="room" aria-live="polite">
+    <div class="round"><span id="roundTag">핑계 1/4</span><span id="roundName">원래 금 가 있었어요</span></div>
+    <svg class="shelf" viewBox="0 0 120 120" aria-hidden="true">
+      <rect x="4" y="70" width="112" height="8" rx="2" fill="#b98a5e"/>
+      <rect x="4" y="112" width="112" height="8" rx="2" fill="#b98a5e"/>
+      <rect x="30" y="24" width="60" height="46" rx="6" fill="#e5e1d8" stroke="#8b8478" stroke-width="2"/>
+      <rect x="38" y="30" width="44" height="26" rx="2" fill="#6f8d5a"/>
+      <path d="M70 30l-6 9 5 4-8 13M64 39l-10 4" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+      <circle cx="44" cy="63" r="3.5" fill="#3c3c46"/><circle cx="76" cy="63" r="3.5" fill="#c8384f"/>
+      <rect x="18" y="86" width="30" height="26" rx="2" fill="#7a6aa8"/><rect x="54" y="92" width="22" height="20" rx="2" fill="#d79a4a"/>
+      <rect x="82" y="82" width="12" height="30" rx="2" fill="#4c8fa8"/>
+    </svg>
+    <div class="scene">
+      <svg id="kid" viewBox="0 0 160 190" aria-label="지명">
+        <path d="M14 190c4-40 30-58 66-58s62 18 66 58z" fill="#4e8fd0"/>
+        <path d="M44 152h72" stroke="#ffffff" stroke-width="6" opacity=".55"/>
+        <path d="M40 166h80" stroke="#ffffff" stroke-width="6" opacity=".55"/>
+        <rect x="68" y="118" width="24" height="20" fill="#e8bd98"/>
+        <circle cx="34" cy="82" r="10" fill="#e8bd98"/><circle cx="126" cy="82" r="10" fill="#e8bd98"/>
+        <circle cx="80" cy="78" r="47" fill="#f2cfae"/>
+        <path d="M30 80c-4-34 18-54 50-54s54 20 50 54c-4-8-8-14-14-18-10 4-22 2-30-6-8 8-22 12-36 10-8 4-14 8-20 14z" fill="#2c2420"/>
+        <path d="M60 28q10-14 24-4" stroke="#2c2420" stroke-width="6" fill="none" stroke-linecap="round"/>
+        <g data-f="normal sweat pout"><path d="M54 66l16 2M90 68l16-2" stroke="#2c2420" stroke-width="3.5" stroke-linecap="round"/></g>
+        <g data-f="smug"><path d="M53 64l17 5M90 69l17-5" stroke="#2c2420" stroke-width="3.5" stroke-linecap="round"/></g>
+        <g data-f="shock"><path d="M54 58l15-4M91 54l15 4" stroke="#2c2420" stroke-width="3.5" stroke-linecap="round"/></g>
+        <g data-f="cry"><path d="M54 62l16 6M90 68l16-6" stroke="#2c2420" stroke-width="3.5" stroke-linecap="round"/></g>
+        <g data-f="normal pout"><ellipse cx="62" cy="80" rx="5" ry="6.5" fill="#231c1b"/><ellipse cx="98" cy="80" rx="5" ry="6.5" fill="#231c1b"/><circle cx="64" cy="78" r="1.6" fill="#fff"/><circle cx="100" cy="78" r="1.6" fill="#fff"/></g>
+        <g data-f="sweat"><ellipse cx="57" cy="80" rx="5" ry="6.5" fill="#231c1b"/><ellipse cx="93" cy="80" rx="5" ry="6.5" fill="#231c1b"/></g>
+        <g data-f="smug"><path d="M54 81q8-5 16 0M90 81q8-5 16 0" stroke="#231c1b" stroke-width="3.5" fill="none" stroke-linecap="round"/></g>
+        <g data-f="shock"><circle cx="62" cy="79" r="9" fill="#fff" stroke="#231c1b" stroke-width="2.5"/><circle cx="98" cy="79" r="9" fill="#fff" stroke="#231c1b" stroke-width="2.5"/><circle cx="62" cy="79" r="2.8" fill="#231c1b"/><circle cx="98" cy="79" r="2.8" fill="#231c1b"/></g>
+        <g data-f="cry"><path d="M54 79q8 6 16 0M90 79q8 6 16 0" stroke="#231c1b" stroke-width="3.5" fill="none" stroke-linecap="round"/><path d="M58 84q-3 12 0 22M102 84q3 12 0 22" stroke="#7cc4ef" stroke-width="5" fill="none" stroke-linecap="round"/></g>
+        <g data-f="normal"><path d="M70 101q10 8 20 0" stroke="#7a3b2e" stroke-width="3.5" fill="none" stroke-linecap="round"/></g>
+        <g data-f="smug"><path d="M68 100q14 6 24-4" stroke="#7a3b2e" stroke-width="3.5" fill="none" stroke-linecap="round"/></g>
+        <g data-f="sweat"><path d="M68 102q4-3 8 0t8 0 8 0" stroke="#7a3b2e" stroke-width="3.5" fill="none" stroke-linecap="round"/></g>
+        <g data-f="shock"><ellipse cx="80" cy="104" rx="7" ry="9" fill="#7a3b2e"/></g>
+        <g data-f="cry"><path d="M66 106q14-14 28 0z" fill="#7a3b2e"/></g>
+        <g data-f="pout"><path d="M72 104q8-6 16 0" stroke="#7a3b2e" stroke-width="3.5" fill="none" stroke-linecap="round"/></g>
+        <g data-f="cry pout smug"><ellipse cx="50" cy="94" rx="7" ry="4" fill="#f29a8c" opacity=".6"/><ellipse cx="110" cy="94" rx="7" ry="4" fill="#f29a8c" opacity=".6"/></g>
+        <g data-f="sweat shock"><path d="M124 50c-6 9-8 13-8 17a8 8 0 0016 0c0-4-2-8-8-17z" fill="#9fd6f5"/></g>
+      </svg>
+      <div class="talk" id="talk">
+        <div class="log" id="log"></div>
+      </div>
+    </div>
+    <div class="stamp" id="stamp">들켰다!</div>
+  </section>
+
+  <nav class="picks" aria-label="면담 자료">
+    <button id="btnStList" type="button" aria-controls="pStatements" aria-expanded="false">지명이의 말<small id="pickStText">문장 고르기</small></button>
+    <button id="btnEvList" type="button" aria-controls="pEvidence" aria-expanded="false">증거 모음<small id="pickEvText">카드 고르기</small></button>
+  </nav>
+
+  <section class="desk">
+    <div class="panel" id="pStatements">
+      <button class="drawer-x" type="button" data-close>닫기 ✕</button>
+      <h2>지명이의 말 <small>수상한 문장을 고르세요</small></h2>
+      <ol class="says" id="stList"></ol>
+    </div>
+    <div class="panel" id="pEvidence">
+      <h2>증거 모음 <small>카드를 눌러 내용을 확인</small></h2>
+      <div class="cards" id="cards"></div>
+      <div class="doc" id="doc"><p class="ph">증거 카드를 고르면 여기에 내용이 펼쳐집니다.</p></div>
+      <button class="ev-pick" id="btnEvPick" type="button" disabled>카드를 먼저 고르세요</button>
+    </div>
+  </section>
+
+  <button class="scrim" id="scrim" type="button" hidden aria-label="닫기"></button>
+
+  <nav class="actions">
+    <button id="btnPress" type="button">캐묻기<small>좀 더 물어보기 · 1분</small></button>
+    <button id="btnPresent" class="primary" type="button">증거 내밀기<small>문장 + 증거 · 1분</small></button>
+    <button id="btnCalm" type="button">달래기<small>삐짐 −20 · 1분 · <span id="nCalm">2</span>회</small></button>
+  </nav>
+</div>
+
+<div class="screen" id="screen" hidden></div>
+
+<script>
+(function(){
+const TOTAL = 20;
+const CALM_MAX = 2;  /* 달래기는 한 판에 두 번까지, 연달아 쓸 수 없다 */
+const EV = {
+  photo:{name:'가족 단톡방 사진', sub:'어제 22:14 아빠', html:`<h3>우리 가족 단톡방 (4명)</h3><div class="meta">10월 26일(월) 밤</div>
+    <div class="chat">
+      <div><span class="sys">아빠 님이 사진을 보냈습니다. (게임기 화면 · 신기록 98,450점)</span><span class="tm">22:14</span></div>
+      <div><span class="nm">아빠</span><span class="msg">17년 만에 신기록 ㅋㅋ 화면 쨍한 거 봐라</span><span class="tm">22:14</span></div>
+      <div><span class="nm">지명</span><span class="msg hl">와 화면 깨끗하다 ㅋㅋ 나도 해 보고 싶다</span><span class="tm">22:15</span></div>
+      <div><span class="nm">엄마</span><span class="msg">둘 다 얼른 자</span><span class="tm">22:16</span></div>
+    </div>`},
+  vet:{name:'동물병원 영수증', sub:'오늘 두부', html:`<h3>튼튼 동물병원 · 진료 영수증</h3><div class="meta">10월 27일(화) · 고양이 두부 (3살)</div>
+    <div class="scroll"><table><tbody>
+      <tr><th>맡긴 시간</th><td class="hl">13:00 (보호자: 엄마)</td></tr>
+      <tr><th>진료</th><td>종합 예방접종, 발톱 정리, 목욕</td></tr>
+      <tr><th>찾아간 시간</th><td class="hl">18:10 (보호자: 엄마)</td></tr>
+      <tr><th>메모</th><td>접종 후 하루 동안 높은 곳 오르지 않게 해 주세요.</td></tr>
+    </tbody></table></div>`},
+  save:{name:'게임기 기록 화면', sub:'게임기 안 플레이 기록', html:`<h3>게임기 설정 › 플레이 기록</h3><div class="meta">화면에 금이 갔지만 글자는 보인다</div>
+    <div class="lcd">
+      ▶ 마지막 플레이<br>
+      &nbsp;&nbsp;<span class="hl">10/27 16:12 ~ 17:05 (53분)</span><br>
+      ▶ 세이브 파일<br>
+      &nbsp;&nbsp;1번 · 아빠 · 보스 6단계<br>
+      &nbsp;&nbsp;<span class="hl">2번 · JIMYUNG · 보스 7단계 첫 클리어 16:57</span>
+    </div>`},
+  noise:{name:'아래층 인터폰 메모', sub:'엄마가 받아 적음', html:`<h3>엄마 휴대폰 메모</h3><div class="meta">10월 27일(화) 18:12 · 동물병원에서 돌아오다 1층에서 만난 아래층 할머니 말씀</div>
+    <p>"오후 5시 다 돼서 위층에서 <span class="hl">쿵쿵쿵쿵 뛰는 소리가 한참 났어요.</span>"</p>
+    <p>"'앗싸! 깼다!' 하는 소리도 나고요."</p>
+    <p>"그러다 뭐가 <span class="hl">딱! 하고 바닥에 떨어지는 소리</span>가 나더니 조용해졌어요."</p>`},
+  case:{name:'장식장 케이스 상태', sub:'18:30 아빠가 발견', html:`<h3>아빠가 발견했을 때</h3><div class="meta">18:30 · 퇴근하자마자 거실 장식장 앞</div>
+    <dl><dt>위치</dt><dd>장식장 둘째 칸, 투명 케이스 안 (평소와 같음)</dd>
+    <dt>방향</dt><dd class="hl">화면이 아래로 가게 뒤집혀 있음</dd>
+    <dt>충전선</dt><dd>케이블이 꽂힌 채로 케이스 밖까지 나와 있음</dd>
+    <dt>화면</dt><dd>오른쪽 위 모서리부터 금 세 줄</dd></dl>`},
+  floor:{name:'거실 마루 자국', sub:'소파 앞', html:`<h3>거실 마루 사진</h3><div class="meta">18:35 · 아빠 휴대폰으로 찍음</div>
+    <p>소파 바로 앞 마루에 <span class="hl">손톱만 한 새 찍힘 자국</span>이 하나 있다.</p>
+    <p>게임기 오른쪽 위 모서리에도 페인트가 살짝 벗겨진 흠집이 있다.</p>
+    <p class="meta" style="margin:0">언제 생긴 자국인지는 사진만으로 알 수 없다.</p>`},
+  mom:{name:'엄마와 지명 문자', sub:'오늘 낮', html:`<h3>엄마 ↔ 지명 문자</h3><div class="meta">10월 27일(화)</div>
+    <div class="chat">
+      <div><span class="nm">엄마</span><span class="msg">두부 병원 맡겼어. 학교 끝나면 바로 집 가서 숙제해~</span><span class="tm">13:02</span></div>
+      <div><span class="nm">지명</span><span class="msg">집 도착! 숙제 할게요</span><span class="tm">16:05</span></div>
+      <div><span class="nm">엄마</span><span class="msg">간식 식탁 위에 있어</span><span class="tm">16:06</span></div>
+      <div><span class="nm">엄마</span><span class="msg">숙제 다 했어?</span><span class="tm">17:30</span></div>
+      <div><span class="nm">지명</span><span class="msg">네!! 진짜 다 했어요</span><span class="tm">17:41</span></div>
+    </div>`},
+  warranty:{name:'게임기 보증서', sub:'2009년 구입', html:`<h3>휴대용 게임기 품질 보증서</h3><div class="meta">상자 안에 접혀 있던 종이</div>
+    <dl><dt>구입일</dt><dd>2009년 12월 24일</dd>
+    <dt>구입처</dt><dd>용산 전자상가</dd>
+    <dt>보증 기간</dt><dd>구입일로부터 1년</dd></dl>
+    <p class="meta" style="margin:8px 0 0">아빠 글씨로 "내 첫 월급 선물"이라고 적혀 있다.</p>`}
+};
+const EV_ORDER = ['photo','vet','save','noise','case','floor','mom','warranty'];
+
+// line: [who, text, face]  who: s=지명, t=아빠(플레이어), n=narration
+const R = [
+  {name:'원래 금 가 있었어요',
+   intro:[['t','지명아, 아빠 게임기 화면이 깨져 있던데. 혹시 아는 거 있어?'],['s','아, 그거요? 원래 금 가 있었어요.','smug'],['s','저도 아까 보고 깜짝 놀랐어요.','sweat']],
+   st:[
+    {tx:'어제 저녁에 봤을 때도 이미 금이 가 있었어요.', press:[['t','어제 저녁에 봤다고?'],['s','네. 장식장 지나가다가 슬쩍요. 금 가 있었어요.','smug'],['n','(어제 밤… 아빠가 그 게임기로 뭘 했더라. 단톡방에 올린 게 있었는데.)']]},
+    {tx:'아빠가 이사할 때 상자째로 떨어뜨렸잖아요.', press:[['t','이사? 우리 이사한 지 3년 됐는데.'],['s','그때 생긴 금이 조금씩 커진 거예요.','sweat']]},
+    {tx:'저는 혼날까 봐 그냥 못 본 척한 거예요.', press:[['t','왜 아빠한테 말 안 했어?'],['s','아빠가 그 게임기 엄청 아끼잖아요. 슬퍼할까 봐요.','normal']]}
+   ],
+   ok:{st:0, ev:'photo', lines:[['t','어제 밤 10시 14분에 아빠가 단톡방에 올린 사진이야. 신기록 화면, 금 하나도 없지?'],['t','너도 바로 밑에 "화면 깨끗하다"고 답했잖아.'],['s','어…','shock'],['s','…알았어요, 금은 오늘 생긴 거 맞아요. 근데 제가 한 거 아니에요! 두부가 떨어뜨렸어요!','pout']]},
+   near:{
+    '0:case':[['t','게임기가 케이스 안에 화면이 아래로 뒤집혀 있던데?'],['s','어제부터 그렇게 있었어요. 그래서 금이 안 보였나 보죠.','smug'],['n','(어제 화면이 어땠는지 직접 보여 주는 게 있으면 좋겠다.)']],
+    '0:floor':[['t','소파 앞 마루에 새 자국이 있던데.'],['s','그 자국도 원래 있었어요!','smug'],['n','(언제 생겼는지 모르는 자국으로는 안 된다. 어제 밤 화면 상태를 확인하자.)']],
+    '1:photo':[['t','어제 밤에 아빠가 이 게임기로 신기록 찍은 사진이야.'],['s','이사 때 생긴 금이 너무 작아서 사진에 안 찍힌 거예요!','sweat'],['n','(이사는 3년 전 일이라 따지기 어렵다. "어제 저녁에 봤다"는 말과 맞춰 보자.)']]
+   }},
+  {name:'두부가 떨어뜨렸어요',
+   intro:[['s','고양이 두부요! 두부가 장식장에 올라가서 툭 쳤어요.','pout'],['s','저는 소리 듣고 나가 본 것뿐이에요.','sweat']],
+   st:[
+    {tx:'저는 방에서 숙제하고 있었는데 거실에서 쿵 소리가 났어요.', press:[['t','몇 시쯤?'],['s','음… 5시쯤이요. 시계는 안 봤어요.','sweat']]},
+    {tx:'나가 보니까 두부가 장식장 위에 앉아서 저를 쳐다봤어요.', press:[['t','두부가 장식장 위에 있었다고?'],['s','네, 꼬리 살랑살랑하면서요. 완전 범인 얼굴이었어요.','smug'],['n','(그러고 보니 엄마가 오늘 두부를 어디 데려간다고 했었는데…)']]},
+    {tx:'게임기가 바닥에 떨어져 있어서 제가 주워서 케이스에 넣었어요.', press:[['t','주워서 넣었다고?'],['s','네. 아빠 물건이니까 조심조심 넣었어요.','normal']]}
+   ],
+   ok:{st:1, ev:'vet', lines:[['t','동물병원 영수증이야. 두부는 오늘 1시에 병원에 갔다가 저녁 6시 10분에 엄마랑 돌아왔어.'],['t','5시에 두부는 병원에서 목욕하고 있었지. 장식장 위에 있을 수가 없어.'],['s','앗…','shock'],['s','…제가 꺼낸 거 맞아요. 근데 구경만 했어요! 켜 보지도 않았어요.','sweat']]},
+   near:{
+    '0:mom':[['t','엄마 문자 보니까 너 4시 5분에 집에 왔더라.'],['s','네, 그래서 숙제했다니까요.','smug'],['n','(지명이가 집에 있었던 건 맞다. 그럼 범인이라는 두부는 그때 어디 있었지?)']],
+    '2:case':[['t','케이스에 화면이 아래로 뒤집혀 있던데.'],['s','급하게 넣느라 그랬어요. 두부가 또 올까 봐요.','sweat'],['n','(주워 넣은 건 지명이도 인정했다. 범인이라는 두부 쪽을 확인하자.)']],
+    '2:floor':[['t','소파 앞 마루에 찍힌 자국이 있어.'],['s','거봐요, 떨어진 자국이잖아요! 두부가 떨어뜨린 거예요.','smug'],['n','(떨어진 건 맞다. 문제는 그때 두부가 집에 있었느냐다.)']]
+   }},
+  {name:'구경만 했어요',
+   intro:[['s','꺼낸 건 맞는데요, 진짜 구경만 했어요.','sweat'],['s','아빠 거니까 켜지도 않았다니까요.','smug']],
+   st:[
+    {tx:'숙제 다 하고 잠깐 꺼내 본 거예요.', press:[['t','숙제는 언제 다 했는데?'],['s','5시 반쯤이요. 엄마한테도 다 했다고 했어요.','normal']]},
+    {tx:'전원 버튼은 한 번도 안 눌렀어요.', press:[['t','한 번도?'],['s','네. 화면 까만 거 보면서 "멋있다" 하고 끝이에요.','smug'],['n','(이 게임기는 켤 때마다 플레이 기록이 남는다. 설정에 들어가 보면…)']]},
+    {tx:'보다가 손이 미끄러져서 떨어뜨린 거예요.', press:[['t','어디로 떨어졌는데?'],['s','소파 위로요. 그래서 괜찮을 줄 알았어요.','sweat']]}
+   ],
+   ok:{st:1, ev:'save', lines:[['t','게임기 플레이 기록이야. 오늘 4시 12분부터 5시 5분까지 53분.'],['t','그리고 세이브 2번, 이름이 "JIMYUNG". 보스 7단계 첫 클리어 4시 57분. 아빠도 6단계밖에 못 깼는데.'],['s','……','shock'],['s','…켜긴 했어요. 근데 얌전히 했어요! 쿠션 위에 살짝 떨어졌는데 게임기가 낡아서 금 간 거예요.','pout']]},
+   near:{
+    '1:case':[['t','케이스 밖까지 충전선이 꽂혀 나와 있던데?'],['s','그 선은 아빠가 원래 꽂아 둔 거예요!','pout'],['n','(수상하긴 한데 확실하지는 않다. 게임기 안에 남은 기록이 있을지도.)']],
+    '2:floor':[['t','소파 위로 떨어졌다면서, 마루에 자국이 있는데?'],['s','그건… 소파에서 굴러서 바닥까지 간 거예요!','sweat'],['n','(어디로 떨어졌는지보다 먼저, 정말 켜지 않았는지 확인하자.)']],
+    '0:mom':[['t','엄마한테 5시 41분에 숙제 다 했다고 했더라.'],['s','그러니까요. 숙제 다 하고 꺼냈다니까요.','smug'],['n','(숙제 시간은 따지기 애매하다. "안 켰다"는 말은 기계가 증명해 줄 텐데.)']]
+   }},
+  {name:'얌전히 했는데 낡아서 그래요',
+   intro:[['s','진짜 소파에 가만히 앉아서 했어요.','pout'],['s','그런데 아빠 게임기가 너무 오래돼서 살짝 떨어진 걸로 금 간 거예요.','cry']],
+   st:[
+    {tx:'소파에 가만히 앉아서 조용히 했어요.', press:[['t','가만히?'],['s','네. 다리도 안 움직였어요. 숨소리도 작게요.','smug'],['n','(엄마가 아래층 할머니를 만났다고 했지. 오후에 무슨 소리를 들으셨다던데…)']]},
+    {tx:'손에서 살짝 미끄러져서 쿠션 위에 톡 떨어졌어요.', press:[['t','쿠션 위에?'],['s','네, 푹신한 데요. 소리도 안 났어요.','sweat']]},
+    {tx:'오래된 게임기라서 그 정도로도 금이 간 거예요.', press:[['t','그 정도로?'],['s','17년 됐잖아요. 할아버지 게임기예요.','smug']]}
+   ],
+   ok:{st:0, ev:'noise', lines:[['t','아래층 할머니가 엄마한테 하신 말씀이야. 5시 다 돼서 위에서 쿵쿵쿵 한참 뛰었대.'],['t','"앗싸! 깼다!" 소리 나고, 그다음에 딱! 하고 바닥에 떨어지는 소리. 보스 깬 시간이 4시 57분이었지.'],['s','……','shock'],['s','죄송해요. 아빠 몰래 꺼내서 했어요. 7단계 깨서 너무 신나서 소파에서 방방 뛰다가 떨어뜨렸어요. 바닥에 딱 떨어져서 금 갔어요.','cry'],['s','혼날까 봐 케이스에 뒤집어서 넣어 놓고, 두부 핑계 대고, 원래 금 가 있었다고 했어요…','cry'],['t','솔직하게 말해 줘서 고마워. 화면은 고칠 수 있어. 그런데 거짓말은 고치기가 훨씬 어려워.'],['t','수리비는 용돈에서 조금씩 같이 내자. 그리고… 7단계 어떻게 깼는지 아빠한테도 알려 줘.'],['s','네! 다음엔 꼭 허락받고 할게요. 아빠 미안해요.','normal']]},
+   near:{
+    '1:floor':[['t','쿠션 위에 떨어졌다면서, 마루에 새 자국이 있고 게임기 모서리에도 흠집이 있어.'],['s','그 자국은 원래 있던 거예요! 언제 생긴 건지 모르잖아요.','pout'],['n','(맞는 말이다. 그때 지명이가 뭘 하고 있었는지 들은 사람이 있다면…)']],
+    '1:noise':[['t','딱! 하고 바닥에 떨어지는 소리가 났대.'],['s','쿠션에서 튕겨서 바닥에 떨어진 거예요. 그래도 저는 얌전히 있었어요!','sweat'],['n','(어디에 떨어졌는지보다, 그때 지명이가 뭘 하고 있었는지가 핵심이다.)']],
+    '0:save':[['t','4시 57분에 보스 7단계를 깼더라.'],['s','깨고 나서도 얌전히 앉아 있었어요.','smug'],['n','(깬 직후 집 안에서 무슨 소리가 났는지 들은 사람을 찾아야 한다.)']]
+   }}
+];
+const WRONG = [
+  [['s','그게 지금 이거랑 무슨 상관인데요?','pout']],
+  [['s','아빠도 제 말 안 믿는 거죠? 너무해요.','cry']],
+  [['s','…네? 그거 아무 상관 없는데요.','smug'],['n','(헛짚었다. 지명이 입이 점점 튀어나온다.)']],
+  [['s','게임기가 저보다 더 중요해요?','cry']]
+];
+const REPRESS = [['t','다시 한번 말해 볼래?'],['s','아까 말했잖아요. 자꾸 똑같은 거 물어보면 짜증 나요.','pout']];
+
+const $ = id => document.getElementById(id);
+let S, Q = [], Qdone = null, timer = null;
+/* CHAR_MS: 글자 하나가 더 찍히는 간격. LOG_MAX: 화면에 남겨 두는 대사 수 */
+const CHAR_MS = 55, LOG_MAX = 30;
+/* 모션을 줄인 설정에서도 글자는 한 자씩 찍고, 스크롤만 단번에 옮긴다 */
+const noAnim = window.matchMedia('(prefers-reduced-motion:reduce)');
+let typer = null, cur = null, scrollAt = -1;
+function clearTimer(){
+  if(timer){ clearTimeout(timer); timer = null; }
+  if(typer){ clearInterval(typer); typer = null; }
+}
+
+function fresh(){ return {round:0, conf:0, upset:0, maxUpset:0, time:TOTAL, sel:-1, ev:null, pressed:{}, near:{}, mistakes:0, calms:0, lastCalm:false, busy:false, over:false, started:false, face:'normal'}; }
+
+function setFace(f){ S.face=f; document.querySelectorAll('#kid [data-f]').forEach(g=>{ g.style.display = g.dataset.f.split(' ').includes(f)?'':'none'; }); }
+function clockText(){ const m = 40 + (TOTAL - S.time); return m>=60 ? '19:'+String(m-60).padStart(2,'0') : '18:'+String(m).padStart(2,'0'); }
+
+function hud(){
+  $('gConf').style.width = S.conf+'%'; $('nConf').textContent = S.conf;
+  $('gUpset').style.width = S.upset+'%'; $('nUpset').textContent = S.upset;
+  $('clock').textContent = clockText();
+  $('clockBox').classList.toggle('low', S.time<=5);
+  $('roundTag').textContent = '핑계 '+(S.round+1)+'/4';
+  $('roundName').textContent = '"'+R[S.round].name+'"';
+  const idle = !S.busy && !S.over && S.started;
+  $('btnPress').disabled = !idle || S.sel<0;
+  $('btnPresent').disabled = !idle || S.sel<0 || !S.ev;
+  $('btnCalm').disabled = !idle || S.calms>=CALM_MAX || S.lastCalm;
+  $('nCalm').textContent = CALM_MAX - S.calms;
+  $('room').classList.toggle('adv', S.busy);
+  renderPicks();
+}
+/* Mobile: the desk panels become drawers - statements slide in from the left, evidence from the right */
+const MQ = window.matchMedia('(max-width:720px)');
+const DRAWER = {st:'pStatements', ev:'pEvidence'};
+function renderPicks(){
+  const st = S.sel<0 ? null : R[S.round].st[S.sel];
+  $('pickStText').textContent = st ? st.tx : '문장 고르기';
+  $('btnStList').title = st ? st.tx : '';
+  $('pickEvText').textContent = S.ev ? EV[S.ev].name : '카드 고르기';
+  $('btnStList').classList.toggle('on', S.sel>=0);
+  $('btnEvList').classList.toggle('on', !!S.ev);
+}
+function closeDrawers(){
+  $('pStatements').classList.remove('open'); $('pEvidence').classList.remove('open');
+  $('scrim').hidden = true;
+  $('btnStList').setAttribute('aria-expanded','false');
+  $('btnEvList').setAttribute('aria-expanded','false');
+}
+function openDrawer(w){
+  closeDrawers();
+  $(DRAWER[w]).classList.add('open'); $('scrim').hidden = false;
+  $(w==='st'?'btnStList':'btnEvList').setAttribute('aria-expanded','true');
+}
+function toggleDrawer(w){ if($(DRAWER[w]).classList.contains('open')) closeDrawers(); else openDrawer(w); }
+function renderStatements(){
+  const r = R[S.round];
+  $('stList').innerHTML = r.st.map((s,i)=>`<li tabindex="0" data-i="${i}" class="${S.sel===i?'sel':''}"><span class="n">${i+1}</span><span class="tx">${s.tx}</span>${S.pressed[S.round+':'+i]?'<span class="pr">캐물음</span>':''}</li>`).join('');
+}
+function renderCards(){
+  $('cards').innerHTML = EV_ORDER.map(k=>`<button type="button" class="card ${S.ev===k?'sel':''}" data-k="${k}"><b>${EV[k].name}</b><span>${EV[k].sub}</span></button>`).join('');
+  $('doc').innerHTML = S.ev ? EV[S.ev].html : '<p class="ph">증거 카드를 고르면 여기에 내용이 펼쳐집니다.</p>';
+  $('btnEvPick').disabled = !S.ev;
+  $('btnEvPick').textContent = S.ev ? '「'+EV[S.ev].name+'」 선택' : '카드를 먼저 고르세요';
+}
+function speaker(w){ return w==='s'?'지명': w==='t'?'나 (아빠)':''; }
+function typing(){ return !!cur; }
+/* 늘어난 만큼만 부드럽게 내려가면, 다 찍힌 대사가 위로 밀려 올라간다 */
+function scrollLog(){
+  const g = $('log'), top = Math.max(0, g.scrollHeight - g.clientHeight);
+  if(top === scrollAt) return;
+  scrollAt = top;
+  g.scrollTo({top, behavior: noAnim.matches?'auto':'smooth'});
+}
+function resetLog(){ $('log').textContent = ''; cur = null; scrollAt = -1; }
+/* 문장을 끝까지 드러낸다 — 저절로 다 찍혔거나, 화면을 눌러 건너뛰었을 때 */
+function endLine(){
+  if(typer){ clearInterval(typer); typer = null; }
+  if(!cur) return;
+  cur.tx.textContent = cur.t;
+  cur.tx.removeAttribute('aria-hidden');
+  cur.el.classList.remove('typing');
+  cur = null;
+  scrollLog();
+}
+function show(w,t,f){
+  if(f) setFace(f);
+  endLine();
+  const g = $('log'), prev = g.lastElementChild, txt = String(t);
+  if(prev && prev.dataset.w===w && prev.dataset.t===txt) return;  /* 막 한 말은 다시 쌓지 않는다 */
+  const el = document.createElement('p');
+  el.className = 'ent '+w+' typing'; el.dataset.w = w; el.dataset.t = txt;
+  const who = speaker(w);
+  if(who){ const b = document.createElement('b'); b.className = 'who'; b.textContent = who; el.appendChild(b); }
+  const tx = document.createElement('span');
+  tx.className = 'tx';
+  tx.setAttribute('aria-hidden','true');  /* 한 글자씩 바뀔 때마다 읽어 주지 않도록 */
+  el.appendChild(tx); g.appendChild(el);
+  while(g.children.length > LOG_MAX) g.removeChild(g.firstElementChild);
+  cur = {el, tx, t:txt, i:0};
+  scrollLog();
+  typer = setInterval(()=>{
+    if(!cur){ clearInterval(typer); typer = null; return; }
+    cur.tx.textContent = cur.t.slice(0, ++cur.i);
+    if(cur.i >= cur.t.length) endLine(); else scrollLog();
+  }, CHAR_MS);
+}
+function say(lines, done){ Q = lines.slice(); Qdone = done||null; S.busy = true; step(); }
+function step(){
+  clearTimer();
+  if(!Q.length){ S.busy=false; const d=Qdone; Qdone=null; hud(); if(d) d(); return; }
+  const [w,t,f] = Q.shift(); show(w,t,f);
+  const n = String(t).length;
+  const read = Math.min(6000, Math.max(1600, 1200 + n*85));
+  timer = setTimeout(step, Math.max(read, n*CHAR_MS + 1200));
+  hud();
+}
+/* 한 번 누르면 문장을 끝까지, 다시 누르면 다음 대사로 */
+function advance(){
+  if(typing()){ clearTimer(); endLine(); if(S.busy) timer = setTimeout(step, 1200); return; }
+  if(S.busy) step();
+}
+function bump(dc, du){
+  S.conf = Math.max(0, Math.min(100, S.conf+dc));
+  S.upset = Math.max(0, Math.min(100, S.upset+du));
+  S.maxUpset = Math.max(S.maxUpset, S.upset);
+  if(du>0){ const b=$('upsetBox'); b.classList.remove('hot'); void b.offsetWidth; b.classList.add('hot'); }
+  hud();
+}
+function check(){
+  if(S.over) return;
+  if(S.upset>=100) return say([['s','아 몰라요! 아빠 미워!!','cry'],['n','지명이가 쿵쿵 걸어가더니 방문을 쾅 닫고 잠가 버렸다.'],['n','문 너머에서 이불 뒤집어쓰는 소리만 들린다.']], ()=>end('upset'));
+  if(S.time<=0) return say([['n','저녁 7시. 현관에서 삑삑삑 비밀번호 누르는 소리가 난다.'],['s','엄마아! 아빠가 저 의심해요!','smug'],['n','지명이는 엄마 뒤로 쏙 숨었다. 오늘 진실은 여기까지.']], ()=>end('bell'));
+  idleLine();
+}
+function idleLine(){
+  const f = S.upset>=70?'cry': S.upset>=40?'pout':'normal';
+  show('n', S.upset>=70 ? '(지명이 입이 댓 발 나왔다. 한 번만 더 헛짚으면 방문을 잠가 버릴 것 같다.)' : '(지명이의 말 중에 증거와 어긋나는 문장이 있다. 찾아서 증거를 내밀자.)', f);
+}
+function press(){
+  if(S.busy||S.sel<0) return;
+  const key = S.round+':'+S.sel; S.time--; S.lastCalm = false;
+  if(S.pressed[key]){ bump(0,12); say(REPRESS, check); }
+  else { S.pressed[key]=true; bump(3,5); renderStatements(); say(R[S.round].st[S.sel].press, check); }
+}
+function calm(){
+  if(S.busy||S.calms>=CALM_MAX||S.lastCalm) return; S.calms++; S.lastCalm = true; S.time--;
+  if(S.upset<10){ say([['t','괜찮아, 혼내려는 거 아니야.'],['s','그럼 저 이제 방에 가도 돼요?','smug']], check); return; }
+  bump(0,-20);
+  say([['t','아빠 화 안 났어. 무슨 일이 있었는지만 알고 싶어.'],['s','…(훌쩍) 진짜 화 안 낼 거예요?','pout']], check);
+}
+function stamp(){ const s=$('stamp'); s.classList.remove('on'); void s.offsetWidth; s.classList.add('on'); const b=$('room'); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); }
+function present(){
+  if(S.busy||S.sel<0||!S.ev) return;
+  const r = R[S.round], si = S.sel, ek = S.ev; S.time--; S.lastCalm = false;
+  const nm = EV[ek].name, jong = (nm.charCodeAt(nm.length-1)-0xAC00)%28>0;
+  const lead = ['t','이거 한번 볼래? '+nm+(jong?'이야.':'야.')];
+  if(r.ok.st===si && r.ok.ev===ek){
+    stamp(); bump(S.round===3?100:22, -8);
+    say(r.ok.lines, ()=>{
+      if(S.round===3){ S.conf=100; hud(); end('win'); return; }
+      S.round++; S.sel=-1; S.ev=null; renderStatements(); renderCards(); hud();
+      say(R[S.round].intro, check);
+    });
+    return;
+  }
+  const nk = si+':'+ek;
+  if(r.near[nk]){
+    const first = !S.near[S.round+':'+nk]; S.near[S.round+':'+nk]=true;
+    bump(first?5:0, first?0:8); say([lead, ...r.near[nk]], check); return;
+  }
+  S.mistakes++;
+  if(ek==='warranty'){ bump(-5,14); say([lead,['s','거봐요! 2009년 거잖아요. 17년이나 됐으니까 낡아서 금 간 거예요!','smug'],['n','(오히려 지명이 핑계에 힘을 실어 준 꼴이 됐다.)']], check); return; }
+  bump(0,22);
+  say([lead, ...WRONG[(S.mistakes-1)%WRONG.length]], check);
+}
+
+function grade(){
+  if(S.mistakes===0 && S.maxUpset<50) return '명탐정\n아빠';
+  if(S.mistakes<=2 && S.maxUpset<80) return '눈치\n백단';
+  return '다음엔\n꼭';
+}
+function end(kind){
+  clearTimer(); closeDrawers(); S.over = true; hud();
+  const used = TOTAL - S.time;
+  const T = {
+    win:{k:'대화 끝 · '+clockText(), h:'게임기가 깨진 진짜 이유를 밝혀냈다', p:'지명이는 아빠 몰래 게임기를 꺼내 53분 동안 했고, 보스 7단계를 깬 순간 소파에서 방방 뛰다 마루에 떨어뜨렸다. 혼날까 봐 케이스에 뒤집어 넣고 핑계를 댔다. 수리비는 용돈에서 조금씩 같이 내고, 다음부터는 허락받고 하기로 했다.'},
+    upset:{k:'대화 중단 · '+clockText(), h:'지명이가 방문을 잠가 버렸다', p:'너무 몰아붙였다. 오늘 대화는 여기까지. 엉뚱한 증거를 내밀기 전에 달래기로 삐짐을 낮춰 보자.'},
+    bell:{k:'19:00 · 엄마 퇴근', h:'엄마가 와 버렸다', p:'핑계를 다 깨기 전에 7시가 됐다. 지명이는 엄마 뒤로 숨었다. 확실한 문장에만 시간을 쓰고, 이미 들은 말은 다시 묻지 말자.'}
+  }[kind];
+  const g = kind==='win' ? grade() : '';
+  $('screen').innerHTML = `<div class="sheet" role="dialog" aria-labelledby="endH">
+    ${g?`<div class="grade">${g.replace('\n','<br>')}</div>`:''}
+    <small class="k">${T.k}</small><h2 id="endH">${T.h}</h2><p>${T.p}</p>
+    <div class="stats"><div><b>${used}분</b>쓴 시간</div><div><b>${S.mistakes}번</b>헛짚은 증거</div><div><b>${S.maxUpset}</b>최고 삐짐</div></div>
+    <div class="acts"><button class="go" id="again" type="button">다시 하기</button><a class="list" href="../index.html">게임 목록</a></div></div>`;
+  $('screen').hidden = false;
+  $('again').onclick = start;
+  setFace(kind==='win'?'normal':kind==='upset'?'cry':'smug');
+}
+function intro(){
+  $('screen').innerHTML = `<div class="sheet" role="dialog" aria-labelledby="inH">
+    <small class="k">10월 27일(화) 18:40 · 우리 집 거실</small>
+    <h2 id="inH">아빠 게임기 화면이 깨졌다</h2>
+    <p>퇴근하고 오니 장식장 속, 아빠가 17년째 아끼던 휴대용 게임기 화면에 금이 가 있다. 소파에 앉은 지명이는 "원래 금 가 있었어요"라고만 한다. 7시에 엄마가 퇴근하기 전 20분 동안 진짜 무슨 일이 있었는지 알아내자. 지명이는 핑계를 네 번 바꿀 것이다.</p>
+    <ul>
+      <li>지명이의 말 중 증거와 어긋나는 <b>한 문장</b>을 고르고, 맞는 증거를 <b>내밀면</b> 핑계가 무너진다.</li>
+      <li><b>캐묻기</b>로 힌트를 얻을 수 있지만, 같은 말을 또 물으면 지명이가 짜증을 낸다.</li>
+      <li>엉뚱한 증거를 내밀면 <b>삐짐</b>이 오른다. 100이 되면 방문을 잠가 버린다. <b>달래기</b>로 풀어 주자. 단, 연달아 쓸 수 없고 한 판에 두 번까지만.</li>
+      <li>모든 행동은 1분. 7시가 되면 엄마가 오고, 지명이는 엄마 뒤로 숨는다.</li>
+      <li>대화는 한 글자씩 찍힌다. 화면을 누르면 문장을 한 번에, 한 번 더 누르면 다음 대사로.</li>
+    </ul>
+    <button class="go" id="begin" type="button">대화 시작</button></div>`;
+  $('screen').hidden = false;
+  $('begin').onclick = ()=>{ $('screen').hidden = true; S.started = true; say(R[0].intro, check); };
+}
+function start(){ clearTimer(); closeDrawers();
+  S = fresh(); Q=[]; Qdone=null; resetLog(); setFace('normal'); $('stamp').classList.remove('on');
+  renderStatements(); renderCards(); show('n','(소파에 앉은 지명이가 쿠션을 꼭 끌어안고 장식장 쪽은 쳐다보지도 않는다.)','sweat');
+  hud(); intro();
+}
+
+$('stList').addEventListener('click', e=>{ const li=e.target.closest('li'); if(!li||S.over) return; S.sel = +li.dataset.i; renderStatements(); hud(); if(MQ.matches) closeDrawers(); });
+$('stList').addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); e.target.closest('li')?.click(); } });
+$('cards').addEventListener('click', e=>{ const c=e.target.closest('.card'); if(!c) return; S.ev = S.ev===c.dataset.k? null : c.dataset.k; renderCards(); hud(); });
+$('btnStList').onclick = ()=> toggleDrawer('st');
+$('btnEvList').onclick = ()=> toggleDrawer('ev');
+$('btnEvPick').onclick = ()=>{ if(S.ev) closeDrawers(); };
+$('scrim').onclick = closeDrawers;
+document.querySelectorAll('[data-close]').forEach(b=>{ b.onclick = closeDrawers; });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeDrawers(); });
+MQ.addEventListener('change', closeDrawers);
+document.addEventListener('keydown', e=>{ if((e.key==='Enter'||e.key===' ') && (S.busy||typing()) && !e.target.closest('button,li')){ e.preventDefault(); advance(); } });
+$('room').addEventListener('click', advance);
+$('btnPress').onclick = press; $('btnPresent').onclick = present; $('btnCalm').onclick = calm;
+
+window.claude?.hot?.snapshot?.(()=>({S}));
+const boot = data => {
+  if(data && data.S && data.S.started && !data.S.over){
+    S = Object.assign(fresh(), data.S, {busy:false}); setFace(S.face||'normal');
+    renderStatements(); renderCards(); $('screen').hidden = true; check();
+  } else start();
+};
+window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
+})();
+</script>
+</body>
+</html>

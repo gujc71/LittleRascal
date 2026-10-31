@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ef6221">
+<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<style>
+.hub-back{display:block;margin-bottom:2px}
+.hub-back a{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;line-height:1;
+  color:var(--muted);text-decoration:none;padding:6px 11px;border:1px solid var(--line);
+  border-radius:999px;background:var(--surface)}
+.hub-back a:hover{color:var(--ink)}
+.hub-back a:focus-visible{outline:3px solid var(--heat,var(--ink));outline-offset:2px}
+</style>
+<title>딱 한 시간만 했어요</title>
+<meta name="description" content="게임을 딱 한 시간만 했다는 6학년 재인. 잘 시간이 되기 전에 진술의 빈틈을 찾아 진짜 게임 시간을 알아내는 설득 추리 게임.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="개구쟁이들">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:title" content="딱 한 시간만 했어요">
+<meta property="og:description" content="게임을 딱 한 시간만 했다는 6학년 재인. 잘 시간이 되기 전에 진술의 빈틈을 찾아 진짜 게임 시간을 알아내는 설득 추리 게임.">
+<meta name="twitter:card" content="summary">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&family=Gowun+Dodum&display=swap">
+<style>
+/* Layout: a night-time living room on top (재인 on the sofa, lit by a warm floor lamp), below it the
+   parent's side: 재인's statements as a speech log and an evidence folder of screens and notes.
+   One hot orange accent stands for the overheated tablet. */
+:root{
+  color-scheme:light;
+  --bg:#eff5ff; --surface:#ffffff; --paper:#fbfcff; --ink:#1c1f33; --muted:#616885;
+  --line:#dde5f4; --heat:#ef6221; --heat-ink:#ffffff; --ok:#1f9d89;
+  --room:#d9e8ff; --room-2:#fbf7ff; --lamp:#ffc368; --room-tag:#2f5fa8; --room-ink:#1e2545; --mom:#b4551f; --narr:#5a628a;
+  --shadow:0 1px 0 rgba(28,31,51,.06),0 6px 18px rgba(28,31,51,.08);
+  --f-display:"Black Han Sans","Gowun Dodum",sans-serif;
+  --f-body:"Gowun Dodum","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-talk:"Jua","Gowun Dodum",sans-serif;
+}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--heat);outline-offset:2px}
+.app{max-width:1040px;margin:0 auto;padding-block:12px 0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:12px}
+
+/* HUD */
+.hud{display:grid;grid-template-columns:1fr auto;gap:10px 16px;align-items:end}
+.brand small{display:block;font-size:12px;letter-spacing:.08em;color:var(--muted)}
+.brand h1{margin:0;font-family:var(--f-display);font-weight:400;font-size:26px;line-height:1.1;text-wrap:balance}
+.brand h1 em{font-style:normal;color:var(--heat)}
+.clock{text-align:right;font-variant-numeric:tabular-nums}
+.clock b{font-family:var(--f-display);font-weight:400;font-size:26px;line-height:1}
+.clock small{display:block;font-size:12px;color:var(--muted)}
+.clock.low b{color:var(--heat)}
+.gauges{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;font-size:13px}
+.g label{font-weight:700}
+.g .bar{height:12px;border-radius:6px;background:var(--surface);border:1px solid var(--line);overflow:hidden}
+.g .bar i{display:block;height:100%;width:0;transition:width .5s cubic-bezier(.3,.8,.3,1)}
+.g-conf .bar i{background:var(--ok)}
+.g-upset .bar i{background:var(--heat)}
+.g b{font-variant-numeric:tabular-nums;min-width:2.2em;text-align:right}
+.g-upset.hot{animation:shake .4s}
+.g small{grid-column:1/-1;color:var(--muted);font-size:11.5px;margin-top:-4px}
+
+/* Living room stage */
+.room{position:relative;border-radius:10px;color:var(--room-ink);min-height:clamp(270px,38vh,440px);padding:14px 16px 16px;overflow:hidden;cursor:default;
+  display:flex;flex-direction:column;
+  background:
+    radial-gradient(circle at 92% 8%,color-mix(in srgb,var(--lamp) 38%,transparent),transparent 42%),
+    linear-gradient(180deg,var(--room-2),var(--room) 70%)}
+.room::after{content:"";position:absolute;left:0;right:0;bottom:0;height:46px;background:rgba(216,163,107,.42);pointer-events:none}
+.room.adv{cursor:pointer}
+.round{position:relative;z-index:1;font-family:var(--f-talk);font-size:16px;color:var(--room-tag);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.scene{position:relative;z-index:1;display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:stretch;margin-top:6px;flex:1 1 0;min-height:0}
+#kid{width:150px;height:auto;display:block;align-self:end}
+.talk{min-width:0;padding-bottom:6px;display:flex;flex-direction:column;min-height:0}
+/* 대사가 한 글자씩 쌓이는 창. 문장을 다 쓰면 지난 대사가 위로 밀려 올라간다 */
+.log{flex:1 1 0;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;
+  display:flex;flex-direction:column;
+  -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 28px);
+  mask-image:linear-gradient(180deg,transparent 0,#000 28px)}
+.log::-webkit-scrollbar{display:none}
+.log>:first-child{margin-top:auto}
+.ent{flex:none;font-family:var(--f-talk);font-size:23px;line-height:1.35;margin:0 0 .45em;text-wrap:pretty}
+.ent:last-child{margin-bottom:0}
+.ent:not(:last-child){opacity:.5}
+.ent .who{display:block;font-family:var(--f-talk);font-size:15px;opacity:.75}
+.ent.t{color:var(--mom)}
+.ent.n{color:var(--narr);font-family:var(--f-body);font-size:18px}
+.ent.typing .tx::after{content:'';display:inline-block;width:.45em;height:1em;vertical-align:-.14em;
+  background:currentColor;opacity:.5;animation:caret .9s steps(1,end) infinite}
+@keyframes caret{50%{opacity:0}}
+.stamp{position:absolute;z-index:2;right:18px;top:40px;font-family:var(--f-display);font-size:42px;color:var(--heat);background:rgba(255,255,255,.72);
+  border:5px solid var(--heat);border-radius:10px;padding:2px 14px;transform:rotate(-12deg) scale(2);opacity:0;pointer-events:none}
+.stamp.on{animation:stamp 1.6s ease-out forwards}
+@keyframes stamp{0%{opacity:0;transform:rotate(-12deg) scale(2.2)}12%{opacity:1;transform:rotate(-12deg) scale(1)}80%{opacity:1}100%{opacity:0;transform:rotate(-12deg) scale(1)}}
+@keyframes shake{0%,100%{transform:none}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.room.shake{animation:shake .35s}
+
+/* Parent's side */
+.desk{display:grid;grid-template-columns:1.1fr 1fr;gap:12px;align-items:start}
+.panel{background:var(--surface);border-radius:8px;box-shadow:var(--shadow);padding:14px;min-width:0}
+.panel h2{margin:0 0 8px;font-size:15px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px}
+.panel h2 small{font-weight:400;color:var(--muted);font-size:12.5px}
+.says{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.says li{display:flex;gap:10px;align-items:flex-start;min-height:44px;padding:9px 12px;cursor:pointer;
+  background:var(--paper);border:1.5px solid var(--line);border-radius:4px 14px 14px 14px}
+.says li .n{font-family:var(--f-talk);color:var(--muted);width:1.1em;flex:none}
+.says li .tx{font-family:var(--f-talk);font-size:17px;line-height:1.35;min-width:0}
+.says li .pr{margin-left:auto;flex:none;font-size:11.5px;color:var(--muted);align-self:center;white-space:nowrap}
+.says li:hover{border-color:color-mix(in srgb,var(--heat) 45%,var(--line))}
+.says li.sel{border-color:var(--heat);background:color-mix(in srgb,var(--heat) 10%,var(--paper))}
+.says li.sel .tx{text-decoration:underline wavy var(--heat);text-underline-offset:5px;text-decoration-thickness:1.5px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.card{text-align:left;background:var(--paper);border:1.5px solid var(--line);border-radius:6px;padding:8px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.card b{font-size:13.5px;line-height:1.3}
+.card span{font-size:11.5px;color:var(--muted)}
+.card.sel{border-color:var(--heat);box-shadow:0 0 0 2px color-mix(in srgb,var(--heat) 30%,transparent)}
+.doc{margin-top:10px;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:12px;font-size:14px;min-height:60px}
+.doc .ph{color:var(--muted);font-size:13px;margin:0}
+.doc h3{margin:0 0 6px;font-size:14px}
+.doc p{margin:0 0 6px}
+.doc .meta{font-size:12px;color:var(--muted);margin-bottom:8px}
+.doc .hl{background:color-mix(in srgb,var(--heat) 18%,transparent);border-radius:3px;padding:0 2px}
+.doc table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+.doc th,.doc td{border-bottom:1px solid var(--line);padding:4px 6px;text-align:left;vertical-align:top}
+.doc th{font-weight:700;color:var(--muted);font-size:12px}
+.doc dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0;font-size:13.5px}
+.doc dt{color:var(--muted)} .doc dd{margin:0}
+.chat{display:flex;flex-direction:column;gap:6px}
+.chat div{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;font-size:13.5px}
+.chat .nm{font-weight:700;font-size:12px;color:var(--muted);grid-column:1/-1}
+.chat .msg{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:4px 10px;justify-self:start}
+.chat .tm{font-size:11px;color:var(--muted);align-self:end;font-variant-numeric:tabular-nums}
+.chat .sys{font-size:12.5px;color:var(--ok);font-weight:700}
+.scroll{overflow-x:auto}
+
+/* Mobile drawers (desktop keeps both panels on the desk) */
+.picks{display:none}
+.scrim{display:none}
+.drawer-x{display:none}
+.ev-pick{display:none}
+
+/* Actions */
+.actions{position:sticky;bottom:0;z-index:5;display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:8px;
+  background:var(--bg);padding-block:10px calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line)}
+.actions button{border:1.5px solid var(--ink);background:var(--surface);border-radius:8px;padding:11px 8px;font-weight:700;line-height:1.2}
+.actions button small{display:block;font-weight:400;font-size:11px;color:var(--muted)}
+.actions .primary{background:var(--heat);border-color:var(--heat);color:var(--heat-ink)}
+.actions .primary small{color:inherit;opacity:.8}
+.actions button:disabled{opacity:.4;cursor:not-allowed}
+
+/* Screens */
+.screen{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:color-mix(in srgb,var(--bg) 82%,transparent);
+  backdrop-filter:blur(3px);padding-block:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-bottom,0px));
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));overflow-y:auto}
+.screen[hidden],.next[hidden]{display:none!important}
+.sheet{background:var(--surface);max-width:520px;width:100%;border-radius:10px;box-shadow:var(--shadow);padding:22px;
+  border-top:6px solid var(--heat);position:relative}
+.sheet small.k{font-size:12px;letter-spacing:.08em;color:var(--muted)}
+.sheet h2{font-family:var(--f-display);font-weight:400;font-size:30px;margin:2px 0 10px;line-height:1.15;text-wrap:balance;padding-right:90px}
+.sheet p{margin:0 0 10px}
+.sheet ul{margin:0 0 14px;padding-left:18px;display:grid;gap:4px}
+.sheet .go{width:100%;background:var(--heat);color:var(--heat-ink);border:0;border-radius:8px;padding:13px;font-weight:700;font-size:16px}
+.sheet .acts{display:flex;gap:8px}
+.sheet .acts .go{flex:1}
+.sheet .acts .list{flex:none;display:flex;align-items:center;justify-content:center;padding:13px 16px;border:1.5px solid var(--ink);border-radius:8px;color:var(--ink);background:transparent;font-weight:700;font-size:16px;text-decoration:none}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:12px 0 16px;text-align:center}
+.stats div{border:1px solid var(--line);border-radius:6px;padding:6px 4px;font-size:12px;color:var(--muted)}
+.stats b{display:block;font-size:20px;color:var(--ink);font-variant-numeric:tabular-nums}
+.grade{position:absolute;right:16px;top:18px;width:86px;height:86px;border-radius:50%;border:4px double var(--heat);color:var(--heat);
+  display:grid;place-items:center;text-align:center;font-family:var(--f-display);font-size:16px;line-height:1.1;transform:rotate(14deg)}
+
+@media (max-width:720px){
+  .desk{grid-template-columns:1fr}
+  .scene{grid-template-columns:96px 1fr;gap:10px}
+  #kid{width:96px}
+  .ent{font-size:20px}
+  .brand h1,.clock b{font-size:22px}
+  .room{min-height:230px}
+  .gauges{grid-template-columns:1fr}
+  /* 좁은 화면: 말·증거 패널을 좌우 서랍으로 빼고 버튼으로 연다 */
+  .picks{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .picks button{background:var(--surface);border:1.5px solid var(--ink);border-radius:8px;
+    padding:9px 11px;font-weight:700;line-height:1.25;text-align:left;min-width:0;display:flex;flex-direction:column;gap:1px}
+  .picks button small{font-weight:400;font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .picks button.on{border-color:var(--heat);box-shadow:0 0 0 2px color-mix(in srgb,var(--heat) 25%,transparent)}
+  .picks button.on small{color:var(--heat)}
+  .desk{display:contents}
+  html,body{overflow-x:clip}
+  .app{min-height:100svh}
+  .room{flex:1 1 auto;display:flex;flex-direction:column}
+  .scene{margin-top:auto}
+  .panel{position:fixed;top:0;bottom:0;z-index:15;width:min(90vw,400px);border-radius:0;
+    padding:14px 14px calc(16px + env(safe-area-inset-bottom,0px));overflow-y:auto;overscroll-behavior:contain;
+    visibility:hidden;box-shadow:0 10px 30px rgba(0,0,0,.3);transition:transform .28s ease,visibility 0s linear .28s}
+  #pStatements{left:0;transform:translateX(-101%)}
+  #pEvidence{right:0;transform:translateX(101%)}
+  #pStatements.open,#pEvidence.open{transform:none;visibility:visible;transition:transform .28s ease,visibility 0s}
+  .drawer-x{display:block;position:sticky;top:0;z-index:2;margin:0 0 8px auto;
+    background:var(--surface);border:1.5px solid var(--line);border-radius:999px;padding:5px 13px;font-size:12.5px}
+  .ev-pick{display:block;position:sticky;bottom:0;z-index:2;width:100%;margin-top:10px;background:var(--heat);color:var(--heat-ink);
+    border:0;border-radius:8px;padding:12px;font-weight:700;font-size:15px;box-shadow:0 -6px 12px var(--paper)}
+  .ev-pick:disabled{opacity:.45;cursor:not-allowed}
+  .scrim{display:block;position:fixed;inset:0;z-index:12;width:100%;border:0;padding:0;
+    background:rgba(0,0,0,.42);-webkit-tap-highlight-color:transparent}
+  .scrim[hidden]{display:none!important}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.stamp.on{opacity:1}}
+</style>
+
+</head>
+<body>
+<div class="app">
+<nav class="hub-back"><a href="../index.html">← 게임 목록</a></nav>
+  <header class="hud">
+    <div class="brand"><small>6학년 강재인 · 밤 9시 거실 면담</small><h1>딱 <em>한 시간</em>만 했어요</h1></div>
+    <div class="clock" id="clockBox"><b id="clock">21:40</b><small>22:00 잘 시간</small></div>
+    <div class="gauges">
+      <div class="g g-conf"><label>실토</label><div class="bar"><i id="gConf"></i></div><b id="nConf">0</b><small>100이 되면 재인이가 진짜 게임 시간을 털어놓는다</small></div>
+      <div class="g g-upset" id="upsetBox"><label>삐짐</label><div class="bar"><i id="gUpset"></i></div><b id="nUpset">0</b><small>100이 되면 방문을 쾅 닫고 들어가 버린다</small></div>
+    </div>
+  </header>
+
+  <section class="room" id="room" aria-live="polite">
+    <div class="round"><span id="roundTag">핑계 1/4</span><span id="roundName">한 시간만 했어요</span></div>
+    <div class="scene">
+      <svg id="kid" viewBox="0 0 160 190" aria-label="강재인">
+        <path d="M14 190c4-40 30-58 66-58s62 18 66 58z" fill="#3c7d8c"/>
+        <path d="M50 136q30 22 60 0" stroke="#2c5f6b" stroke-width="6" fill="none" stroke-linecap="round"/>
+        <path d="M68 146v22M92 146v22" stroke="#e9eef0" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="68" cy="170" r="3" fill="#e9eef0"/><circle cx="92" cy="170" r="3" fill="#e9eef0"/>
+        <rect x="68" y="118" width="24" height="20" fill="#e8bd98"/>
+        <path d="M30 86c-8-44 18-64 50-64s58 20 50 64c-2 20 2 36 10 50-16 4-30-4-36-16H56c-6 12-20 20-36 16 8-14 12-30 10-50z" fill="#231c1b"/>
+        <circle cx="34" cy="82" r="10" fill="#e8bd98"/><circle cx="126" cy="82" r="10" fill="#e8bd98"/>
+        <circle cx="80" cy="78" r="47" fill="#f2cfae"/>
+        <path d="M32 78c-4-34 18-52 48-52 31 0 52 18 48 50-5-14-12-22-22-26-4 8-14 12-24 10 4-4 4-8 2-10-10 8-24 10-36 6 2 4 0 8-4 10-4 2-8 6-12 12z" fill="#231c1b"/>
+        <rect x="100" y="38" width="18" height="7" rx="3.5" fill="#f07a9a" transform="rotate(-24 109 41)"/>
+        <g data-f="normal sweat pout"><path d="M54 66l16 2M90 68l16-2" stroke="#231c1b" stroke-width="3.5" stroke-linecap="round"/></g>
+        <g data-f="smug"><path d="M53 64l17 5M90 69l17-5" stroke="#231c1b" stroke-width="3.5" stroke-linecap="round"/></g>
+        <g data-f="shock"><path d="M54 58l15-4M91 54l15 4" stroke="#231c1b" stroke-width="3.5" stroke-linecap="round"/></g>
+        <g data-f="cry"><path d="M54 62l16 6M90 68l16-6" stroke="#231c1b" stroke-width="3.5" stroke-linecap="round"/></g>
+        <g data-f="normal pout"><ellipse cx="62" cy="80" rx="5" ry="6.5" fill="#231c1b"/><ellipse cx="98" cy="80" rx="5" ry="6.5" fill="#231c1b"/><circle cx="64" cy="78" r="1.6" fill="#fff"/><circle cx="100" cy="78" r="1.6" fill="#fff"/></g>
+        <g data-f="sweat"><ellipse cx="57" cy="80" rx="5" ry="6.5" fill="#231c1b"/><ellipse cx="93" cy="80" rx="5" ry="6.5" fill="#231c1b"/></g>
+        <g data-f="smug"><path d="M54 81q8-5 16 0M90 81q8-5 16 0" stroke="#231c1b" stroke-width="3.5" fill="none" stroke-linecap="round"/></g>
+        <g data-f="shock"><circle cx="62" cy="79" r="9" fill="#fff" stroke="#231c1b" stroke-width="2.5"/><circle cx="98" cy="79" r="9" fill="#fff" stroke="#231c1b" stroke-width="2.5"/><circle cx="62" cy="79" r="2.8" fill="#231c1b"/><circle cx="98" cy="79" r="2.8" fill="#231c1b"/></g>
+        <g data-f="cry"><path d="M54 79q8 6 16 0M90 79q8 6 16 0" stroke="#231c1b" stroke-width="3.5" fill="none" stroke-linecap="round"/><path d="M58 84q-3 12 0 22M102 84q3 12 0 22" stroke="#7cc4ef" stroke-width="5" fill="none" stroke-linecap="round"/></g>
+        <g data-f="normal"><path d="M70 101q10 8 20 0" stroke="#7a3b2e" stroke-width="3.5" fill="none" stroke-linecap="round"/></g>
+        <g data-f="smug"><path d="M68 100q14 6 24-4" stroke="#7a3b2e" stroke-width="3.5" fill="none" stroke-linecap="round"/></g>
+        <g data-f="sweat"><path d="M68 102q4-3 8 0t8 0 8 0" stroke="#7a3b2e" stroke-width="3.5" fill="none" stroke-linecap="round"/></g>
+        <g data-f="shock"><ellipse cx="80" cy="104" rx="7" ry="9" fill="#7a3b2e"/></g>
+        <g data-f="cry"><path d="M66 106q14-14 28 0z" fill="#7a3b2e"/></g>
+        <g data-f="pout"><path d="M72 104q8-6 16 0" stroke="#7a3b2e" stroke-width="3.5" fill="none" stroke-linecap="round"/></g>
+        <g data-f="cry pout smug"><ellipse cx="50" cy="94" rx="7" ry="4" fill="#f29a8c" opacity=".6"/><ellipse cx="110" cy="94" rx="7" ry="4" fill="#f29a8c" opacity=".6"/></g>
+        <g data-f="sweat shock"><path d="M124 50c-6 9-8 13-8 17a8 8 0 0016 0c0-4-2-8-8-17z" fill="#9fd6f5"/></g>
+      </svg>
+      <div class="talk" id="talk">
+        <div class="log" id="log"></div>
+      </div>
+    </div>
+    <div class="stamp" id="stamp">들켰다!</div>
+  </section>
+
+  <nav class="picks" aria-label="면담 자료">
+    <button id="btnStList" type="button" aria-controls="pStatements" aria-expanded="false">재인이의 말<small id="pickStText">문장 고르기</small></button>
+    <button id="btnEvList" type="button" aria-controls="pEvidence" aria-expanded="false">증거 모음<small id="pickEvText">카드 고르기</small></button>
+  </nav>
+
+  <section class="desk">
+    <div class="panel" id="pStatements">
+      <button class="drawer-x" type="button" data-close>닫기 ✕</button>
+      <h2>재인이의 말 <small>수상한 문장을 고르세요</small></h2>
+      <ol class="says" id="stList"></ol>
+    </div>
+    <div class="panel" id="pEvidence">
+      <h2>증거 모음 <small>카드를 눌러 내용을 확인</small></h2>
+      <div class="cards" id="cards"></div>
+      <div class="doc" id="doc"><p class="ph">증거 카드를 고르면 여기에 내용이 펼쳐집니다.</p></div>
+      <button class="ev-pick" id="btnEvPick" type="button" disabled>카드를 먼저 고르세요</button>
+    </div>
+  </section>
+
+  <button class="scrim" id="scrim" type="button" hidden aria-label="닫기"></button>
+
+  <nav class="actions">
+    <button id="btnPress" type="button">캐묻기<small>좀 더 물어보기 · 1분</small></button>
+    <button id="btnPresent" class="primary" type="button">증거 내밀기<small>문장 + 증거 · 1분</small></button>
+    <button id="btnCalm" type="button">달래기<small>삐짐 −20 · 1분 · <span id="nCalm">2</span>회</small></button>
+  </nav>
+</div>
+
+<div class="screen" id="screen" hidden></div>
+
+<script>
+(function(){
+const TOTAL = 20;
+const CALM_MAX = 2;  /* 달래기는 한 판에 두 번까지, 연달아 쓸 수 없다 */
+const EV = {
+  heat:{name:'태블릿 상태 메모', sub:'21:36 이불 속에서', html:`<h3>엄마가 적어 둔 메모</h3><div class="meta">10월 27일(화) 21:36 · 재인이 침대, 이불 밑에서 발견</div>
+    <div class="scroll"><table><tbody>
+      <tr><th>본체</th><td class="hl">손난로처럼 뜨끈뜨끈함</td></tr>
+      <tr><th>충전기</th><td>어댑터까지 뜨거움, 꽂혀 있음</td></tr>
+      <tr><th>배터리</th><td class="hl">충전 중인데도 23%</td></tr>
+      <tr><th>화면 밝기</th><td>최대</td></tr>
+    </tbody></table></div>`},
+  youtube:{name:'유튜브 시청 기록', sub:'오늘 저녁', html:`<h3>유튜브 시청 기록 (재인이 태블릿)</h3><div class="meta">10월 27일(화)</div>
+    <div class="scroll"><table><thead><tr><th>시각</th><th>영상</th></tr></thead><tbody>
+      <tr><td>18:41</td><td class="hl">[드래곤 리그] 신규 레이드 3분 공략</td></tr>
+      <tr><td>18:46</td><td class="hl">용갑옷 하루 만에 얻는 법 (누적 접속 꿀팁)</td></tr>
+      <tr><td>18:55</td><td>ㅋㅋㅋ 레이드 실패 모음 2탄</td></tr>
+    </tbody></table></div><p class="meta" style="margin:6px 0 0">검색 기록에 '분수의 나눗셈'은 없습니다.</p>`},
+  guild:{name:'게임 길드 채팅', sub:'태블릿 화면 캡처', html:`<h3>드래곤 리그 · 길드 채팅</h3><div class="meta">태블릿에 열려 있던 화면 · 오늘 밤</div>
+    <div class="chat">
+      <div><span class="nm">불꽃용사재인</span><span class="msg hl">동생이 자꾸 옆에서 구경함 ㅡㅡ</span><span class="tm">20:47</span></div>
+      <div><span class="nm">검은늑대</span><span class="msg">ㅋㅋ 쫓아내</span><span class="tm">20:48</span></div>
+      <div><span class="nm">불꽃용사재인</span><span class="msg hl">울엄마 9시반 퇴근임 그 전에 레이드 한 판 더 ㄱ</span><span class="tm">21:05</span></div>
+      <div><span class="sys">불꽃용사재인 님이 '전설 용갑옷'을 얻었습니다!</span><span class="tm">21:12</span></div>
+    </div>`},
+  minseo:{name:'동생 주아의 말', sub:'21:38 양치하다가', html:`<h3>동생 강주아 (3학년)</h3><div class="meta">21:38 · 화장실에서 양치하다가</div>
+    <p>"언니가 태블릿 만지면 죽는댔어. 나는 옆에서 구경만 했어."</p>
+    <p class="hl">"레이드? 그게 뭐야?"</p>`},
+  workbook:{name:'수학 익힘책', sub:'오늘 숙제 범위', html:`<h3>6학년 2학기 수학 익힘책</h3><div class="meta">학원 숙제 범위 · 58~61쪽</div>
+    <div class="scroll"><table><tbody>
+      <tr><th>58쪽</th><td class="hl">1번만 풀고 나머지는 빈칸</td></tr>
+      <tr><th>59~61쪽</th><td>깨끗함</td></tr>
+      <tr><th>여백</th><td>용 그림과 '레이드 ㄱㄱ' 낙서</td></tr>
+    </tbody></table></div>`},
+  delivery:{name:'배달 앱 주문 내역', sub:'오늘 18:31', html:`<h3>배달 앱 주문 내역</h3><div class="meta">엄마 카드 · 재인이가 주문</div>
+    <dl><dt>주문</dt><dd>18:31 · 후라이드 반 양념 반</dd>
+    <dt>요청 사항</dt><dd class="hl">벨 누르지 말고 문 앞에 두세요 (게임 중)</dd>
+    <dt>배달 완료</dt><dd>19:02</dd></dl>`},
+  item:{name:'새 아이템 정보', sub:'전설 용갑옷', html:`<h3>전설 용갑옷</h3><div class="meta">드래곤 리그 · 재인이 캐릭터 장비 창</div>
+    <dl><dt>등급</dt><dd>전설</dd>
+    <dt>얻는 방법</dt><dd class="hl">하루 누적 접속 4시간 달성 보상</dd>
+    <dt>얻은 시각</dt><dd>오늘 21:12</dd>
+    <dt>설명</dt><dd>끈기 있는 용사에게만 주어지는 갑옷.</dd></dl>`},
+  kakao:{name:'재인이가 보낸 카톡', sub:'오늘 17:58', html:`<h3>엄마 ↔ 재인 카톡</h3><div class="meta">10월 27일(화)</div>
+    <div class="chat">
+      <div><span class="nm">재인</span><span class="msg">엄마 나 숙제 다 하고 게임 딱 1시간 하고 껐어 ㅎㅎ</span><span class="tm">17:58</span></div>
+      <div><span class="nm">엄마</span><span class="msg">오 우리 딸 최고</span><span class="tm">18:10</span></div>
+    </div>`}
+};
+const EV_ORDER = ['heat','youtube','guild','minseo','workbook','delivery','item','kakao'];
+
+// line: [who, text, face]  who: s=재인, t=엄마(플레이어), n=narration
+const R = [
+  {name:'한 시간만 했어요',
+   intro:[['t','재인아, 오늘 게임 얼마나 했어?'],['s','한 시간이요! 딱 한 시간.','smug'],['s','약속 지켰어요.','normal']],
+   st:[
+    {tx:'학원 끝나고 4시에 와서 숙제부터 했어요.', press:[['t','무슨 숙제?'],['s','수학 익힘책이요. 다 했어요.','smug']]},
+    {tx:'5시부터 6시까지 딱 한 시간만 했어요.', press:[['t','어떻게 그렇게 정확히 알아?'],['s','타이머 맞춰 놨어요. 저 시간 엄청 잘 지켜요.','smug']]},
+    {tx:'6시에 끄고 나서는 태블릿 근처에도 안 갔어요.', press:[['t','그럼 태블릿은 왜 이불 속에 있었어?'],['s','몰라요. 주아가 갖다 놨나 봐요.','sweat'],['n','(아까 이불 속에서 태블릿을 꺼냈을 때 손에 닿은 느낌이 이상했는데…)']]},
+    {tx:'태블릿은 충전하려고 침대에 둔 거예요.', press:[['t','침대에서 충전을 해?'],['s','콘센트가 거기 있잖아요.','normal']]}
+   ],
+   ok:{st:2, ev:'heat', lines:[['t','엄마가 9시 36분에 이불 속에서 꺼내면서 적어 둔 거야.'],['t','본체는 손난로처럼 뜨끈하고, 충전기를 꽂아 놨는데 배터리가 23%야.'],['s','헉.','shock'],['s','그, 그건… 6시 이후에 쓴 건 맞는데요…','sweat']]},
+   near:{
+    '3:heat':[['t','충전기까지 뜨겁던데?'],['s','충전하면 원래 뜨거워요! 과학 시간에 배웠어요.','smug'],['n','(그럴듯하다. 그런데 꽂아 놨는데도 배터리가 줄었다는 건…)']],
+    '2:delivery':[['t','6시 반에 치킨 시키면서 "게임 중"이라고 썼던데?'],['s','그건 습관이에요. 친구들도 다 그렇게 써요.','sweat'],['n','(수상하지만 결정타는 아니다. 태블릿 자체를 살펴보자.)']]
+   }},
+  {name:'유튜브만 봤어요',
+   intro:[['s','아 그게요… 6시 이후에 태블릿 쓴 건 맞아요.','sweat'],['s','근데 게임 아니고 공부했어요!','normal']],
+   st:[
+    {tx:'6시 이후엔 게임 말고 유튜브만 봤어요.', press:[['t','유튜브로 뭘 봤는데?'],['s','공부하는 거요. 진짜예요.','normal']]},
+    {tx:'수학 강의 봤어요. 분수의 나눗셈이요.', press:[['t','분수의 나눗셈이 어려웠어?'],['s','네. 그래서 세 개나 봤어요.','smug'],['n','(세 개나? 시청 기록에 남아 있겠지.)']]},
+    {tx:'학원 선생님이 보라고 하신 거예요.', press:[['t','선생님한테 여쭤봐도 돼?'],['s','아… 선생님 바쁘실 텐데요.','sweat']]}
+   ],
+   ok:{st:1, ev:'youtube', lines:[['t','유튜브 시청 기록이야. 6시 41분 "신규 레이드 3분 공략", 46분 "용갑옷 하루 만에 얻는 법".'],['t','"분수의 나눗셈"은 검색한 적도 없네.'],['s','공략도… 공부는 공부잖아요…','shock'],['s','알았어요. 게임 영상 본 건 맞아요.','sweat']]},
+   near:{
+    '0:youtube':[['t','유튜브 기록을 봤는데…'],['s','거봐요, 유튜브 본 거 맞죠?','smug'],['n','(유튜브를 본 건 사실이다. 무엇을 봤는지가 문제다.)']]
+   }},
+  {name:'주아가 했어요',
+   intro:[['s','그리고 게임은요… 사실 주아가 한 거예요.','sweat'],['s','저는 안 했어요. 진짜예요.','pout']],
+   st:[
+    {tx:'주아가 레이드 하고 싶다고 하도 졸라서 빌려줬어요.', press:[['t','주아가 레이드를 해?'],['s','네, 요즘 완전 빠졌어요. 저보다 더 해요.','smug']]},
+    {tx:'저는 그동안 제 방에서 수학 익힘책 풀었어요.', press:[['t','다 풀었어?'],['s','네… 거의요. 대부분이요.','sweat']]},
+    {tx:'주아 게임 진짜 잘해요. 혼자 용갑옷도 땄어요.', press:[['t','3학년이 혼자?'],['s','천재예요. 집안 내력이에요.','smug'],['n','(누가 용갑옷을 땄는지, 게임 안에 기록이 남지 않았을까?)']]}
+   ],
+   ok:{st:0, ev:'guild', lines:[['t','태블릿에 열려 있던 길드 채팅이야. 8시 47분, "불꽃용사재인".'],['t','"동생이 자꾸 옆에서 구경함." 9시 5분엔 "울엄마 9시반 퇴근임 그 전에 레이드 한 판 더."'],['s','아……','shock'],['s','그건… 제가 쓴 거 맞아요. 주아는 구경만 했어요.','pout']]},
+   near:{
+    '0:minseo':[['t','주아는 레이드가 뭔지도 모른다던데?'],['s','주아가 엄마 앞이라 모르는 척하는 거예요!','sweat'],['n','(동생 말만으론 부족하다. 재인이가 직접 남긴 흔적이 있다면…)']],
+    '2:minseo':[['t','주아는 옆에서 구경만 했다던데?'],['s','주아는 원래 겸손해요.','smug'],['n','(빠져나갔다. 게임 속 기록을 찾아보자.)']],
+    '1:workbook':[['t','익힘책 58쪽에 1번만 풀고 나머지는 빈칸이던데?'],['s','어려운 건 내일 하려고 남겨 둔 거예요!','sweat'],['n','(숙제를 안 한 건 확실하다. 그런데 누가 게임을 했는지가 먼저다.)']]
+   }},
+  {name:'두 시간밖에 안 했어요',
+   intro:[['s','알았어요, 제가 했어요. 근데요!','pout'],['s','다 합쳐도 두 시간이에요. 약속보다 한 시간 더 한 것뿐이에요.','sweat']],
+   st:[
+    {tx:'학원 끝나고 4시 반부터 5시 반까지 한 시간이요.', press:[['t','숙제부터 했다며?'],['s','그건… 빨리 했어요. 10분 만에.','sweat']]},
+    {tx:'저녁 먹고 8시부터 9시까지 한 시간. 그게 끝이에요.', press:[['t','저녁은 몇 시에 먹었는데?'],['s','7시쯤요? 치킨 시켜 먹었어요.','normal']]},
+    {tx:'용갑옷은 접속 이벤트라 그냥 주는 거예요.', press:[['t','그냥 준다고?'],['s','네. 들어가기만 하면 줘요. 다들 있어요.','smug'],['n','(아까 본 유튜브 제목이 "용갑옷 하루 만에 얻는 법 (누적 접속 꿀팁)"이었는데…)']]}
+   ],
+   ok:{st:2, ev:'item', lines:[['t','용갑옷 정보 화면이야. 얻는 방법 읽어 볼래?'],['t','"하루 누적 접속 4시간 달성 보상. 얻은 시각 21:12."'],['s','……','shock'],['s','죄송해요. 사실 4시 10분부터 엄마 오기 직전까지 했어요. 저녁 먹을 때만 쉬었어요.','cry'],['t','솔직하게 말해 줘서 고마워. 이번 주는 태블릿을 거실에서 충전하자.'],['s','네… 익힘책도 내일 아침에 마저 풀게요.','normal']]},
+   near:{
+    '1:delivery':[['t','치킨은 7시에 왔는데, 8시까지 뭐 했어?'],['s','뼈를… 아주 천천히 발랐어요.','sweat'],['n','(수상하다. 하지만 오늘 몇 시간 했는지 숫자로 보여 주는 증거가 있으면 좋겠다.)']],
+    '0:workbook':[['t','10분 만에 했다는 익힘책이 빈칸이던데?'],['s','어려운 건 내일 하려고요!','sweat'],['n','(숙제 얘기는 나중에. 지금은 게임 시간이다.)']]
+   }}
+];
+const WRONG = [
+  [['s','그게 지금 이거랑 무슨 상관인데요?','pout']],
+  [['s','엄마 지금 저 의심하는 거죠? 너무해요.','cry']],
+  [['s','…네? 그거 아무 상관 없는데요.','smug'],['n','(헛짚었다. 재인이 입이 점점 튀어나온다.)']],
+  [['s','엄마는 맨날 제 말 안 믿어요…','cry']]
+];
+const REPRESS = [['t','다시 한번 말해 볼래?'],['s','아까 말했잖아요. 자꾸 똑같은 거 물어보면 짜증 나요.','pout']];
+
+const $ = id => document.getElementById(id);
+let S, Q = [], Qdone = null, timer = null;
+/* CHAR_MS: 글자 하나가 더 찍히는 간격. LOG_MAX: 화면에 남겨 두는 대사 수 */
+const CHAR_MS = 55, LOG_MAX = 30;
+/* 모션을 줄인 설정에서도 글자는 한 자씩 찍고, 스크롤만 단번에 옮긴다 */
+const noAnim = window.matchMedia('(prefers-reduced-motion:reduce)');
+let typer = null, cur = null, scrollAt = -1;
+function clearTimer(){
+  if(timer){ clearTimeout(timer); timer = null; }
+  if(typer){ clearInterval(typer); typer = null; }
+}
+
+function fresh(){ return {round:0, conf:0, upset:0, maxUpset:0, time:TOTAL, sel:-1, ev:null, pressed:{}, near:{}, mistakes:0, calms:0, lastCalm:false, busy:false, over:false, started:false, face:'normal'}; }
+
+function setFace(f){ S.face=f; document.querySelectorAll('#kid [data-f]').forEach(g=>{ g.style.display = g.dataset.f.split(' ').includes(f)?'':'none'; }); }
+function clockText(){ const m = 40 + (TOTAL - S.time); return m>=60 ? '22:'+String(m-60).padStart(2,'0') : '21:'+String(m).padStart(2,'0'); }
+
+function hud(){
+  $('gConf').style.width = S.conf+'%'; $('nConf').textContent = S.conf;
+  $('gUpset').style.width = S.upset+'%'; $('nUpset').textContent = S.upset;
+  $('clock').textContent = clockText();
+  $('clockBox').classList.toggle('low', S.time<=5);
+  $('roundTag').textContent = '핑계 '+(S.round+1)+'/4';
+  $('roundName').textContent = '"'+R[S.round].name+'"';
+  const idle = !S.busy && !S.over && S.started;
+  $('btnPress').disabled = !idle || S.sel<0;
+  $('btnPresent').disabled = !idle || S.sel<0 || !S.ev;
+  $('btnCalm').disabled = !idle || S.calms>=CALM_MAX || S.lastCalm;
+  $('nCalm').textContent = CALM_MAX - S.calms;
+  $('room').classList.toggle('adv', S.busy);
+  renderPicks();
+}
+/* Mobile: the desk panels become drawers - statements slide in from the left, evidence from the right */
+const MQ = window.matchMedia('(max-width:720px)');
+const DRAWER = {st:'pStatements', ev:'pEvidence'};
+function renderPicks(){
+  const st = S.sel<0 ? null : R[S.round].st[S.sel];
+  $('pickStText').textContent = st ? st.tx : '문장 고르기';
+  $('btnStList').title = st ? st.tx : '';
+  $('pickEvText').textContent = S.ev ? EV[S.ev].name : '카드 고르기';
+  $('btnStList').classList.toggle('on', S.sel>=0);
+  $('btnEvList').classList.toggle('on', !!S.ev);
+}
+function closeDrawers(){
+  $('pStatements').classList.remove('open'); $('pEvidence').classList.remove('open');
+  $('scrim').hidden = true;
+  $('btnStList').setAttribute('aria-expanded','false');
+  $('btnEvList').setAttribute('aria-expanded','false');
+}
+function openDrawer(w){
+  closeDrawers();
+  $(DRAWER[w]).classList.add('open'); $('scrim').hidden = false;
+  $(w==='st'?'btnStList':'btnEvList').setAttribute('aria-expanded','true');
+}
+function toggleDrawer(w){ if($(DRAWER[w]).classList.contains('open')) closeDrawers(); else openDrawer(w); }
+function renderStatements(){
+  const r = R[S.round];
+  $('stList').innerHTML = r.st.map((s,i)=>`<li tabindex="0" data-i="${i}" class="${S.sel===i?'sel':''}"><span class="n">${i+1}</span><span class="tx">${s.tx}</span>${S.pressed[S.round+':'+i]?'<span class="pr">캐물음</span>':''}</li>`).join('');
+}
+function renderCards(){
+  $('cards').innerHTML = EV_ORDER.map(k=>`<button type="button" class="card ${S.ev===k?'sel':''}" data-k="${k}"><b>${EV[k].name}</b><span>${EV[k].sub}</span></button>`).join('');
+  $('doc').innerHTML = S.ev ? EV[S.ev].html : '<p class="ph">증거 카드를 고르면 여기에 내용이 펼쳐집니다.</p>';
+  $('btnEvPick').disabled = !S.ev;
+  $('btnEvPick').textContent = S.ev ? '「'+EV[S.ev].name+'」 선택' : '카드를 먼저 고르세요';
+}
+function speaker(w){ return w==='s'?'재인': w==='t'?'나 (엄마)':''; }
+function typing(){ return !!cur; }
+/* 늘어난 만큼만 부드럽게 내려가면, 다 찍힌 대사가 위로 밀려 올라간다 */
+function scrollLog(){
+  const g = $('log'), top = Math.max(0, g.scrollHeight - g.clientHeight);
+  if(top === scrollAt) return;
+  scrollAt = top;
+  g.scrollTo({top, behavior: noAnim.matches?'auto':'smooth'});
+}
+function resetLog(){ $('log').textContent = ''; cur = null; scrollAt = -1; }
+/* 문장을 끝까지 드러낸다 — 저절로 다 찍혔거나, 화면을 눌러 건너뛰었을 때 */
+function endLine(){
+  if(typer){ clearInterval(typer); typer = null; }
+  if(!cur) return;
+  cur.tx.textContent = cur.t;
+  cur.tx.removeAttribute('aria-hidden');
+  cur.el.classList.remove('typing');
+  cur = null;
+  scrollLog();
+}
+function show(w,t,f){
+  if(f) setFace(f);
+  endLine();
+  const g = $('log'), prev = g.lastElementChild, txt = String(t);
+  if(prev && prev.dataset.w===w && prev.dataset.t===txt) return;  /* 막 한 말은 다시 쌓지 않는다 */
+  const el = document.createElement('p');
+  el.className = 'ent '+w+' typing'; el.dataset.w = w; el.dataset.t = txt;
+  const who = speaker(w);
+  if(who){ const b = document.createElement('b'); b.className = 'who'; b.textContent = who; el.appendChild(b); }
+  const tx = document.createElement('span');
+  tx.className = 'tx';
+  tx.setAttribute('aria-hidden','true');  /* 한 글자씩 바뀔 때마다 읽어 주지 않도록 */
+  el.appendChild(tx); g.appendChild(el);
+  while(g.children.length > LOG_MAX) g.removeChild(g.firstElementChild);
+  cur = {el, tx, t:txt, i:0};
+  scrollLog();
+  typer = setInterval(()=>{
+    if(!cur){ clearInterval(typer); typer = null; return; }
+    cur.tx.textContent = cur.t.slice(0, ++cur.i);
+    if(cur.i >= cur.t.length) endLine(); else scrollLog();
+  }, CHAR_MS);
+}
+function say(lines, done){ Q = lines.slice(); Qdone = done||null; S.busy = true; step(); }
+function step(){
+  clearTimer();
+  if(!Q.length){ S.busy=false; const d=Qdone; Qdone=null; hud(); if(d) d(); return; }
+  const [w,t,f] = Q.shift(); show(w,t,f);
+  const n = String(t).length;
+  const read = Math.min(6000, Math.max(1600, 1200 + n*85));
+  timer = setTimeout(step, Math.max(read, n*CHAR_MS + 1200));
+  hud();
+}
+/* 한 번 누르면 문장을 끝까지, 다시 누르면 다음 대사로 */
+function advance(){
+  if(typing()){ clearTimer(); endLine(); if(S.busy) timer = setTimeout(step, 1200); return; }
+  if(S.busy) step();
+}
+function bump(dc, du){
+  S.conf = Math.max(0, Math.min(100, S.conf+dc));
+  S.upset = Math.max(0, Math.min(100, S.upset+du));
+  S.maxUpset = Math.max(S.maxUpset, S.upset);
+  if(du>0){ const b=$('upsetBox'); b.classList.remove('hot'); void b.offsetWidth; b.classList.add('hot'); }
+  hud();
+}
+function check(){
+  if(S.over) return;
+  if(S.upset>=100) return say([['s','아 몰라! 엄마 미워요!!','cry'],['n','쾅! 재인이가 방문을 닫고 들어가 버렸다.'],['n','문 너머로 이불 뒤집어쓰는 소리가 들린다.']], ()=>end('upset'));
+  if(S.time<=0) return say([['n','밤 10시. 거실 시계가 울린다.'],['s','앗, 10시다! 10시엔 무조건 자라고 하셨잖아요. 안녕히 주무세요!','smug'],['n','재인이는 방으로 쏙 들어갔다. 진실도 함께.']], ()=>end('bell'));
+  idleLine();
+}
+function idleLine(){
+  const f = S.upset>=70?'cry': S.upset>=40?'pout':'normal';
+  show('n', S.upset>=70 ? '(재인이 입이 댓 발 나왔다. 한 번만 더 헛짚으면 방으로 들어가 버릴 것 같다.)' : '(재인이의 말 중에 증거와 어긋나는 문장이 있다. 찾아서 증거를 내밀자.)', f);
+}
+function press(){
+  if(S.busy||S.sel<0) return;
+  const key = S.round+':'+S.sel; S.time--; S.lastCalm = false;
+  if(S.pressed[key]){ bump(0,12); say(REPRESS, check); }
+  else { S.pressed[key]=true; bump(3,5); renderStatements(); say(R[S.round].st[S.sel].press, check); }
+}
+function calm(){
+  if(S.busy||S.calms>=CALM_MAX||S.lastCalm) return; S.calms++; S.lastCalm = true; S.time--;
+  if(S.upset<10){ say([['t','괜찮아, 혼내려는 거 아니야.'],['s','그럼 저 이제 들어가도 돼요?','smug']], check); return; }
+  bump(0,-20);
+  say([['t','엄마 화난 거 아니야. 있었던 일만 듣고 싶어.'],['s','…(훌쩍) 네.','pout']], check);
+}
+function stamp(){ const s=$('stamp'); s.classList.remove('on'); void s.offsetWidth; s.classList.add('on'); const b=$('room'); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); }
+function present(){
+  if(S.busy||S.sel<0||!S.ev) return;
+  const r = R[S.round], si = S.sel, ek = S.ev; S.time--; S.lastCalm = false;
+  const lead = ['t','이거 한번 볼래? '+EV[ek].name+'이야.'];
+  if(r.ok.st===si && r.ok.ev===ek){
+    stamp(); bump(S.round===3?100:22, -8);
+    say(r.ok.lines, ()=>{
+      if(S.round===3){ S.conf=100; hud(); end('win'); return; }
+      S.round++; S.sel=-1; S.ev=null; renderStatements(); renderCards(); hud();
+      say(R[S.round].intro, check);
+    });
+    return;
+  }
+  const nk = si+':'+ek;
+  if(r.near[nk]){
+    const first = !S.near[S.round+':'+nk]; S.near[S.round+':'+nk]=true;
+    bump(first?5:0, first?0:8); say([lead, ...r.near[nk]], check); return;
+  }
+  S.mistakes++;
+  if(ek==='kakao'){ bump(-5,14); say([lead,['s','거봐요! 제가 6시 전에 엄마한테 말했잖아요!','smug'],['n','(오히려 재인이 편을 들어 준 꼴이 됐다.)']], check); return; }
+  bump(0,22);
+  say([lead, ...WRONG[(S.mistakes-1)%WRONG.length]], check);
+}
+
+function grade(){
+  if(S.mistakes===0 && S.maxUpset<50) return '명탐정\n엄마';
+  if(S.mistakes<=2 && S.maxUpset<80) return '눈치\n백단';
+  return '다음엔\n꼭';
+}
+function end(kind){
+  clearTimer(); closeDrawers(); S.over = true; hud();
+  const used = TOTAL - S.time;
+  const T = {
+    win:{k:'면담 끝 · '+clockText(), h:'진실을 받아냈다', p:'한 시간이 아니라 다섯 시간 가까이였다. 재인이는 이번 주 내내 태블릿을 거실에서 충전하고, 내일 아침 익힘책을 마저 풀기로 약속했다.'},
+    upset:{k:'면담 중단 · '+clockText(), h:'재인이가 방문을 닫아 버렸다', p:'너무 몰아붙였다. 오늘 밤 대화는 여기까지. 엉뚱한 증거를 내밀기 전에 달래기로 삐짐을 낮춰 보자.'},
+    bell:{k:'22:00 · 잘 시간', h:'잘 시간이 됐다', p:'핑계를 다 깨기 전에 10시가 됐다. 확실한 문장에만 시간을 쓰고, 이미 들은 말은 다시 묻지 말자.'}
+  }[kind];
+  const g = kind==='win' ? grade() : '';
+  $('screen').innerHTML = `<div class="sheet" role="dialog" aria-labelledby="endH">
+    ${g?`<div class="grade">${g.replace('\n','<br>')}</div>`:''}
+    <small class="k">${T.k}</small><h2 id="endH">${T.h}</h2><p>${T.p}</p>
+    <div class="stats"><div><b>${used}분</b>쓴 시간</div><div><b>${S.mistakes}번</b>헛짚은 증거</div><div><b>${S.maxUpset}</b>최고 삐짐</div></div>
+    <div class="acts"><button class="go" id="again" type="button">다시 하기</button><a class="list" href="../index.html">게임 목록</a></div></div>`;
+  $('screen').hidden = false;
+  $('again').onclick = start;
+  setFace(kind==='win'?'normal':kind==='upset'?'cry':'smug');
+}
+function intro(){
+  $('screen').innerHTML = `<div class="sheet" role="dialog" aria-labelledby="inH">
+    <small class="k">10월 27일(화) 21:40 · 우리 집 거실</small>
+    <h2 id="inH">태블릿이 너무 뜨겁다</h2>
+    <p>평일 게임은 하루 1시간이 약속이다. 야근하고 9시 반에 들어왔더니 재인이 태블릿이 이불 속에서 뜨끈하다. 10시 잠자리에 들기 전 20분 동안 진짜 게임 시간을 알아내자. 재인이는 핑계를 네 번 바꿀 것이다.</p>
+    <ul>
+      <li>재인이의 말 중 증거와 어긋나는 <b>한 문장</b>을 고르고, 맞는 증거를 <b>내밀면</b> 핑계가 무너진다.</li>
+      <li><b>캐묻기</b>로 힌트를 얻을 수 있지만, 같은 말을 또 물으면 재인이가 짜증을 낸다.</li>
+      <li>엉뚱한 증거를 내밀면 <b>삐짐</b>이 오른다. 100이 되면 방문이 닫힌다. <b>달래기</b>로 풀어 주자. 단, 연달아 쓸 수 없고 한 판에 두 번까지만.</li>
+      <li>모든 행동은 1분. 10시가 되면 재인이는 "안녕히 주무세요" 하고 방으로 도망간다.</li>
+      <li>대화는 한 글자씩 찍힌다. 화면을 누르면 문장을 한 번에, 한 번 더 누르면 다음 대사로.</li>
+    </ul>
+    <button class="go" id="begin" type="button">대화 시작</button></div>`;
+  $('screen').hidden = false;
+  $('begin').onclick = ()=>{ $('screen').hidden = true; S.started = true; say(R[0].intro, check); };
+}
+function start(){ clearTimer(); closeDrawers();
+  S = fresh(); Q=[]; Qdone=null; resetLog(); setFace('normal'); $('stamp').classList.remove('on');
+  renderStatements(); renderCards(); show('n','(소파에 앉은 재인이가 눈을 동그랗게 뜨고 엄마를 본다.)','sweat');
+  hud(); intro();
+}
+
+$('stList').addEventListener('click', e=>{ const li=e.target.closest('li'); if(!li||S.over) return; S.sel = +li.dataset.i; renderStatements(); hud(); if(MQ.matches) closeDrawers(); });
+$('stList').addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); e.target.closest('li')?.click(); } });
+$('cards').addEventListener('click', e=>{ const c=e.target.closest('.card'); if(!c) return; S.ev = S.ev===c.dataset.k? null : c.dataset.k; renderCards(); hud(); });
+$('btnStList').onclick = ()=> toggleDrawer('st');
+$('btnEvList').onclick = ()=> toggleDrawer('ev');
+$('btnEvPick').onclick = ()=>{ if(S.ev) closeDrawers(); };
+$('scrim').onclick = closeDrawers;
+document.querySelectorAll('[data-close]').forEach(b=>{ b.onclick = closeDrawers; });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeDrawers(); });
+MQ.addEventListener('change', closeDrawers);
+document.addEventListener('keydown', e=>{ if((e.key==='Enter'||e.key===' ') && (S.busy||typing()) && !e.target.closest('button,li')){ e.preventDefault(); advance(); } });
+$('room').addEventListener('click', advance);
+$('btnPress').onclick = press; $('btnPresent').onclick = present; $('btnCalm').onclick = calm;
+
+window.claude?.hot?.snapshot?.(()=>({S}));
+const boot = data => {
+  if(data && data.S && data.S.started && !data.S.over){
+    S = Object.assign(fresh(), data.S, {busy:false}); setFace(S.face||'normal');
+    renderStatements(); renderCards(); $('screen').hidden = true; check();
+  } else start();
+};
+window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
+})();
+</script>
+
+</body>
+</html>
