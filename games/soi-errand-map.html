@@ -1,0 +1,571 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>소이의 심부름</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap">
+<style>
+/* Layout: a neighbourhood street map (blocks, buildings, stream, railway, parks) with shop pins on the left; mom's memo, running sum, distance table and result on the right. Single bright look by choice. */
+:root{
+  --land:#eceee8; --bldg:#dcdcd5; --bldgEdge:#cbcbc3; --road:#ffffff; --roadEdge:#cfd4d9;
+  --main:#ffe9a8; --mainEdge:#e6c463; --park:#c6e4b1; --tree:#a8d38e; --school:#efe0c2; --water:#a9d4f1; --waterEdge:#86bde4; --rail:#8b939c;
+  --ink:#27313b; --soft:#5f6d79; --paper:#ffffff; --line:#d9e2d3;
+  --route:#ff6a4d; --best:#2f6fd6; --sun:#ffc93c;
+  --display:'Jua','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  --body:'Gowun Dodum','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  color-scheme:light;
+}
+html,body{background:#eef3ea;color:var(--ink)}
+body{font-family:var(--body);font-size:15px;line-height:1.55;touch-action:manipulation;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 32px}
+.wrap{max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(28px,4.4vw,42px);line-height:1.1;margin:0;text-wrap:balance}
+h1 span{color:var(--route)}
+.lead{margin:4px 0 0;color:var(--soft);max-width:66ch}
+.main{display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:16px;align-items:start}
+@media (max-width:900px){.main{grid-template-columns:minmax(0,1fr)}}
+.mapbox{background:var(--land);border-radius:18px;border:2px solid var(--line);overflow:hidden;min-width:0}
+.mapbox svg{display:block;width:100%;height:auto;touch-action:manipulation;user-select:none}
+.levels{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 0 0}
+dialog{border:2px solid var(--ink);border-radius:18px;padding:20px 22px;max-width:min(520px,calc(100vw - 32px));background:var(--paper);color:var(--ink);box-shadow:0 6px 0 var(--ink)}
+dialog::backdrop{background:rgba(39,49,59,.5)}
+dialog h2{font-family:var(--display);font-weight:400;font-size:26px;margin:0 0 6px}
+dialog .lead{margin:0}
+dialog .actions{display:flex;justify-content:flex-end;margin-top:16px}
+dialog .memo{margin-top:22px}
+.levels .lab{font-family:var(--display);font-size:16px;margin-right:4px}
+.seg{display:inline-flex;border:2px solid var(--ink);border-radius:12px;overflow:hidden}
+.seg button{border:0;border-radius:0;box-shadow:none;padding:5px 14px}
+.seg button+button{border-left:2px solid var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.seg button:active{transform:none}
+.levels .desc{font-size:13.5px;color:var(--soft);flex:1 1 220px;min-width:0}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;background:var(--paper);border-top:2px solid var(--line)}
+button{font-family:var(--display);font-size:16px;border:2px solid var(--ink);background:var(--paper);color:var(--ink);border-radius:12px;padding:6px 14px;cursor:pointer;box-shadow:0 3px 0 var(--ink);transition:transform .08s,box-shadow .08s}
+button:active{transform:translateY(3px);box-shadow:0 0 0 var(--ink)}
+button:disabled{opacity:.4;cursor:default;transform:none;box-shadow:0 3px 0 var(--ink)}
+button.primary{background:var(--sun)}
+button:focus-visible,summary:focus-visible{outline:3px solid var(--best);outline-offset:2px}
+aside{display:flex;flex-direction:column;gap:14px;min-width:0}
+.card{background:var(--paper);border-radius:18px;border:2px solid var(--line);padding:16px 18px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card h2{font-family:var(--display);font-weight:400;font-size:21px;margin:0}
+.rule{font-size:14px;color:var(--soft);margin:0}
+.rule b{color:var(--ink)}
+.memo{border-radius:6px 6px 18px 18px;position:relative;gap:4px;
+  background-image:repeating-linear-gradient(to bottom,transparent 0 31px,#e8eef6 31px 32px);background-position:0 50px}
+.memo::before{content:"";position:absolute;top:-9px;left:50%;width:70px;height:18px;margin-left:-35px;background:rgba(255,201,60,.75);transform:rotate(-3deg);border-radius:2px}
+.memo ul{list-style:none;margin:0;padding:0}
+.memo li{display:flex;align-items:center;gap:10px;height:32px;font-size:15px}
+.dot{width:10px;height:10px;border-radius:50%;flex:none}
+.stat{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.stat .k{color:var(--soft);font-size:14px}
+.stat .v{font-family:var(--display);font-size:30px;font-variant-numeric:tabular-nums}
+.stat .v small{font-size:16px;margin-left:2px}
+.sum{font-size:14px;color:var(--soft);font-variant-numeric:tabular-nums;line-height:1.7}
+.sum .leg{display:inline-block;background:#f1f4ef;border-radius:8px;padding:0 7px;color:var(--ink);white-space:nowrap}
+dialog.result{position:fixed;inset:0;margin:auto;height:fit-content;width:fit-content;z-index:10}
+dialog.result[open]{display:flex;flex-direction:column;gap:8px;min-width:min(340px,calc(100vw - 64px))}
+dialog.result .actions{gap:8px;margin-top:8px}
+.stars{font-size:34px;letter-spacing:4px;line-height:1}
+.stars .on{color:var(--sun);-webkit-text-stroke:1.5px #c99512}
+.stars .off{color:#e3e6e0}
+.msg{font-family:var(--display);font-size:19px;line-height:1.35;text-wrap:balance}
+.cmp{font-size:14px;color:var(--soft);font-variant-numeric:tabular-nums}
+.bestorder{font-size:13.5px;color:var(--best)}
+details summary{font-family:var(--display);font-size:18px;cursor:pointer}
+.tablewrap{overflow-x:auto;margin-top:8px}
+table{border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:3px 4px;text-align:right;border-bottom:1px solid #eef0ec;white-space:nowrap}
+th{font-family:var(--display);font-weight:400;color:var(--soft)}
+td.self{color:#c9cfc4;text-align:center}
+svg text{font-family:var(--display)}
+.hud{display:none;align-items:center;gap:10px;padding:8px 12px;background:var(--paper);border-bottom:2px solid var(--line);font-variant-numeric:tabular-nums}
+.hud .cnt{font-family:var(--display);font-size:17px}
+.hud .dist{font-family:var(--display);font-size:17px;color:var(--route);margin-left:auto}
+.hud .bar{flex:1;height:8px;border-radius:4px;background:#eef1ea;overflow:hidden;min-width:40px}
+.hud .bar i{display:block;height:100%;width:0;background:var(--route);transition:width .3s}
+.hud button{font-size:14px;padding:3px 10px;box-shadow:0 2px 0 var(--ink)}
+@media (max-width:900px){
+  .hud{display:flex}
+  .scorecard{order:-1}
+  .wrap{gap:12px}
+  .lead{font-size:14px}
+}
+@media (max-width:560px){
+  body{padding-block:12px 24px}
+  .mapbox,.card{border-radius:14px}
+  .levels{padding:8px 10px;gap:6px}
+  .levels .lab{display:none}
+  .seg button{padding:5px 12px;font-size:15px}
+  .levels .desc{flex-basis:100%;font-size:13px}
+  .toolbar{padding:8px 10px}
+  .toolbar button{flex:1;padding:8px 6px;font-size:15px}
+  .card{padding:14px 14px}
+  .stat .v{font-size:26px}
+}
+.poi{cursor:pointer}
+.poi:focus{outline:none}
+.poi:focus-visible .pin{stroke:var(--best);stroke-width:4}
+.poi.visited .face{opacity:.5}
+.poi .face{transition:transform .15s;transform-box:fill-box;transform-origin:50% 100%}
+@media (hover:hover){.poi.open:hover .face{transform:scale(1.1)}}
+@media (prefers-reduced-motion:reduce){button,.poi .face{transition:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>소이의 <span>심부름</span></h1>
+  </header>
+
+  <dialog id="intro" aria-labelledby="introTitle">
+    <h2 id="introTitle">소이의 심부름</h2>
+    <p class="lead">집에서 출발해 여덟 가게를 <b>한 번씩만</b> 들르고 다시 집으로 돌아와요. 소이는 길로만 다닐 수 있어서 하천은 다리로, 철길은 건널목으로만 건너요. 전체 거리가 가장 짧아지는 순서대로 가게를 눌러 보세요.</p>
+    <div class="levels">
+      <span class="lab">난이도</span>
+      <div class="seg" role="group" aria-label="난이도">
+        <button type="button" id="lv-easy" data-lv="easy">쉬움</button>
+        <button type="button" id="lv-normal" data-lv="normal">보통</button>
+        <button type="button" id="lv-hard" data-lv="hard">어려움</button>
+      </div>
+      <span class="desc" id="lvdesc"></span>
+    </div>
+    <div class="actions"><button type="button" id="introStart" class="primary">시작하기</button></div>
+    <div class="card memo">
+      <h2>엄마 메모</h2>
+      <ul id="list"></ul>
+    </div>
+  </dialog>
+
+  <div class="main">
+    <section class="mapbox">
+      <div class="hud" aria-live="polite"><span class="cnt" id="hudCnt">0/8</span><span class="bar"><i id="hudBar"></i></span><span class="dist" id="hudDist">0m</span><button type="button" id="hudResult" hidden>결과 보기</button></div>
+      <svg id="map" viewBox="0 0 740 520" role="img" aria-label="소이네 동네 지도"></svg>
+      <div class="toolbar">
+        <button id="undo" type="button">되돌리기</button>
+        <button id="retry" type="button">다시 하기</button>
+        <button id="newmap" type="button" class="primary">새 지도</button>
+      </div>
+    </section>
+
+    <aside>
+      <div class="card scorecard" id="scorecard">
+        <div class="stat"><span class="k">지금까지 걸은 거리</span><span class="v" id="walked">0<small>m</small></span></div>
+        <div class="sum" id="sum"></div>
+      </div>
+      <dialog class="result" id="result" aria-label="결과">
+        <div class="stars" id="stars"></div>
+        <div class="msg" id="msg"></div>
+        <div class="cmp" id="cmp"></div>
+        <div class="bestorder" id="bestorder" hidden></div>
+        <div class="actions">
+          <button id="showbest" type="button">최단 경로 보기</button>
+          <button id="closeresult" type="button" class="primary">닫기</button>
+        </div>
+      </dialog>
+      <div class="card">
+        <details id="tbl">
+          <summary>거리표 보기</summary>
+          <p class="rule" style="margin-top:6px">길을 따라 걸을 때의 거리(m)예요. 계산하며 풀고 싶을 때 열어 보세요.</p>
+          <div class="tablewrap"><table id="dtable"></table></div>
+        </details>
+      </div>
+      <div class="card">
+        <h2>외판원 순회 문제</h2>
+        <p class="rule">여러 곳을 <b>한 번씩만</b> 방문하고 <b>출발한 곳으로 돌아오는</b> 가장 짧은 길을 찾는 문제예요. 가게 여덟 곳을 도는 순서는 <b>40,320가지</b>이고, 거꾸로 도는 경우를 하나로 쳐도 <b>20,160가지</b>나 돼요.</p>
+        <p class="rule">보통과 어려움 지도는 <b>바깥쪽으로 한 바퀴 돌기</b>로는 최단 경로가 나오지 않도록 골라서 만들어요. 어려움에서는 <b>제일 가까운 곳부터 가기</b>도 통하지 않아요.</p>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+let W=740,H=520,COLS=11,ROWS=8,X0=20,Y0=22,DX=70,DY=68,SPACING=112,EDGE=1;const M_PER_PX=100/70;
+function setOrient(portrait){
+  S.portrait=portrait;
+  if(portrait){W=390;H=614;COLS=6;ROWS=10;X0=40;Y0=48;DX=62;DY=59;SPACING=95;EDGE=0}
+  else{W=740;H=520;COLS=11;ROWS=8;X0=20;Y0=22;DX=70;DY=68;SPACING=112;EDGE=1}
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+}
+function wantPortrait(){const b=document.querySelector('.mapbox');return (b?b.clientWidth:window.innerWidth)<600}
+const SHOPS=[
+  {name:'반찬가게', short:'반찬', item:'멸치볶음 한 통', mark:'반', color:'#7a5cc2'},
+  {name:'과일가게', short:'과일', item:'사과 세 개', mark:'과', color:'#e5484d'},
+  {name:'정육점', short:'정육', item:'돼지고기 한 근', mark:'정', color:'#8a5a44'},
+  {name:'슈퍼마켓', short:'슈퍼', item:'우유 한 팩', mark:'슈', color:'#2f7fbf'},
+  {name:'빵집', short:'빵집', item:'식빵 한 봉지', mark:'빵', color:'#d99a12'},
+  {name:'꽃집', short:'꽃집', item:'카네이션 한 다발', mark:'꽃', color:'#e05fa0'},
+  {name:'서점', short:'서점', item:'동화책 한 권', mark:'책', color:'#2e8b57'},
+  {name:'떡집', short:'떡집', item:'꿀떡 한 팩', mark:'떡', color:'#ef7d32'},
+];
+const NP=SHOPS.length+1;           // home + shops
+const NAMES=['집',...SHOPS.map(s=>s.name)];
+const SHORT=['집',...SHOPS.map(s=>s.short)];
+const LEVELS={
+  easy:  {river:false,rail:false,parks:1,trap:false,greedy:false,desc:'반듯한 동네예요. 공원만 피해서 돌아가면 돼요.'},
+  normal:{river:true, rail:false,parks:2,trap:true, greedy:false,desc:'한빛천이 동네를 가로질러요. 건널 수 있는 다리는 두 곳뿐이에요.'},
+  hard:  {river:true, rail:true, parks:2,trap:true, greedy:true, desc:'하천과 철길이 모두 있어요. 가까워 보여도 멀리 돌아가야 할 때가 많아요.'},
+};
+const BLOCKS=[{name:'햇살공원',kind:'park'},{name:'소이초등학교',kind:'school'},{name:'솔숲공원',kind:'park'},{name:'새싹어린이집',kind:'school'}];
+const NS='http://www.w3.org/2000/svg';
+const svg=document.getElementById('map');
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let S={level:'hard'};
+function el(tag,attrs={},parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e}
+function rnd(a,b){return a+Math.random()*(b-a)}
+function ri(a,b){return a+Math.floor(Math.random()*(b-a+1))}
+function hyp(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+const nid=(c,r)=>r*COLS+c;
+
+/* ---------- town generation ---------- */
+function buildTown(L){
+  const T={nodes:[],adj:[],edges:[],cells:{},rr:-1,rc:-1,bridges:[],crossings:[],blocks:[]};
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)T.nodes.push({c,r,x:X0+c*DX+rnd(-5,5),y:Y0+r*DY+rnd(-5,5),alive:true});
+  const wide=COLS>=10;
+  if(L.river)T.rr=ri(2,ROWS-4);
+  if(L.rail)T.rc=wide?ri(2,COLS-4):ri(1,COLS-3);
+  T.mainRow=ri(1,ROWS-2);while(T.mainRow===T.rr||T.mainRow===T.rr+1)T.mainRow=ri(1,ROWS-2);
+  T.mainCol=ri(1,COLS-2);while(T.mainCol===T.rc||T.mainCol===T.rc+1)T.mainCol=ri(1,COLS-2);
+  const spread=(list,ref,gap)=>{const a=shuffle(list.filter(v=>Math.abs(v-ref)>=gap));return a.length?a[0]:shuffle(list.filter(v=>v!==ref))[0]};
+  if(L.river)T.bridges=[T.mainCol,spread([...Array(COLS-2)].map((_,i)=>i+1),T.mainCol,wide?3:2)];
+  if(L.rail)T.crossings=[T.mainRow,spread([...Array(ROWS-1)].map((_,i)=>i).filter(r=>r!==T.rr&&r!==T.rr+1),T.mainRow,3)];
+  // parks / schools: rectangles of cells avoiding stream row and railway column
+  const used=new Set();
+  const names=shuffle(BLOCKS.slice());
+  for(let k=0;k<L.parks;k++){
+    for(let t=0;t<60;t++){
+      const w=COLS>=10?ri(2,3):2,h=COLS>=10?2:ri(2,3),c0=ri(0,COLS-1-w),r0=ri(0,ROWS-1-h);
+      let ok=true;const cells=[];
+      for(let c=c0-1;c<=c0+w&&ok;c++)for(let r=r0-1;r<=r0+h&&ok;r++){
+        const inside=c>=c0&&c<c0+w&&r>=r0&&r<r0+h;
+        if(inside&&(r===T.rr||c===T.rc))ok=false;
+        if(used.has(c+','+r))ok=false;
+        if(inside)cells.push([c,r]);
+      }
+      if(!ok)continue;
+      cells.forEach(([c,r])=>{used.add(c+','+r);T.cells[c+','+r]=names[k].kind});
+      for(let c=c0+1;c<c0+w;c++)for(let r=r0+1;r<r0+h;r++)T.nodes[nid(c,r)].alive=false;
+      T.blocks.push({c0,r0,w,h,...names[k]});
+      break;
+    }
+  }
+  const add=(a,b,kind)=>{if(!T.nodes[a].alive||!T.nodes[b].alive)return;const len=hyp(T.nodes[a],T.nodes[b]);T.edges.push({a,b,kind,len})};
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    if(c<COLS-1&&!(c===T.rc&&!T.crossings.includes(r)))add(nid(c,r),nid(c+1,r),r===T.mainRow?'main':(c===T.rc?'cross':'road'));
+    if(r<ROWS-1&&!(r===T.rr&&!T.bridges.includes(c)))add(nid(c,r),nid(c,r+1),c===T.mainCol?(r===T.rr?'mainbridge':'main'):(r===T.rr?'bridge':'road'));
+  }
+  T.adj=T.nodes.map(()=>[]);
+  T.edges.forEach(e=>{T.adj[e.a].push([e.b,e.len]);T.adj[e.b].push([e.a,e.len])});
+  return T;
+}
+function dijkstra(T,src){
+  const n=T.nodes.length,dist=Array(n).fill(Infinity),prev=Array(n).fill(-1),done=Array(n).fill(false);dist[src]=0;
+  for(;;){let u=-1;for(let i=0;i<n;i++)if(!done[i]&&dist[i]<Infinity&&(u<0||dist[i]<dist[u]))u=i;if(u<0)break;done[u]=true;
+    for(const [v,w] of T.adj[u])if(dist[u]+w<dist[v]){dist[v]=dist[u]+w;prev[v]=u}}
+  return {dist,prev};
+}
+function pickPOIs(T,L){
+  const cand=shuffle(T.nodes.map((n,i)=>i).filter(i=>{const n=T.nodes[i];return n.alive&&n.c>=EDGE&&n.c<=COLS-1-EDGE&&n.r>=EDGE&&n.r<=ROWS-1-EDGE&&T.adj[i].length>=2}));
+  const pts=[];
+  for(const i of cand){if(pts.length===NP)break;if(pts.every(j=>hyp(T.nodes[i],T.nodes[j])>=SPACING))pts.push(i)}
+  if(pts.length<NP)return null;
+  if(L.river){const north=pts.filter(i=>T.nodes[i].r<=T.rr).length;if(north<3||NP-north<3)return null}
+  if(L.rail){const west=pts.filter(i=>T.nodes[i].c<=T.rc).length;if(west<3||NP-west<3)return null}
+  return pts;
+}
+/* Held-Karp: shortest closed tour from 0 through all points, with the count of optimal orders */
+function solveTSP(d){
+  const n=d.length,K=n-1,FULL=(1<<K)-1;
+  const dp=[...Array(1<<K)].map(()=>Array(K).fill(Infinity)),cnt=[...Array(1<<K)].map(()=>Array(K).fill(0)),par=[...Array(1<<K)].map(()=>Array(K).fill(-1));
+  for(let j=0;j<K;j++){dp[1<<j][j]=d[0][j+1];cnt[1<<j][j]=1}
+  for(let m=1;m<=FULL;m++)for(let j=0;j<K;j++){
+    if(!(m&(1<<j))||dp[m][j]===Infinity)continue;
+    for(let k=0;k<K;k++){if(m&(1<<k))continue;const nm=m|(1<<k),v=dp[m][j]+d[j+1][k+1];
+      if(v<dp[nm][k]){dp[nm][k]=v;cnt[nm][k]=cnt[m][j];par[nm][k]=j}else if(v===dp[nm][k])cnt[nm][k]+=cnt[m][j]}
+  }
+  let best=Infinity,last=-1,count=0;
+  for(let j=0;j<K;j++){const v=dp[FULL][j]+d[j+1][0];if(v<best){best=v;last=j;count=cnt[FULL][j]}else if(v===best)count+=cnt[FULL][j]}
+  const order=[];let m=FULL,j=last;while(j>=0){order.unshift(j+1);const p=par[m][j];m^=1<<j;j=p}
+  return {best,order,count};
+}
+function tourLen(order,d){let s=0,c=0;for(const i of order){s+=d[c][i];c=i}return s+d[c][0]}
+function greedy(d){
+  let c=0,s=0;const left=new Set([...Array(NP-1)].map((_,i)=>i+1));
+  while(left.size){let nb=null;for(const n of left)if(nb===null||d[c][n]<d[c][nb])nb=n;s+=d[c][nb];left.delete(nb);c=nb}
+  return s+d[c][0];
+}
+function genMap(level){
+  const L=LEVELS[level];let fallback=null;
+  for(let t=0;t<1500;t++){
+    const T=buildTown(L);
+    const P=pickPOIs(T,L);if(!P)continue;
+    const runs=P.map(i=>dijkstra(T,i));
+    if(P.some(i=>runs[0].dist[i]===Infinity))continue;
+    const d=P.map((_,a)=>P.map((b,_b)=>Math.round(runs[a].dist[b]*M_PER_PX/10)*10));
+    const sol=solveTSP(d);
+    const pack={T,P,runs,d,sol};
+    if(!fallback)fallback=pack;
+    if(L.trap){
+      const eu=P.map(a=>P.map(b=>hyp(T.nodes[a],T.nodes[b])));
+      if(tourLen(solveTSP(eu).order,d)<sol.best*1.05)continue;
+    }
+    if(L.greedy&&greedy(d)<=sol.best*1.03)continue;
+    return pack;
+  }
+  return fallback;
+}
+
+/* ---------- drawing ---------- */
+let gBest,gRoute,gPOI,sprite;
+function N(c,r){return S.T.nodes[nid(c,r)]}
+function bil(c,r,u,v){const a=N(c,r),b=N(c+1,r),cc=N(c+1,r+1),d=N(c,r+1);return {x:(1-u)*(1-v)*a.x+u*(1-v)*b.x+u*v*cc.x+(1-u)*v*d.x,y:(1-u)*(1-v)*a.y+u*(1-v)*b.y+u*v*cc.y+(1-u)*v*d.y}}
+function quad(c,r,u0,v0,u1,v1){return [bil(c,r,u0,v0),bil(c,r,u1,v0),bil(c,r,u1,v1),bil(c,r,u0,v1)].map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')}
+function smooth(pts){let d=`M${pts[0].x},${pts[0].y}`;for(let i=0;i<pts.length-1;i++){const p0=pts[i-1]||pts[i],p1=pts[i],p2=pts[i+1],p3=pts[i+2]||p2;d+=` C${p1.x+(p2.x-p0.x)/6},${p1.y+(p2.y-p0.y)/6} ${p2.x-(p3.x-p1.x)/6},${p2.y-(p3.y-p1.y)/6} ${p2.x},${p2.y}`}return d}
+function label(parent,x,y,text,opts={}){
+  const t=el('text',{x,y,'text-anchor':'middle','font-size':opts.size||13,fill:opts.fill||'var(--soft)',stroke:'var(--land)','stroke-width':3,'paint-order':'stroke','letter-spacing':opts.ls||0},parent);
+  if(opts.rotate)t.setAttribute('transform',`rotate(${opts.rotate} ${x} ${y})`);
+  t.textContent=text;return t;
+}
+function drawMap(){
+  const T=S.T;svg.innerHTML='';
+  el('rect',{x:0,y:0,width:W,height:H,fill:'var(--land)'},svg);
+  const gCells=el('g',{},svg);
+  for(let r=0;r<ROWS-1;r++)for(let c=0;c<COLS-1;c++){
+    const kind=T.cells[c+','+r];
+    if(kind)continue;
+    if(r===T.rr||c===T.rc)continue;
+    const style=Math.random();
+    const g=el('g',{fill:'var(--bldg)',stroke:'var(--bldgEdge)','stroke-width':1},gCells);
+    if(style<.25)el('polygon',{points:quad(c,r,.2,.2,.8,.8)},g);
+    else if(style<.6){el('polygon',{points:quad(c,r,.2,.2,.47,.8)},g);el('polygon',{points:quad(c,r,.53,.2,.8,.8)},g)}
+    else{const s=rnd(.42,.58);
+      el('polygon',{points:quad(c,r,.2,.2,s-.03,.47)},g);el('polygon',{points:quad(c,r,s+.03,.2,.8,.47)},g);
+      el('polygon',{points:quad(c,r,.2,.53,.8,.8)},g)}
+  }
+  // parks & schools
+  for(const b of T.blocks){
+    const g=el('g',{},svg);
+    for(let c=b.c0;c<b.c0+b.w;c++)for(let r=b.r0;r<b.r0+b.h;r++)el('polygon',{points:quad(c,r,-.02,-.02,1.02,1.02),fill:b.kind==='park'?'var(--park)':'var(--school)'},g);
+    if(b.kind==='park')for(let k=0;k<b.w*b.h*3;k++){const p=bil(b.c0+ri(0,b.w-1),b.r0+ri(0,b.h-1),rnd(.2,.8),rnd(.2,.8));el('circle',{cx:p.x,cy:p.y,r:rnd(5,9),fill:'var(--tree)'},g)}
+    else{const p=bil(b.c0,b.r0,b.w/2,b.h/2+0);const a=N(b.c0,b.r0),z=N(b.c0+b.w,b.r0+b.h);el('ellipse',{cx:(a.x+z.x)/2,cy:(a.y+z.y)/2,rx:(z.x-a.x)/2-26,ry:(z.y-a.y)/2-30,fill:'none',stroke:'#d9b98a','stroke-width':6},g)}
+    b.center={x:(N(b.c0,b.r0).x+N(b.c0+b.w,b.r0+b.h).x)/2,y:(N(b.c0,b.r0).y+N(b.c0+b.w,b.r0+b.h).y)/2};
+  }
+  // stream
+  if(T.rr>=0){
+    const pts=[];for(let c=0;c<COLS;c++)pts.push({x:N(c,T.rr).x,y:(N(c,T.rr).y+N(c,T.rr+1).y)/2+rnd(-4,4)});
+    pts.unshift({x:-20,y:pts[0].y});pts.push({x:W+20,y:pts[pts.length-1].y});
+    const d=smooth(pts);
+    el('path',{d,fill:'none',stroke:'var(--waterEdge)','stroke-width':30,'stroke-linecap':'round'},svg);
+    el('path',{d,fill:'none',stroke:'var(--water)','stroke-width':26,'stroke-linecap':'round'},svg);
+    T.riverPts=pts;
+  }
+  // railway
+  if(T.rc>=0){
+    const pts=[];for(let r=0;r<ROWS;r++)pts.push({x:(N(T.rc,r).x+N(T.rc+1,r).x)/2,y:N(T.rc,r).y});
+    pts.unshift({x:pts[0].x,y:-20});pts.push({x:pts[pts.length-1].x,y:H+20});
+    const d=smooth(pts);
+    el('path',{d,fill:'none',stroke:'var(--rail)','stroke-width':8},svg);
+    el('path',{d,fill:'none',stroke:'#f4f5f6','stroke-width':4,'stroke-dasharray':'10 10'},svg);
+    T.railPts=pts;
+  }
+  // roads
+  const gR=el('g',{fill:'none','stroke-linecap':'round'},svg);
+  const seg=e=>{const a=T.nodes[e.a],b=T.nodes[e.b];return {x1:a.x,y1:a.y,x2:b.x,y2:b.y}};
+  const isMain=e=>e.kind==='main'||e.kind==='mainbridge';
+  const isBridge=e=>e.kind==='bridge'||e.kind==='mainbridge';
+  T.edges.filter(isBridge).forEach(e=>el('line',{...seg(e),stroke:'#7d8a96','stroke-width':isMain(e)?24:18,'stroke-linecap':'butt'},gR));
+  T.edges.forEach(e=>{if(!isMain(e))el('line',{...seg(e),stroke:'var(--roadEdge)','stroke-width':13},gR)});
+  T.edges.forEach(e=>{if(!isMain(e))el('line',{...seg(e),stroke:'var(--road)','stroke-width':10},gR)});
+  T.edges.forEach(e=>{if(isMain(e))el('line',{...seg(e),stroke:'var(--mainEdge)','stroke-width':19},gR)});
+  T.edges.forEach(e=>{if(isMain(e))el('line',{...seg(e),stroke:'var(--main)','stroke-width':16},gR)});
+  T.edges.filter(e=>e.kind==='cross').forEach(e=>{const a=T.nodes[e.a],b=T.nodes[e.b],mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
+    el('line',{x1:mx,y1:my-9,x2:mx,y2:my+9,stroke:'#e5484d','stroke-width':4,'stroke-dasharray':'3 3'},gR)});
+  // place names
+  const gL=el('g',{},svg);
+  for(const b of T.blocks)label(gL,b.center.x,b.center.y+5,b.name,{size:13,fill:b.kind==='park'?'#4f7d3a':'#9a7440'});
+  const far=cands=>cands.reduce((best,p)=>{const m=Math.min(...S.P.map(i=>hyp(p,T.nodes[i])));return m>best.m?{p,m}:best},{p:cands[0],m:-1}).p;
+  if(T.riverPts){const cs=[];for(let k=1;k<T.riverPts.length-2;k++){const a=T.riverPts[k],b=T.riverPts[k+1];for(const f of [.3,.5,.7]){const q={x:a.x+(b.x-a.x)*f,y:a.y+(b.y-a.y)*f};if(q.x>30&&q.x<W-30)cs.push(q)}}const p=far(cs);{const m=Math.min(...S.P.map(i=>hyp(p,T.nodes[i])));if(m>=48)label(gL,p.x,p.y+5,'한빛천',{size:14,fill:'#3d82b8',ls:2})}}
+  if(T.railPts){const r=[1,2,5,6].find(r=>!T.crossings.includes(r))??1;const p=T.railPts[r+1];label(gL,p.x+1,(p.y+T.railPts[r+2].y)/2,'철길',{size:13,fill:'#5c646c',rotate:90})}
+  {const cs=[];for(let c=0;c<COLS-1;c++){if(c===T.rc||c===T.mainCol||c+1===T.mainCol)continue;const a=N(c,T.mainRow),b=N(c+1,T.mainRow);cs.push({x:(a.x+b.x)/2,y:(a.y+b.y)/2})}const p=far(cs);label(gL,p.x,p.y+4,'소이대로',{size:11.5,fill:'#8a6a12'})}
+
+  gBest=el('g',{},svg);
+  gRoute=el('g',{},svg);
+  gPOI=el('g',{},svg);
+  S.poiEls=[];
+  S.P.forEach((ni,i)=>{
+    const n=T.nodes[ni];
+    const g=el('g',{class:'poi',transform:`translate(${n.x.toFixed(1)},${n.y.toFixed(1)})`},gPOI);
+    const color=i===0?'#27313b':SHOPS[i-1].color;
+    const name=i===0?'우리 집':SHOPS[i-1].name;
+    el('rect',{x:-(name.length*6.5+8),y:4,width:name.length*13+16,height:19,rx:9.5,fill:'#fff',stroke:color,'stroke-width':1.5},g);
+    const nt=el('text',{y:18,'text-anchor':'middle','font-size':12.5,fill:'var(--ink)'},g);nt.textContent=name;
+    el('circle',{cx:0,cy:-14,r:27,fill:'transparent'},g);
+    const f=el('g',{class:'face'},g);
+    el('path',{class:'pin',d:'M0,0 C-3,-8 -15,-15 -15,-27 A15,15 0 1 1 15,-27 C15,-15 3,-8 0,0Z',fill:color,stroke:'#fff','stroke-width':2},f);
+    el('circle',{cx:0,cy:-27,r:10.5,fill:'#fff'},f);
+    if(i===0){el('path',{d:'M-7,-27 L0,-34 L7,-27 V-21 H-7Z',fill:color},f)}
+    else{const t=el('text',{y:-22,'text-anchor':'middle','font-size':14,fill:color},f);t.textContent=SHOPS[i-1].mark}
+    const badge=el('g',{transform:'translate(14,-42)',visibility:'hidden'},g);
+    el('circle',{r:10,fill:'var(--route)',stroke:'#fff','stroke-width':2},badge);
+    const bt=el('text',{y:4.5,'text-anchor':'middle','font-size':12.5,fill:'#fff'},badge);
+    if(i>0){
+      g.setAttribute('tabindex',0);g.setAttribute('role','button');g.setAttribute('aria-label',name);
+      const on=()=>pick(i);
+      g.addEventListener('click',on);
+      g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();on()}});
+    }
+    S.poiEls.push({g,badge,bt});
+  });
+  sprite=el('g',{style:'pointer-events:none'},svg);
+  el('ellipse',{cx:0,cy:14,rx:10,ry:3.5,fill:'rgba(0,0,0,.18)'},sprite);
+  el('path',{d:'M-9 -5 Q-18 5 -13 15',stroke:'#3a2a22','stroke-width':4.5,fill:'none','stroke-linecap':'round'},sprite);
+  el('rect',{x:-8,y:3,width:16,height:12,rx:4.5,fill:'var(--sun)',stroke:'var(--ink)','stroke-width':1.8},sprite);
+  el('circle',{cx:0,cy:-5,r:9.5,fill:'#ffe0c7',stroke:'var(--ink)','stroke-width':1.8},sprite);
+  el('path',{d:'M-9.5 -7 Q0 -19 9.5 -7 Q3.5 -11 -9.5 -7Z',fill:'#3a2a22'},sprite);
+  el('circle',{cx:-3.5,cy:-4,r:1.4,fill:'var(--ink)'},sprite);
+  el('circle',{cx:3.5,cy:-4,r:1.4,fill:'var(--ink)'},sprite);
+  el('circle',{cx:13,cy:-10,r:3,fill:'var(--route)'},sprite);
+}
+function placeSprite(p){sprite.setAttribute('transform',`translate(${(p.x-24).toFixed(1)},${(p.y-2).toFixed(1)})`)}
+
+/* ---------- game ---------- */
+function streetPath(a,b){ // POI index a -> b, list of points along streets
+  const prev=S.runs[a].prev,target=S.P[b],src=S.P[a],ids=[];
+  for(let v=target;v!==-1;v=prev[v]){ids.push(v);if(v===src)break}
+  return ids.reverse().map(i=>S.T.nodes[i]);
+}
+function partial(pts,f){
+  const lens=[0];for(let k=1;k<pts.length;k++)lens.push(lens[k-1]+hyp(pts[k-1],pts[k]));
+  const target=lens[lens.length-1]*f,out=[pts[0]];
+  for(let k=1;k<pts.length;k++){
+    if(lens[k]<=target){out.push(pts[k]);continue}
+    const seg=lens[k]-lens[k-1],t=seg?(target-lens[k-1])/seg:1;
+    out.push({x:pts[k-1].x+(pts[k].x-pts[k-1].x)*t,y:pts[k-1].y+(pts[k].y-pts[k-1].y)*t});break;
+  }
+  return out;
+}
+function setLevel(lv){
+  S.level=lv;
+  document.querySelectorAll('.seg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.lv===lv));
+  document.getElementById('lvdesc').textContent=LEVELS[lv].desc;
+  newGame(true);
+}
+function newGame(newMap){
+  if(newMap||!S.T){setOrient(wantPortrait());const m=genMap(S.level);Object.assign(S,{T:m.T,P:m.P,runs:m.runs,d:m.d,best:m.sol.best,bestOrder:m.sol.order,bestCount:m.sol.count});drawTable()}
+  S.order=[];S.anim=false;S.done=false;S.showBest=false;S.returned=false;
+  drawMap();placeSprite(S.T.nodes[S.P[0]]);render();
+}
+function cur(){return S.order.length?S.order[S.order.length-1]:0}
+function stops(){const s=[0,...S.order];if(S.returned)s.push(0);return s}
+function walked(){const s=stops();let d=0;for(let k=1;k<s.length;k++)d+=S.d[s[k-1]][s[k]];return d}
+function polyStr(pts){return pts.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')}
+function drawRoute(extra){
+  gRoute.innerHTML='';
+  const s=stops();let pts=[S.T.nodes[S.P[0]]];
+  for(let k=1;k<s.length;k++)pts=pts.concat(streetPath(s[k-1],s[k]).slice(1));
+  if(extra)pts=pts.concat(extra.slice(1));
+  if(pts.length<2)return;
+  const str=polyStr(pts);
+  el('polyline',{points:str,fill:'none',stroke:'#fff','stroke-width':9,'stroke-linecap':'round','stroke-linejoin':'round'},gRoute);
+  el('polyline',{points:str,fill:'none',stroke:'var(--route)','stroke-width':5.5,'stroke-linecap':'round','stroke-linejoin':'round'},gRoute);
+}
+function pick(i){
+  if(S.anim||S.done||S.order.includes(i))return;
+  const from=cur();
+  walkTo(from,i,()=>{
+    S.order.push(i);
+    if(S.order.length===NP-1){S.done=true;render();walkTo(i,0,()=>{S.returned=true;finish()})}
+  });
+}
+function walkTo(a,b,cb){
+  S.anim=true;render();
+  const pts=streetPath(a,b);
+  let len=0;for(let k=1;k<pts.length;k++)len+=hyp(pts[k-1],pts[k]);
+  const dur=Math.max(350,len/0.38);
+  const t0=performance.now();
+  function frame(now){
+    const f=dur?Math.min(1,(now-t0)/dur):1;
+    const e=f<.5?2*f*f:1-Math.pow(-2*f+2,2)/2;
+    const part=partial(pts,e);
+    placeSprite(part[part.length-1]);drawRoute(part);
+    if(f<1)requestAnimationFrame(frame);else{S.anim=false;cb();drawRoute();render()}
+  }
+  requestAnimationFrame(frame);
+}
+function undo(){
+  if(S.anim||S.done||!S.order.length)return;
+  S.order.pop();drawRoute();placeSprite(S.T.nodes[S.P[cur()]]);render();
+}
+function finish(){
+  const you=walked(),best=S.best,diff=you-best;
+  const stars=diff===0?3:(you<=best*1.08?2:1);
+  document.getElementById('stars').innerHTML=[1,2,3].map(n=>`<span class="${n<=stars?'on':'off'}">★</span>`).join('');
+  document.getElementById('msg').textContent=
+    stars===3?'최단 경로를 찾았어요! 엄마가 칭찬하실 거예요.':
+    stars===2?`아깝다! 최단 경로보다 ${diff.toLocaleString()}m 더 걸었어요.`:
+    `조금 돌아왔네요. 최단 경로보다 ${diff.toLocaleString()}m 더 걸었어요.`;
+  const routes=S.bestCount/2;
+  document.getElementById('cmp').textContent=`내 거리 ${you.toLocaleString()}m · 최단 거리 ${best.toLocaleString()}m`+(routes>1?` · 최단 길이 ${routes}가지`:'');
+  render();
+  const rd=document.getElementById('result');if(!rd.open)rd.show();
+}
+function toggleBest(){
+  S.showBest=!S.showBest;gBest.innerHTML='';
+  const bo=document.getElementById('bestorder');
+  if(S.showBest){
+    const legs=[0,...S.bestOrder,0];
+    let pts=[S.T.nodes[S.P[0]]];for(let k=1;k<legs.length;k++)pts=pts.concat(streetPath(legs[k-1],legs[k]).slice(1));
+    el('polyline',{points:polyStr(pts),fill:'none',stroke:'var(--best)','stroke-width':15,'stroke-opacity':.3,'stroke-linecap':'round','stroke-linejoin':'round'},gBest);
+    bo.innerHTML='파란 띠: '+legs.map((n,k)=>NAMES[n]+(k<legs.length-1?` <span style="color:var(--soft)">─${S.d[n][legs[k+1]]}→</span> `:'')).join('')+` = ${S.best.toLocaleString()}m`+
+      '<br><span style="color:var(--soft)">거꾸로 돌아도 거리는 같아요.</span>';
+    bo.hidden=false;
+  }else bo.hidden=true;
+  document.getElementById('showbest').textContent=S.showBest?'최단 경로 숨기기':'최단 경로 보기';
+}
+function drawTable(){
+  let h='<tr><th></th>'+SHORT.map(n=>`<th>${n}</th>`).join('')+'</tr>';
+  for(let i=0;i<NP;i++)h+=`<tr><th>${SHORT[i]}</th>`+SHORT.map((_,j)=>i===j?'<td class="self">·</td>':`<td>${S.d[i][j]}</td>`).join('')+'</tr>';
+  document.getElementById('dtable').innerHTML=h;
+}
+
+/* ---------- UI ---------- */
+function render(){
+  document.getElementById('list').innerHTML=SHOPS.map((s,i)=>{
+    return `<li><span class="dot" style="background:${s.color}"></span><span class="txt"><b>${s.name}</b> · ${s.item}</span></li>`}).join('');
+  S.poiEls.forEach((o,i)=>{
+    if(i===0)return;
+    const pos=S.order.indexOf(i);
+    o.g.classList.toggle('visited',pos>=0);
+    o.g.classList.toggle('open',pos<0&&!S.done);
+    o.badge.setAttribute('visibility',pos>=0?'visible':'hidden');
+    o.bt.textContent=pos+1;
+  });
+  const s=stops();
+  document.getElementById('walked').innerHTML=walked().toLocaleString()+'<small>m</small>';
+  const legs=[];for(let k=1;k<s.length;k++)legs.push(`<span class="leg">${SHORT[s[k-1]]}→${SHORT[s[k]]} ${S.d[s[k-1]][s[k]]}</span>`);
+  document.getElementById('sum').innerHTML=legs.length?legs.join(' + '):'집에서 출발! 첫 번째로 갈 가게를 눌러 보세요.';
+  const finished=S.returned;
+  document.getElementById('hudCnt').textContent=`장보기 ${S.order.length}/${NP-1}`;
+  document.getElementById('hudBar').style.width=(S.order.length/(NP-1)*100)+'%';
+  document.getElementById('hudDist').textContent=walked().toLocaleString()+'m';
+  document.getElementById('hudResult').hidden=!finished;
+  if(!finished){document.getElementById('result').close();document.getElementById('bestorder').hidden=true;gBest.innerHTML='';S.showBest=false;document.getElementById('showbest').textContent='최단 경로 보기'}
+  document.getElementById('undo').disabled=S.anim||S.done||!S.order.length;
+  document.getElementById('retry').disabled=S.anim;
+  document.getElementById('newmap').disabled=S.anim;
+  document.querySelectorAll('.seg button').forEach(b=>b.disabled=S.anim);
+}
+document.getElementById('undo').onclick=undo;
+document.getElementById('retry').onclick=()=>newGame(false);
+document.getElementById('newmap').onclick=()=>newGame(true);
+document.getElementById('showbest').onclick=toggleBest;
+document.getElementById('closeresult').onclick=()=>document.getElementById('result').close();
+document.getElementById('hudResult').onclick=()=>{const rd=document.getElementById('result');if(!rd.open)rd.show()};
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{if(S.T&&wantPortrait()!==S.portrait&&!S.order.length&&!S.anim)newGame(true)},250)});
+document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>setLevel(b.dataset.lv));
+setLevel('hard');
+const intro=document.getElementById('intro');
+document.getElementById('introStart').onclick=()=>intro.close();
+intro.showModal();
+</script>
+
+</body></html>

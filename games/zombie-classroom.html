@@ -1,0 +1,479 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Z-바이러스 교실</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gowun+Dodum&family=Nanum+Pen+Script&display=swap">
+<style>
+/* Layout: one phone-sized screen — HUD on top, a 3:4 classroom scene you tap, inventory tray at the bottom. Night classroom lit by an emergency lamp. */
+:root{
+  --night:#0e1719; --wall:#1d2b2a; --wall2:#243533; --floor:#2b251e;
+  --board:#1e4a3d; --chalk:#e9f0e6; --wood:#6b4a2f; --metal:#4a5a5c;
+  --hazard:#f0b43c; --blood:#c9412f; --ink:#dfe7e2; --muted:#8ea39b; --panel:#152224;
+  --f-display:"Black Han Sans","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-body:"Gowun Dodum","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-hand:"Nanum Pen Script","Gowun Dodum",cursive;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{background:var(--night);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  -webkit-tap-highlight-color:transparent;overflow-x:hidden}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:2px solid var(--hazard);outline-offset:2px}
+.app{max-width:460px;margin:0 auto;padding-block:12px 20px;display:flex;flex-direction:column;gap:10px;min-height:100%}
+
+/* Start / end screens */
+.screen{display:flex;flex-direction:column;gap:16px;padding-block:28px}
+.eyebrow{font-size:12px;letter-spacing:.18em;color:var(--hazard)}
+h1{font-family:var(--f-display);font-weight:400;font-size:44px;line-height:1.05;margin:0;text-wrap:balance}
+h1 em{font-style:normal;color:var(--blood)}
+.story{background:var(--panel);border-left:3px solid var(--blood);padding:14px 16px;font-size:15px}
+.story p{margin:0 0 8px}.story p:last-child{margin:0}
+.rules{display:grid;gap:6px;font-size:14px;color:var(--muted);padding:0;margin:0;list-style:none}
+.rules li::before{content:"— ";color:var(--hazard)}
+.btn{background:var(--hazard);color:#1a1205;border:0;border-radius:6px;padding:14px 18px;font-family:var(--f-display);font-size:20px;letter-spacing:.04em}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--metal);font-family:var(--f-body);font-size:15px}
+
+/* HUD */
+.hud{display:flex;align-items:center;gap:10px}
+.timer{font-family:var(--f-display);font-size:30px;font-variant-numeric:tabular-nums;letter-spacing:.03em;line-height:1}
+.timer.low{color:var(--blood);animation:pulse 1s infinite}
+.hud .where{flex:1;min-width:0;font-size:12px;color:var(--muted);letter-spacing:.06em}
+.hud .btn.ghost{padding:8px 12px;font-size:14px}
+@keyframes pulse{50%{opacity:.45}}
+
+/* Scene */
+.stage{position:relative;overflow:hidden;border-radius:8px}
+.scene{position:relative;width:100%;margin-bottom:-9.33%;max-width:100%;aspect-ratio:3/3.4;overflow:hidden;border-radius:8px;container-type:inline-size;
+  background:linear-gradient(var(--wall2),var(--wall) 72%,var(--floor) 72%,#1d1914)}
+.scene::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(circle at 85% 0%,rgba(201,65,47,.35),transparent 55%),radial-gradient(ellipse at 50% 120%,rgba(0,0,0,.6),transparent 60%);
+  animation:siren 3.2s ease-in-out infinite}
+@keyframes siren{50%{opacity:.4}}
+.shake{animation:shake .45s}
+@keyframes shake{20%{transform:translate(-6px,2px)}40%{transform:translate(5px,-3px)}60%{transform:translate(-4px,1px)}80%{transform:translate(3px,0)}}
+.hs{position:absolute;border:0;padding:0;background:none}
+.hs:active{filter:brightness(1.3)}
+.lbl{position:absolute;left:50%;transform:translateX(-50%);bottom:-5.5cqw;white-space:nowrap;font-size:3.2cqw;color:var(--muted);letter-spacing:.05em}
+.found::before{content:"";position:absolute;right:-1.5cqw;top:-1.5cqw;width:3cqw;height:3cqw;border-radius:50%;background:var(--hazard);box-shadow:0 0 8px var(--hazard)}
+
+/* front */
+.clock{left:44%;top:4%;width:12%;aspect-ratio:1;border-radius:50%;background:#e7e2d4;border:1.2cqw solid #3a3a36}
+.clock .h,.clock .m{position:absolute;left:50%;bottom:50%;width:1cqw;background:#222;transform-origin:50% 100%;border-radius:1cqw}
+.clock .h{height:28%;margin-left:-.5cqw;transform:rotate(128.5deg)}
+.clock .m{height:40%;margin-left:-.5cqw;transform:rotate(102deg)}
+.board{left:5%;top:20%;width:64%;height:30%;background:var(--board);border:1.6cqw solid var(--wood);border-radius:1cqw;
+  font-family:var(--f-hand);color:var(--chalk);font-size:5.4cqw;line-height:1.05;text-align:left;padding:2cqw 3cqw;opacity:.95}
+.board .smudge{opacity:.55}
+.door{right:4%;top:19%;width:22%;height:53%;background:linear-gradient(90deg,#5a4330,#4a3726);border:1cqw solid #2e2219;border-radius:.6cqw}
+.door .pane{position:absolute;left:18%;top:8%;width:64%;height:26%;background:#0b1213;border:.8cqw solid #2e2219}
+.door .pane::before,.door .pane::after{content:"";position:absolute;bottom:0;width:38%;height:70%;background:#2f3d2a;border-radius:50% 50% 0 0}
+.door .pane::before{left:10%}.door .pane::after{right:6%;height:55%}
+.door .pad{position:absolute;right:8%;top:46%;width:30%;height:14%;background:#1a2122;border:.5cqw solid #889;border-radius:.6cqw}
+.door .pad::after{content:"";position:absolute;left:30%;top:20%;width:40%;height:20%;background:var(--blood);border-radius:1cqw;box-shadow:0 0 6px var(--blood)}
+.door .knob{position:absolute;left:10%;top:52%;width:9%;aspect-ratio:1;border-radius:50%;background:#c7a660}
+.desk{left:22%;top:57%;width:38%;height:22%;background:linear-gradient(#7a5536,#5c3f27);border-radius:.8cqw .8cqw 0 0}
+.desk::before{content:"";position:absolute;inset:-3cqw -2cqw auto;height:3cqw;background:#8d6644;border-radius:.6cqw}
+.desk .drawer{position:absolute;left:20%;top:22%;width:60%;height:24%;border:.5cqw solid #3d2a19;border-radius:.4cqw}
+.desk .drawer::after{content:"";position:absolute;left:44%;top:30%;width:12%;height:40%;background:#c7a660;border-radius:.3cqw}
+.sdesk{position:absolute;height:5%;background:#5a4733;border-radius:.6cqw;pointer-events:none}
+
+/* back */
+.window{left:5%;top:7%;width:42%;height:28%;background:linear-gradient(#0a1420,#16212a);border:1.4cqw solid #8b9396;display:grid;grid-template-columns:1fr 1fr;gap:1.2cqw;padding:0}
+.window::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:1.2cqw;margin-left:-.6cqw;background:#8b9396}
+.window .z{position:absolute;bottom:6%;width:5cqw;height:9cqw;background:#33452f;border-radius:50% 50% 20% 20%}
+.window .z::before{content:"";position:absolute;left:28%;top:22%;width:44%;height:12%;background:var(--blood);border-radius:2px;box-shadow:0 0 4px var(--blood)}
+.cork{left:52%;top:7%;width:43%;height:28%;background:#8a6a43;border:1.2cqw solid var(--wood)}
+.cork i{position:absolute;background:#efe9d8;box-shadow:0 1px 2px rgba(0,0,0,.5)}
+.cork i::before{content:"";position:absolute;left:45%;top:-1cqw;width:2cqw;height:2cqw;border-radius:50%;background:var(--blood)}
+.lockers{left:5%;top:44%;width:60%;height:30%;display:grid;grid-template-columns:repeat(5,1fr);gap:.8cqw;padding:1cqw;background:#2c3638;border-radius:.6cqw}
+.lockers span{background:var(--metal);border-radius:.4cqw;position:relative}
+.lockers span::after{content:"";position:absolute;right:15%;top:45%;width:12%;height:12%;background:#bbb;border-radius:50%}
+.closet{right:5%;top:38%;width:24%;height:36%;background:linear-gradient(90deg,#273032,#1c2324);border:.8cqw solid #12181a;border-radius:.6cqw}
+.closet::before{content:"";position:absolute;left:50%;top:6%;bottom:6%;width:.6cqw;background:#0b0f10}
+.closet::after{content:"청소함";position:absolute;left:0;right:0;top:12%;text-align:center;font-size:3cqw;color:#5d6b6b}
+
+.endrow{display:flex;gap:10px;flex-wrap:wrap}
+.endrow a.btn{text-decoration:none;display:inline-block;text-align:center}
+.navrow{display:flex;gap:10px}
+.navrow .btn.ghost{flex:1;padding-top:7px;padding-bottom:7px}
+.msg{min-height:3.2em;background:var(--panel);border-radius:6px;padding:10px 12px;font-size:14.5px}
+.msg b{color:var(--hazard);font-weight:400}
+
+/* inventory */
+.inv-h{font-size:12px;letter-spacing:.14em;color:var(--muted)}
+.inv{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.slot{aspect-ratio:1;border:1px dashed var(--metal);border-radius:6px;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:11px;color:var(--muted);padding:4px}
+.slot.has{border:1px solid var(--hazard);background:var(--panel);color:var(--ink)}
+.slot svg{width:60%;height:auto}
+
+/* modal */
+.veil{position:fixed;inset:0;background:rgba(5,9,10,.82);display:flex;align-items:flex-end;justify-content:center;z-index:20;
+  padding:0 max(0px,env(safe-area-inset-right,0px)) 0 max(0px,env(safe-area-inset-left,0px))}
+.sheet{width:100%;max-width:460px;max-height:88%;overflow:auto;background:var(--panel);border-radius:14px 14px 0 0;
+  padding:18px max(16px,env(safe-area-inset-left,0px)) calc(18px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px}
+.sheet-h{display:flex;align-items:center;gap:10px}
+.sheet-h h2{flex:1;margin:0;font-family:var(--f-display);font-weight:400;font-size:24px}
+.x{background:none;border:1px solid var(--metal);border-radius:6px;padding:6px 12px}
+.note{font-family:var(--f-hand);font-size:26px;line-height:1.2;background:#efe9d8;color:#2a2a2a;padding:14px 16px;border-radius:2px;transform:rotate(-1deg)}
+.chalkboard{background:var(--board);border:8px solid var(--wood);border-radius:4px;padding:14px 18px;font-family:var(--f-hand);color:var(--chalk);font-size:30px;line-height:1.25}
+.chalkboard .dim{opacity:.55;font-size:24px}
+.sub{font-size:13.5px;color:var(--muted);margin:0}
+.lock{display:flex;gap:12px;justify-content:center}
+.wheel{display:flex;flex-direction:column;align-items:center;gap:6px}
+.wheel button{width:56px;height:40px;background:var(--wall2);border:1px solid var(--metal);border-radius:6px;font-size:18px}
+.wheel output{width:56px;height:64px;display:grid;place-items:center;background:#0b1213;border:2px solid #c7a660;border-radius:6px;font-family:var(--f-display);font-size:36px;font-variant-numeric:tabular-nums}
+.screen-led{background:#0b1213;border:2px solid var(--metal);border-radius:6px;padding:10px;text-align:center;font-family:var(--f-display);font-size:34px;letter-spacing:.3em;min-height:1.6em;font-variant-numeric:tabular-nums;color:var(--hazard)}
+.keys{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.keys button{height:54px;background:var(--wall2);border:1px solid var(--metal);border-radius:8px;font-family:var(--f-display);font-size:22px}
+.keys .ok{background:var(--hazard);color:#1a1205;border:0}
+.lgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.lgrid button{aspect-ratio:3/4;background:var(--metal);border:1px solid #2c3638;border-radius:4px;font-family:var(--f-display);font-size:18px;color:#e2e8e8;display:flex;align-items:flex-start;justify-content:center;padding-top:6px}
+.lgrid button.bad{background:#5a2c26}
+.tbl{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums;background:#efe9d8;color:#2a2a2a}
+.tbl th,.tbl td{padding:7px 8px;border-bottom:1px solid #cfc6ae;text-align:left}
+.tbl th{font-size:12px;letter-spacing:.06em;color:#6b604a}
+.paper{background:#efe9d8;color:#2a2a2a;padding:12px 14px;font-size:14px}
+.paper p{margin:0 0 4px}.paper .hand{font-family:var(--f-hand);font-size:22px;line-height:1.2;color:#7a1f14}
+.inner-msg{min-height:1.5em;font-size:14px;color:var(--hazard)}
+
+.result{font-family:var(--f-display);font-size:28px;color:var(--hazard)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stats div{background:var(--panel);padding:12px;border-radius:6px}
+.stats b{display:block;font-family:var(--f-display);font-weight:400;font-size:26px;font-variant-numeric:tabular-nums}
+.stats span{font-size:12px;color:var(--muted)}
+
+@media (prefers-reduced-motion:reduce){.scene::after,.timer.low,.shake{animation:none}}
+</style>
+
+<div class="app" id="app">
+  <section class="screen" id="start">
+    <div class="eyebrow">방과 후 · 5학년 2반 교실</div>
+    <h1>Z-바이러스<br><em>교실</em></h1>
+    <div class="story">
+      <p>눈을 떠 보니 텅 빈 교실. 복도에서 신음 소리가 들린다.</p>
+      <p>딸을 데리러 왔던 김 박사는 좀비를 보고, 백신과 탈출 방법을 교실 곳곳에 숨겼다.</p>
+      <p>12분 뒤면 좀비들이 문을 부수고 들어온다. 백신을 찾아 탈출하라.</p>
+    </div>
+    <ul class="rules">
+      <li>물건을 눌러 자세히 살펴보세요.</li>
+      <li>아래 버튼으로 교실 앞쪽과 뒤쪽을 오갈 수 있어요.</li>
+      <li>비밀번호를 틀리면 30초가 줄어요. 힌트도 30초.</li>
+    </ul>
+    <button class="btn" id="go">탈출 시작</button>
+  </section>
+
+  <section id="game" hidden>
+    <div class="app" style="padding:0">
+      <div class="hud">
+        <div class="timer" id="timer">12:00</div>
+        <div class="where" id="where">교실 앞쪽</div>
+        <button class="btn ghost" id="hint">힌트 −30초</button>
+      </div>
+
+      <div class="stage">
+        <div class="scene" id="front">
+          <span class="sdesk" style="left:4%;top:86%;width:24%"></span>
+          <span class="sdesk" style="left:66%;top:86%;width:28%"></span>
+          <button class="hs clock" data-hs="clock" aria-label="벽시계"><span class="h"></span><span class="m"></span></button>
+          <button class="hs board" data-hs="board" aria-label="칠판">
+            ○ + ○ = 8<br>△ + ○ = 7<br>□ × △ = 6<br><span class="smudge">문 = △ ○ □ ○</span>
+            <span class="lbl" style="bottom:-7.5cqw">칠판</span>
+          </button>
+          <button class="hs door" data-hs="door" aria-label="교실 문"><span class="pane"></span><span class="pad"></span><span class="knob"></span><span class="lbl">출입문</span></button>
+          <button class="hs desk" data-hs="desk" aria-label="교탁"><span class="drawer"></span><span class="lbl">교탁</span></button>
+        </div>
+        <div class="scene" id="back" hidden>
+          <button class="hs window" data-hs="window" aria-label="창문">
+            <span class="z" style="left:14%"></span><span class="z" style="left:38%;transform:scale(.8)"></span><span class="z" style="left:70%;transform:scale(1.1)"></span>
+            <span class="lbl" style="bottom:-7cqw">창문</span>
+          </button>
+          <button class="hs cork" data-hs="cork" aria-label="게시판">
+            <i style="left:8%;top:14%;width:36%;height:44%"></i><i style="left:52%;top:10%;width:40%;height:34%;transform:rotate(3deg)"></i><i style="left:50%;top:54%;width:30%;height:34%;transform:rotate(-4deg)"></i>
+            <span class="lbl" style="bottom:-7cqw">게시판</span>
+          </button>
+          <button class="hs lockers" data-hs="lockers" aria-label="사물함">
+            <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+            <span class="lbl" style="position:absolute;background:none;bottom:-6cqw">사물함</span>
+          </button>
+          <button class="hs closet" data-hs="closet" aria-label="청소함"></button>
+          <span class="sdesk" style="left:8%;top:86%;width:30%"></span>
+          <span class="sdesk" style="left:56%;top:88%;width:30%"></span>
+        </div>
+      </div>
+
+      <div class="navrow"><button class="btn ghost" id="turn">뒤돌아보기 (교실 뒤쪽)</button></div>
+      <div class="msg" id="msg" role="status" aria-live="polite">어디부터 살펴볼까? 물건을 눌러 보자.</div>
+      <div class="inv-h">소지품</div>
+      <div class="inv" id="inv"></div>
+    </div>
+  </section>
+
+  <section class="screen" id="end" hidden></section>
+</div>
+
+<div class="veil" id="veil" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-t">
+    <div class="sheet-h"><h2 id="sh-t"></h2><button class="x" id="close">닫기</button></div>
+    <div id="sh-b" style="display:flex;flex-direction:column;gap:14px"></div>
+  </div>
+</div>
+
+<script>
+const TOTAL = 720;
+const ITEMS = {
+  flash:  {name:'손전등', desc:'어두운 곳을 비출 수 있다.',
+    svg:'<svg viewBox="0 0 40 40"><rect x="6" y="15" width="20" height="10" rx="2" fill="#6b7b7d"/><path d="M26 13l8-4v22l-8-4z" fill="#9aa9ab"/><rect x="12" y="17" width="4" height="6" fill="#f0b43c"/></svg>'},
+  key:    {name:'사물함 열쇠', desc:'꼬리표에 박사의 글씨: 「감염되지 않은 아이의 사물함」',
+    svg:'<svg viewBox="0 0 40 40"><circle cx="13" cy="20" r="7" fill="none" stroke="#c7a660" stroke-width="4"/><path d="M20 20h16M30 20v6M35 20v5" stroke="#c7a660" stroke-width="4" fill="none"/></svg>'},
+  card:   {name:'출입카드', desc:'「Z연구소 · 김 박사」 교실 문을 열 수 있는 카드.',
+    svg:'<svg viewBox="0 0 40 40"><rect x="5" y="10" width="30" height="20" rx="3" fill="#e9f0e6"/><rect x="5" y="14" width="30" height="4" fill="#c9412f"/><rect x="9" y="22" width="10" height="4" fill="#8ea39b"/></svg>'},
+  vaccine:{name:'Z-백신', desc:'초록빛 앰플. 이걸 가지고 반드시 나가야 한다.',
+    svg:'<svg viewBox="0 0 40 40"><rect x="15" y="6" width="10" height="6" fill="#8ea39b"/><rect x="13" y="12" width="14" height="22" rx="3" fill="#2a3d36" stroke="#e9f0e6" stroke-width="2"/><rect x="15" y="20" width="10" height="12" fill="#7fe0a6"/></svg>'}
+};
+const HINTS = [
+  ['칠판 아래쪽 메모와 벽시계를 함께 보세요. 교탁 서랍은 3자리 숫자예요.', '시계는 4시 17분에 멈춰 있어요.'],
+  ['손전등이 생겼어요. 교실 뒤쪽의 어두운 곳을 비춰 보세요.', '교실 뒤쪽 청소함을 누르세요.'],
+  ['게시판 체온은 고장 난 체온계로 잰 값이에요. 1도를 더한 뒤, 연구실에 다녀온 사람도 빼 보세요.'],
+  ['칠판의 도형 식을 풀어 ○, △, □가 각각 얼마인지 구하세요.', '○=4, △=3, □=2.']
+];
+let S;
+const fresh = () => ({view:'front', inv:[], f:{}, t:TOTAL, hints:0, hintLv:[0,0,0,0], wrong:0, phase:'start', seen:{}});
+const $ = id => document.getElementById(id);
+let tick = null;
+
+function stage(){ const f=S.f; return !f.drawer?0 : !f.key?1 : !f.locker?2 : 3; }
+function fmt(t){ t=Math.max(0,t); return String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0'); }
+function say(h){ $('msg').innerHTML = h; }
+function buzz(p){ try{ navigator.vibrate && navigator.vibrate(p); }catch(e){} }
+
+function render(){
+  $('start').hidden = S.phase!=='start';
+  $('game').hidden = S.phase!=='play';
+  $('end').hidden = S.phase!=='end';
+  $('timer').textContent = fmt(S.t);
+  $('timer').classList.toggle('low', S.t<=120);
+  $('front').hidden = S.view!=='front';
+  $('back').hidden = S.view!=='back';
+  $('where').textContent = S.view==='front' ? '교실 앞쪽 · 칠판' : '교실 뒤쪽 · 사물함';
+  $('turn').textContent = S.view==='front' ? '뒤돌아보기 (교실 뒤쪽)' : '뒤돌아보기 (교실 앞쪽)';
+  document.querySelectorAll('.hs').forEach(b=>b.classList.toggle('found', !!S.seen[b.dataset.hs]));
+  const inv = $('inv'); inv.innerHTML='';
+  for(let i=0;i<4;i++){
+    const k=S.inv[i], b=document.createElement('button');
+    b.className='slot'+(k?' has':'');
+    if(k){ b.innerHTML=ITEMS[k].svg+'<span>'+ITEMS[k].name+'</span>'; b.onclick=()=>say('<b>'+ITEMS[k].name+'</b> · '+ITEMS[k].desc); }
+    else { b.disabled=true; b.setAttribute('aria-label','빈 칸'); }
+    inv.appendChild(b);
+  }
+}
+function give(k){ if(!S.inv.includes(k)) S.inv.push(k); }
+function take(k){ S.inv = S.inv.filter(x=>x!==k); }
+function pen(s, why){
+  S.t -= s; S.wrong++;
+  bang(why || '−'+s+'초! 문 너머의 좀비들이 더 흥분했다.');
+  if(S.t<=0) lose();
+}
+function bang(text){
+  const sc=$(S.view); sc.classList.remove('shake'); void sc.offsetWidth; sc.classList.add('shake');
+  buzz([80,40,120]);
+  if(text) say(text);
+}
+
+function startTimer(){
+  clearInterval(tick);
+  tick = setInterval(()=>{
+    if(S.phase!=='play') return;
+    S.t--;
+    if(S.t>0 && S.t%53===0) bang('<b>쾅! 쾅!</b> 누군가 교실 문을 두드린다…');
+    if(S.t===120) bang('<b>2분 남았다.</b> 문틀이 삐걱거리기 시작한다!');
+    if(S.t<=0){ lose(); return; }
+    $('timer').textContent=fmt(S.t); $('timer').classList.toggle('low', S.t<=120);
+  },1000);
+}
+
+/* ---------- modal ---------- */
+function openSheet(title, html, mount){
+  $('sh-t').textContent=title; $('sh-b').innerHTML=html; $('veil').hidden=false;
+  if(mount) mount($('sh-b'));
+}
+function closeSheet(){ $('veil').hidden=true; render(); }
+$('close').onclick=closeSheet;
+$('veil').addEventListener('click',e=>{ if(e.target.id==='veil') closeSheet(); });
+
+/* ---------- hotspots ---------- */
+const H = {
+  clock(){
+    openSheet('벽시계', `
+      <svg viewBox="0 0 200 200" style="width:60%;margin:0 auto;display:block">
+        <circle cx="100" cy="100" r="92" fill="#e7e2d4" stroke="#3a3a36" stroke-width="10"/>
+        ${Array.from({length:12},(_,i)=>{const a=i*30*Math.PI/180;return `<line x1="${100+70*Math.sin(a)}" y1="${100-70*Math.cos(a)}" x2="${100+80*Math.sin(a)}" y2="${100-80*Math.cos(a)}" stroke="#222" stroke-width="4"/>`}).join('')}
+        <line x1="100" y1="100" x2="${100+42*Math.sin(128.5*Math.PI/180)}" y2="${100-42*Math.cos(128.5*Math.PI/180)}" stroke="#222" stroke-width="8" stroke-linecap="round"/>
+        <line x1="100" y1="100" x2="${100+64*Math.sin(102*Math.PI/180)}" y2="${100-64*Math.cos(102*Math.PI/180)}" stroke="#222" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="100" cy="100" r="6" fill="#c9412f"/>
+      </svg>
+      <p class="sub">초침이 움직이지 않는다. 시계는 <b style="color:var(--ink)">4시 17분</b>에 멈춰 있다. 유리에 손자국이 묻어 있다.</p>`);
+    S.seen.clock=true;
+  },
+  board(){
+    openSheet('칠판', `
+      <div class="chalkboard">
+        ○ + ○ = 8<br>△ + ○ = 7<br>□ × △ = 6<br><br>
+        탈출문 암호 = △ ○ □ ○<br>
+        <span class="dim">교탁 서랍 = 내가 물린 시각 (시·분)</span>
+      </div>
+      <p class="sub">급하게 휘갈긴 글씨. 분필 가루 옆에 핏자국이 떨어져 있다.</p>`);
+    S.seen.board=true;
+  },
+  desk(){
+    S.seen.desk=true;
+    if(S.f.drawer){ say('교탁 서랍은 이미 비어 있다. 박사의 쪽지만 남아 있다: <b>"열쇠는 어둠 속에 두었다."</b>'); render(); return; }
+    const d=[0,0,0];
+    openSheet('교탁 서랍', `
+      <p class="sub">서랍에 3자리 번호 자물쇠가 걸려 있다.</p>
+      <div class="lock">${[0,1,2].map(i=>`<div class="wheel"><button data-up="${i}" aria-label="${i+1}번째 숫자 올리기">▲</button><output id="w${i}">0</output><button data-dn="${i}" aria-label="${i+1}번째 숫자 내리기">▼</button></div>`).join('')}</div>
+      <div class="inner-msg" id="im"></div>
+      <button class="btn" id="open">자물쇠 열기</button>`, b=>{
+        const upd=()=>d.forEach((v,i)=>b.querySelector('#w'+i).textContent=v);
+        b.querySelectorAll('[data-up]').forEach(x=>x.onclick=()=>{d[x.dataset.up]=(d[x.dataset.up]+1)%10;upd();});
+        b.querySelectorAll('[data-dn]').forEach(x=>x.onclick=()=>{d[x.dataset.dn]=(d[x.dataset.dn]+9)%10;upd();});
+        b.querySelector('#open').onclick=()=>{
+          if(d.join('')==='417'){
+            S.f.drawer=true; give('flash'); closeSheet(); buzz(60);
+            say('<b>찰칵!</b> 서랍이 열렸다. 손전등과 쪽지가 있다. 쪽지: <b>"열쇠는 어둠 속에 두었다."</b>');
+          } else { b.querySelector('#im').textContent='꿈쩍도 하지 않는다. (−30초)'; pen(30); $('timer').textContent=fmt(S.t); }
+        };
+      });
+  },
+  door(){
+    S.seen.door=true;
+    if(!S.inv.includes('card')){ bang('문은 출입카드로 잠겨 있다. 작은 창 너머로 <b>붉은 눈</b>이 이쪽을 노려본다…'); render(); return; }
+    let code='';
+    openSheet('출입문 잠금장치', `
+      <p class="sub">출입카드를 대자 키패드에 불이 들어왔다. 4자리 암호를 입력하세요.</p>
+      <div class="screen-led" id="led">····</div>
+      <div class="inner-msg" id="im"></div>
+      <div class="keys">${[1,2,3,4,5,6,7,8,9].map(n=>`<button data-k="${n}">${n}</button>`).join('')}<button data-k="C">지움</button><button data-k="0">0</button><button data-k="OK" class="ok">확인</button></div>`, b=>{
+        const led=b.querySelector('#led');
+        const show=()=>led.textContent=(code+'····').slice(0,4);
+        b.querySelectorAll('[data-k]').forEach(x=>x.onclick=()=>{
+          const k=x.dataset.k;
+          if(k==='C'){ code=''; }
+          else if(k==='OK'){
+            if(code==='3424'){ clearInterval(tick); $('veil').hidden=true; win(); return; }
+            b.querySelector('#im').textContent='삐— 틀린 암호! (−30초)'; code=''; pen(30); $('timer').textContent=fmt(S.t);
+          } else if(code.length<4) code+=k;
+          show();
+        });
+      });
+  },
+  window(){
+    S.seen.window=true;
+    openSheet('창문', `
+      <svg viewBox="0 0 300 160" style="width:100%;border-radius:6px;background:#0a1420">
+        <rect x="0" y="110" width="300" height="50" fill="#1b2a1e"/>
+        ${[30,70,95,140,180,215,250,270].map((x,i)=>`<g transform="translate(${x},${100+(i%3)*8}) scale(${.7+(i%3)*.2})"><rect x="-8" y="-4" width="16" height="30" rx="6" fill="#33452f"/><circle cx="0" cy="-12" r="9" fill="#3d5236"/><rect x="-5" y="-14" width="10" height="3" fill="#c9412f"/></g>`).join('')}
+      </svg>
+      <p class="sub">운동장에 좀비 수십 마리가 비틀거린다. 창문은 3층이라 뛰어내릴 수 없다. 탈출구는 교실 문뿐이다.</p>`);
+  },
+  cork(){
+    S.seen.cork=true;
+    openSheet('게시판', `
+      <table class="tbl"><caption class="sub" style="text-align:left;caption-side:top;padding-bottom:6px">보건 기록 · 10월 31일 오후 3시</caption>
+        <thead><tr><th>번호</th><th>이름</th><th>체온</th></tr></thead>
+        <tbody>
+          <tr><td>3</td><td>연우</td><td>37.4℃</td></tr>
+          <tr><td>8</td><td>지명</td><td>37.5℃</td></tr>
+          <tr><td>11</td><td>지안</td><td>37.2℃</td></tr>
+          <tr><td>14</td><td>소율</td><td>36.6℃</td></tr>
+          <tr><td>17</td><td>시연</td><td>36.9℃</td></tr>
+        </tbody></table>
+      <div class="paper"><p>※ 38.0℃ 이상은 감염 의심</p><p>※ 교실 체온계 고장: 실제보다 <b>1.0℃ 낮게</b> 표시됨 — 보건실</p></div>
+      <div class="paper"><p><b>Z연구실 방문 기록</b></p><p>10/30 시연 · 10/30 연우</p><p class="hand">연구실에 들어온 아이는 모두 감염됐다… — 김</p></div>`);
+  },
+  closet(){
+    S.seen.closet=true;
+    if(!S.inv.includes('flash') && !S.f.key){ say('청소함 안은 칠흑같이 어둡다. 뭔가 반짝이는 것 같은데… <b>빛이 필요하다.</b>'); render(); return; }
+    if(S.f.key){ say('청소함엔 대걸레와 양동이뿐이다.'); render(); return; }
+    S.f.key=true; give('key'); buzz(60);
+    openSheet('청소함', `
+      <svg viewBox="0 0 300 150" style="width:100%;border-radius:6px;background:#050808">
+        <defs><radialGradient id="beam"><stop offset="0" stop-color="#f6e6b0" stop-opacity=".9"/><stop offset="1" stop-color="#f6e6b0" stop-opacity="0"/></radialGradient></defs>
+        <circle cx="150" cy="80" r="80" fill="url(#beam)"/>
+        <rect x="60" y="20" width="8" height="120" fill="#5c4630"/><rect x="230" y="70" width="40" height="60" fill="#3c5a74"/>
+        <g transform="translate(140,80) rotate(-20)"><circle r="10" fill="none" stroke="#c7a660" stroke-width="5"/><path d="M10 0h28M30 0v8M36 0v6" stroke="#c7a660" stroke-width="5"/></g>
+        <rect x="120" y="98" width="48" height="16" fill="#efe9d8" transform="rotate(6 144 106)"/>
+      </svg>
+      <p class="sub">손전등을 비추자 양동이 뒤에서 <b style="color:var(--ink)">사물함 열쇠</b>가 나왔다. 꼬리표에 박사의 글씨가 있다.</p>
+      <div class="note">감염되지 않은 아이의 사물함</div>`);
+  },
+  lockers(){
+    S.seen.lockers=true;
+    const hasKey=S.inv.includes('key');
+    if(S.f.locker){ say('14번 사물함은 이미 비어 있다.'); render(); return; }
+    openSheet('사물함', `
+      <p class="sub">${hasKey?'열쇠를 꽂아 볼 사물함을 고르세요. 틀리면 경보가 울려요 (−20초).':'모든 사물함이 잠겨 있다. 열쇠가 필요하다.'}</p>
+      <div class="lgrid">${Array.from({length:20},(_,i)=>`<button data-n="${i+1}">${i+1}</button>`).join('')}</div>
+      <div class="inner-msg" id="im"></div>`, b=>{
+        b.querySelectorAll('[data-n]').forEach(x=>x.onclick=()=>{
+          const im=b.querySelector('#im');
+          if(!S.inv.includes('key')){ im.textContent=x.dataset.n+'번 사물함은 잠겨 있다.'; return; }
+          if(x.dataset.n==='14'){
+            S.f.locker=true; take('key'); give('vaccine'); give('card'); closeSheet(); buzz([60,40,60]);
+            say('<b>14번 사물함이 열렸다!</b> 초록빛 Z-백신과 박사의 출입카드가 들어 있다. 이제 문만 열면 된다.');
+          } else { x.classList.add('bad'); im.textContent='경보음! '+x.dataset.n+'번이 아니다. (−20초)'; pen(20); $('timer').textContent=fmt(S.t); }
+        });
+      });
+  }
+};
+document.querySelectorAll('.hs').forEach(b=>b.addEventListener('click',()=>{ H[b.dataset.hs](); render(); }));
+
+$('turn').onclick=()=>{ S.view = S.view==='front'?'back':'front'; render(); };
+$('hint').onclick=()=>{
+  const st=stage(), lv=Math.min(S.hintLv[st],1);
+  S.hintLv[st]++; S.hints++; S.t-=30;
+  say('<b>힌트</b> · '+HINTS[st][lv]);
+  if(S.t<=0) lose(); else render();
+};
+$('go').onclick=()=>{ S=fresh(); S.phase='play'; render(); startTimer(); };
+
+function rank(){
+  if(S.t>=360 && S.hints===0) return ['S급 생존자','백신 연구팀이 당신을 스카우트하고 싶어 한다.'];
+  if(S.t>=180) return ['A급 생존자','침착한 판단 덕분에 무사히 빠져나왔다.'];
+  return ['B급 생존자','아슬아슬했다. 등 뒤에서 문이 부서지는 소리가 들렸다.'];
+}
+function win(){
+  S.phase='end';
+  const [r,line]=rank();
+  $('end').innerHTML=`
+    <div class="eyebrow">탈출 성공</div>
+    <h1>백신을 들고<br><em>복도</em>로</h1>
+    <div class="story"><p>문이 열리자 좀비들이 백신 냄새에 움찔하며 물러섰다. 당신은 계단을 뛰어 내려가 구조대에 Z-백신을 건넸다.</p><p>${line}</p></div>
+    <div class="result">${r}</div>
+    <div class="stats"><div><b>${fmt(S.t)}</b><span>남은 시간</span></div><div><b>${S.hints}회</b><span>힌트 사용</span></div></div>
+    <div class="endrow"><button class="btn" id="again">다시 하기</button><a class="btn ghost" href="../index.html">게임 목록</a></div>`;
+  $('again').onclick=()=>{ S=fresh(); render(); };
+  render(); window.scrollTo(0,0);
+}
+function lose(){
+  clearInterval(tick); $('veil').hidden=true; S.phase='end';
+  $('end').innerHTML=`
+    <div class="eyebrow">시간 초과</div>
+    <h1>문이<br><em>부서졌다</em></h1>
+    <div class="story"><p>쾅 하는 소리와 함께 교실 문이 쓰러졌다. 백신은 아직 교실 어딘가에 남아 있다…</p></div>
+    <div class="endrow"><button class="btn" id="again">다시 도전</button><a class="btn ghost" href="../index.html">게임 목록</a></div>`;
+  $('again').onclick=()=>{ S=fresh(); render(); };
+  buzz([200,80,200]); render(); window.scrollTo(0,0);
+}
+
+function boot(data){
+  S = (data && data.S) ? data.S : fresh();
+  render();
+  if(S.phase==='play') startTimer();
+}
+try{ window.claude?.hot?.snapshot?.(()=>({S})); }catch(e){}
+window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
+</script>
+
+</body></html>
