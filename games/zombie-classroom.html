@@ -220,6 +220,7 @@ h1 em{font-style:normal;color:var(--blood)}
   </div>
 </div>
 
+<script src="lib/common.js"></script>
 <script>
 const TOTAL = 720;
 const ITEMS = {
@@ -240,7 +241,6 @@ const HINTS = [
 ];
 let S;
 const fresh = () => ({view:'front', inv:[], f:{}, t:TOTAL, hints:0, hintLv:[0,0,0,0], wrong:0, phase:'start', seen:{}});
-const $ = id => document.getElementById(id);
 let tick = null;
 
 function stage(){ const f=S.f; return !f.drawer?0 : !f.key?1 : !f.locker?2 : 3; }
@@ -276,7 +276,7 @@ function pen(s, why){
   if(S.t<=0) lose();
 }
 function bang(text){
-  const sc=$(S.view); sc.classList.remove('shake'); void sc.offsetWidth; sc.classList.add('shake');
+  replay($(S.view), 'shake');
   buzz([80,40,120]);
   if(text) say(text);
 }
@@ -444,7 +444,7 @@ function rank(){
   return ['B급 생존자','아슬아슬했다. 등 뒤에서 문이 부서지는 소리가 들렸다.'];
 }
 function win(){
-  S.phase='end';
+  S.phase='end'; markSolved();
   const [r,line]=rank();
   $('end').innerHTML=`
     <div class="eyebrow">탈출 성공</div>

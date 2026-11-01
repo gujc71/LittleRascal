@@ -259,6 +259,7 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
 </div>
 <canvas id="confetti" hidden></canvas>
 
+<script src="lib/common.js"></script>
 <script>
 const SKIN='#f6d2b4', SKIN_D='#d9a888', HAIR='#2b2522', INK='#232a3d', LIP='#c46a5c', NOSE='#b37d63';
 
@@ -415,7 +416,6 @@ const MISSION_HTML=`<div class="stamp-sm">수사 지시서 · 사건번호 2026-
 const LEFT=['face','hair','brows','eyes'], RIGHT=['nose','mouth','extra'];
 const TAB_LABEL={face:'얼굴형',hair:'머리',brows:'눈썹',eyes:'눈',nose:'코',mouth:'입',extra:'특징'};
 let sel={}, culprit={}, order=[], openCat=null, testiSeen=false;
-const $=id=>document.getElementById(id);
 const cat=k=>CATS.find(c=>c.key===k);
 
 function thumbSel(k,id){
@@ -435,7 +435,6 @@ document.querySelectorAll('.part').forEach(t=>t.addEventListener('click',()=>{
   openCat===t.dataset.cat?closeTray():openTray(t.dataset.cat);
 }));
 
-const reduced=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
 function openTray(k){
   const c=cat(k), tray=$('tray'); openCat=k;
   $('tray-title').textContent=`${c.name} 고르기`;
@@ -453,7 +452,7 @@ function closeTray(){
   if(!openCat) return; const k=openCat, tray=$('tray'); openCat=null;
   document.querySelectorAll('.part').forEach(t=>t.classList.remove('active'));
   $('tab-'+k).focus({preventScroll:true});
-  if(reduced()){tray.hidden=true;return;}
+  if(reducedMotion()){tray.hidden=true;return;}
   tray.classList.add('closing');
   tray.onanimationend=e=>{ if(e.target===tray && !openCat){tray.hidden=true;tray.classList.remove('closing');tray.onanimationend=null;} };
 }
@@ -536,9 +535,9 @@ function shrinkMission(){
   const card=$('introCard'), ov=$('intro');
   const c=card.getBoundingClientRect(), b=mb.getBoundingClientRect();
   const done=()=>{ov.hidden=true;ov.classList.remove('fade');card.style.transform='';
-    mb.classList.remove('landed');void mb.offsetWidth;mb.classList.add('landed');
+    replay(mb,'landed');
     if(firstStart&&!testiSeen) tb.classList.add('pulse');};
-  if(matchMedia('(prefers-reduced-motion: reduce)').matches||!card.animate){done();return;}
+  if(reducedMotion()||!card.animate){done();return;}
   ov.classList.add('fade');
   card.style.transformOrigin='top left';
   card.animate([{transform:'none',opacity:1},
@@ -585,6 +584,7 @@ function submit(){
   const wrong=CATS.filter(c=>sel[c.key]!==culprit[c.key]);
   const hits=7-wrong.length, r=$('result');
   if(!wrong.length){
+    markSolved();
     r.innerHTML=`<div class="siren-bar"></div>
       <h2 id="r-title">범인 검거 성공!</h2>
       <div class="caught"><svg viewBox="18 18 164 210" role="img" aria-label="검거된 범인 몽타주">${render(culprit)}</svg><div class="stamp">검거</div></div>
@@ -621,7 +621,7 @@ document.addEventListener('click',e=>{
 });
 
 function confetti(){
-  if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if(reducedMotion()) return;
   const c=$('confetti'),x=c.getContext('2d'); c.hidden=false;
   const W=c.width=innerWidth,H=c.height=innerHeight;
   const cols=['#ffd23f','#ff4b55','#3d8bff','#1f9d63','#ffffff'];

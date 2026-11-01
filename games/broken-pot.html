@@ -462,6 +462,7 @@ button:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--clay);outl
   </nav>
 </div>
 
+<script src="lib/common.js"></script>
 <script>
 (function(){
 const CLUES={
@@ -501,7 +502,6 @@ const CATS={
 const STORY=['',' 은(는) 블라인드에 걸린 ',' 을(를) 꺼내려고 의자에 올라가 ',' (으)로 툭툭 치다가 화분을 떨어뜨렸다. 모두 ',' 에서 이기고 싶었기 때문이다. 그리고 깨진 조각 일부를 휴지에 싸서 ',' 에 몰래 버렸다.'];
 const TOTAL_WORDS=Object.values(CATS).reduce((n,c)=>n+c.words.length,0);
 
-const $=id=>document.getElementById(id);
 let S,seenWords=0;
 function setTab(t){
   $('app').dataset.tab=t;
@@ -517,7 +517,7 @@ function inspect(id){
   const c=CLUES[id];let added=[];
   if(!S.found.includes(id)){S.found.push(id);added=addWords(c.words)}
   S.sel=id;
-  const card=$('clue');card.classList.remove('empty','pop');void card.offsetWidth;card.classList.add('pop');
+  const card=$('clue');card.classList.remove('empty');replay(card,'pop');
   $('clueName').textContent=c.name;$('clueText').textContent=c.text;
   const fg=$('clueFig');fg.innerHTML=c.fig||'';fg.hidden=!c.fig;
   const nw=$('clueWords');nw.innerHTML='';
@@ -627,15 +627,15 @@ function submit(){
   const wrong=SLOTS.filter((sl,i)=>S.fill[i]!==sl.answer).length;
   const fb=$('feedback');
   if(!wrong){
-    S.solved=true;fb.className='feedback ok';fb.textContent='모든 빈칸이 맞았어요!';
+    S.solved=true;markSolved();fb.className='feedback ok';fb.textContent='모든 빈칸이 맞았어요!';
     $('rank').textContent=S.tries===1?'한 번에 맞혔어요. 3반 최고의 명탐정!':S.tries===2?`${S.tries}번 만에 맞혔어요. 날카로운 탐정이에요!`:`${S.tries}번 만에 맞혔어요. 끝까지 포기하지 않는 끈기 탐정!`;
-    render();$('result').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
+    render();$('result').scrollIntoView({behavior:reducedMotion()?'auto':'smooth',block:'start'});
     return;
   }
   fb.className='feedback bad';
   if(S.tries>=2){S.showWrong=true;fb.textContent=`${wrong}칸이 틀렸어요. 빨간 칸을 다시 생각해 보세요.`}
   else fb.textContent=wrong<=2?`거의 다 왔어요! ${wrong}칸이 틀렸어요.`:`${wrong}칸이 틀렸어요. 단서와 친구들 말을 다시 맞춰 보세요.`;
-  const r=$('report');r.classList.remove('shake');void r.offsetWidth;r.classList.add('shake');
+  replay($('report'),'shake');
   render();
 }
 

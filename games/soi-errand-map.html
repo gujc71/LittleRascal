@@ -177,6 +177,7 @@ svg text{font-family:var(--display)}
   </div>
 </div>
 
+<script src="lib/common.js"></script>
 <script>
 let W=740,H=520,COLS=11,ROWS=8,X0=20,Y0=22,DX=70,DY=68,SPACING=112,EDGE=1;const M_PER_PX=100/70;
 function setOrient(portrait){
@@ -207,13 +208,11 @@ const LEVELS={
 const BLOCKS=[{name:'햇살공원',kind:'park'},{name:'소이초등학교',kind:'school'},{name:'솔숲공원',kind:'park'},{name:'새싹어린이집',kind:'school'}];
 const NS='http://www.w3.org/2000/svg';
 const svg=document.getElementById('map');
-const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let S={level:'hard'};
 function el(tag,attrs={},parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e}
 function rnd(a,b){return a+Math.random()*(b-a)}
 function ri(a,b){return a+Math.floor(Math.random()*(b-a+1))}
 function hyp(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
-function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 const nid=(c,r)=>r*COLS+c;
 
 /* ---------- town generation ---------- */
@@ -496,6 +495,7 @@ function undo(){
   S.order.pop();drawRoute();placeSprite(S.T.nodes[S.P[cur()]]);render();
 }
 function finish(){
+  markSolved();
   const you=walked(),best=S.best,diff=you-best;
   const stars=diff===0?3:(you<=best*1.08?2:1);
   document.getElementById('stars').innerHTML=[1,2,3].map(n=>`<span class="${n<=stars?'on':'off'}">★</span>`).join('');

@@ -292,10 +292,10 @@ button:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--red);outli
 
 <div class="screen" id="screen"></div>
 
+<script src="lib/common.js"></script>
+<script src="lib/persuade.js"></script>
 <script>
 (function(){
-const TOTAL = 20;
-const CALM_MAX = 2;  /* 달래기는 한 판에 두 번까지, 연달아 쓸 수 없다 */
 const EV = {
   intro:{name:'자기소개 카드', sub:'3월 2일 작성', html:`<h3>자기소개 카드</h3><div class="meta">4학년 3반 17번 · 3월 2일 작성 · 교실 뒤 게시판</div>
     <div class="hand">이름: 오시연<br>좋아하는 것: 돈가스, 롤, 잠<br>장래희망: 프로게이머<br>올해 소원: <span class="hl">강아지 키우기 (엄마가 절대 안 된대요 ㅠㅠ)</span></div>`},
@@ -377,249 +377,44 @@ const WRONG = [
 ];
 const REPRESS = [['t','한 번만 더 말해 볼래?'],['s','아까 말했잖아요. 똑같은 거 자꾸 물어보시면 기분 나빠요.','pout']];
 
-const $ = id => document.getElementById(id);
-let S, Q = [], Qdone = null, timer = null;
-/* CHAR_MS: 글자 하나가 더 찍히는 간격. LOG_MAX: 화면에 남겨 두는 대사 수 */
-const CHAR_MS = 55, LOG_MAX = 30;
-/* 모션을 줄인 설정에서도 글자는 한 자씩 찍고, 스크롤만 단번에 옮긴다 */
-const noAnim = window.matchMedia('(prefers-reduced-motion:reduce)');
-let typer = null, cur = null, scrollAt = -1;
-function clearTimer(){
-  if(timer){ clearTimeout(timer); timer = null; }
-  if(typer){ clearInterval(typer); typer = null; }
-}
-
-function fresh(){ return {round:0, conf:0, upset:0, maxUpset:0, time:TOTAL, sel:-1, ev:null, pressed:{}, near:{}, mistakes:0, calms:0, lastCalm:false, busy:false, over:false, started:false, face:'normal'}; }
-
-function setFace(f){ S.face=f; document.querySelectorAll('#kid [data-f]').forEach(g=>{ g.style.display = g.dataset.f.split(' ').includes(f)?'':'none'; }); }
-function clockText(){ const m = 40 + (TOTAL - S.time); return (m>=60? '13:'+String(m-60).padStart(2,'0') : '12:'+String(m).padStart(2,'0')); }
-
-function hud(){
-  $('gConf').style.width = S.conf+'%'; $('nConf').textContent = S.conf;
-  $('gUpset').style.width = S.upset+'%'; $('nUpset').textContent = S.upset;
-  $('clock').textContent = clockText();
-  $('clockBox').classList.toggle('low', S.time<=5);
-  $('roundTag').textContent = '핑계 '+(S.round+1)+'/4';
-  $('roundName').textContent = '"'+R[S.round].name+'"';
-  const idle = !S.busy && !S.over && S.started;
-  $('btnPress').disabled = !idle || S.sel<0;
-  $('btnPresent').disabled = !idle || S.sel<0 || !S.ev;
-  $('btnCalm').disabled = !idle || S.calms>=CALM_MAX || S.lastCalm;
-  $('nCalm').textContent = CALM_MAX - S.calms;
-  $('board').classList.toggle('adv', S.busy);
-  renderPicks();
-}
-/* Mobile: the desk panels become drawers — 진술 slides in from the left, 증거 파일 from the right */
-const MQ = window.matchMedia('(max-width:720px)');
-const DRAWER = {st:'pStatements', ev:'pEvidence'};
-function renderPicks(){
-  const st = S.sel<0 ? null : R[S.round].st[S.sel];
-  $('pickStText').textContent = st ? st.tx : '문장 고르기';
-  $('btnStList').title = st ? st.tx : '';
-  $('pickEvText').textContent = S.ev ? EV[S.ev].name : '카드 고르기';
-  $('btnStList').classList.toggle('on', S.sel>=0);
-  $('btnEvList').classList.toggle('on', !!S.ev);
-}
-function closeDrawers(){
-  $('pStatements').classList.remove('open'); $('pEvidence').classList.remove('open');
-  $('scrim').hidden = true;
-  $('btnStList').setAttribute('aria-expanded','false');
-  $('btnEvList').setAttribute('aria-expanded','false');
-}
-function openDrawer(w){
-  closeDrawers();
-  $(DRAWER[w]).classList.add('open'); $('scrim').hidden = false;
-  $(w==='st'?'btnStList':'btnEvList').setAttribute('aria-expanded','true');
-}
-function toggleDrawer(w){ if($(DRAWER[w]).classList.contains('open')) closeDrawers(); else openDrawer(w); }
-function renderStatements(){
-  const r = R[S.round];
-  $('stList').innerHTML = r.st.map((s,i)=>`<li tabindex="0" data-i="${i}" class="${S.sel===i?'sel':''}"><span class="n">${i+1}</span><span class="tx">${s.tx}</span>${S.pressed[S.round+':'+i]?'<span class="pr">추궁함</span>':''}</li>`).join('');
-}
-function renderCards(){
-  $('cards').innerHTML = EV_ORDER.map(k=>`<button type="button" class="card ${S.ev===k?'sel':''}" data-k="${k}"><b>${EV[k].name}</b><span>${EV[k].sub}</span></button>`).join('');
-  $('doc').innerHTML = S.ev ? EV[S.ev].html : '<p class="ph">증거 카드를 고르면 여기에 내용이 펼쳐집니다.</p>';
-  $('btnEvPick').disabled = !S.ev;
-  $('btnEvPick').textContent = S.ev ? '「'+EV[S.ev].name+'」 선택' : '카드를 먼저 고르세요';
-}
-function speaker(w){ return w==='s'?'시연': w==='t'?'나 (담임)':''; }
-function typing(){ return !!cur; }
-/* 늘어난 만큼만 부드럽게 내려가면, 다 찍힌 대사가 위로 밀려 올라간다 */
-function scrollLog(){
-  const g = $('log'), top = Math.max(0, g.scrollHeight - g.clientHeight);
-  if(top === scrollAt) return;
-  scrollAt = top;
-  g.scrollTo({top, behavior: noAnim.matches?'auto':'smooth'});
-}
-function resetLog(){ $('log').textContent = ''; cur = null; scrollAt = -1; }
-/* 문장을 끝까지 드러낸다 — 저절로 다 찍혔거나, 화면을 눌러 건너뛰었을 때 */
-function endLine(){
-  if(typer){ clearInterval(typer); typer = null; }
-  if(!cur) return;
-  cur.tx.textContent = cur.t;
-  cur.tx.removeAttribute('aria-hidden');
-  cur.el.classList.remove('typing');
-  cur = null;
-  scrollLog();
-}
-function show(w,t,f){
-  if(f) setFace(f);
-  endLine();
-  const g = $('log'), prev = g.lastElementChild, txt = String(t);
-  if(prev && prev.dataset.w===w && prev.dataset.t===txt) return;  /* 막 한 말은 다시 쌓지 않는다 */
-  const el = document.createElement('p');
-  el.className = 'ent '+w+' typing'; el.dataset.w = w; el.dataset.t = txt;
-  const who = speaker(w);
-  if(who){ const b = document.createElement('b'); b.className = 'who'; b.textContent = who; el.appendChild(b); }
-  const tx = document.createElement('span');
-  tx.className = 'tx';
-  tx.setAttribute('aria-hidden','true');  /* 한 글자씩 바뀔 때마다 읽어 주지 않도록 */
-  el.appendChild(tx); g.appendChild(el);
-  while(g.children.length > LOG_MAX) g.removeChild(g.firstElementChild);
-  cur = {el, tx, t:txt, i:0};
-  scrollLog();
-  typer = setInterval(()=>{
-    if(!cur){ clearInterval(typer); typer = null; return; }
-    cur.tx.textContent = cur.t.slice(0, ++cur.i);
-    if(cur.i >= cur.t.length) endLine(); else scrollLog();
-  }, CHAR_MS);
-}
-function say(lines, done){ Q = lines.slice(); Qdone = done||null; S.busy = true; step(); }
-function step(){
-  clearTimer();
-  if(!Q.length){ S.busy=false; const d=Qdone; Qdone=null; hud(); if(d) d(); return; }
-  const [w,t,f] = Q.shift(); show(w,t,f);
-  const n = String(t).length;
-  const read = Math.min(6000, Math.max(1600, 1200 + n*85));
-  timer = setTimeout(step, Math.max(read, n*CHAR_MS + 1200));
-  hud();
-}
-/* 한 번 누르면 문장을 끝까지, 다시 누르면 다음 대사로 */
-function advance(){
-  if(typing()){ clearTimer(); endLine(); if(S.busy) timer = setTimeout(step, 1200); return; }
-  if(S.busy) step();
-}
-function bump(dc, du){
-  S.conf = Math.max(0, Math.min(100, S.conf+dc));
-  S.upset = Math.max(0, Math.min(100, S.upset+du));
-  S.maxUpset = Math.max(S.maxUpset, S.upset);
-  if(du>0){ const b=$('upsetBox'); b.classList.remove('hot'); void b.offsetWidth; b.classList.add('hot'); }
-  hud();
-}
-function check(){
-  if(S.over) return;
-  if(S.upset>=100) return say([['s','으아앙! 선생님 미워요!!','cry'],['n','시연이가 교무실이 떠나가라 울기 시작했다. 옆자리 선생님들이 일제히 돌아본다.'],['n','문이 열리고 교감 선생님이 들어온다. "무슨 일이에요?"']], ()=>end('upset'));
-  if(S.time<=0) return say([['n','딩동댕동. 5교시 시작종이 울렸다.'],['s','앗, 다음 시간 체육이에요! 안녕히 계세요!','smug'],['n','시연이는 바람처럼 사라졌다. 진실도 함께.']], ()=>end('bell'));
-  idleLine();
-}
-function idleLine(){
-  const f = S.upset>=70?'cry': S.upset>=40?'pout':'normal';
-  show('n', S.upset>=70 ? '(시연이 눈가가 촉촉하다. 한 번만 더 헛짚으면 터질 것 같다.)' : '(진술 중에 증거와 어긋나는 문장이 있다. 찾아서 증거를 들이밀자.)', f);
-}
-function press(){
-  if(S.busy||S.sel<0) return;
-  const key = S.round+':'+S.sel; S.time--; S.lastCalm = false;
-  if(S.pressed[key]){ bump(0,12); say(REPRESS, check); }
-  else { S.pressed[key]=true; bump(3,5); renderStatements(); say(R[S.round].st[S.sel].press, check); }
-}
-function calm(){
-  if(S.busy||S.calms>=CALM_MAX||S.lastCalm) return; S.calms++; S.lastCalm = true; S.time--;
-  if(S.upset<10){ say([['t','괜찮아, 선생님 화난 거 아니야.'],['s','저 멀쩡한데요? 그럼 이제 가도 돼요?','smug']], check); return; }
-  bump(0,-20);
-  say([['t','괜찮아. 혼내려는 거 아니야. 있었던 일만 듣고 싶어.'],['s','…(훌쩍) 네.','pout']], check);
-}
-function stamp(){ const s=$('stamp'); s.classList.remove('on'); void s.offsetWidth; s.classList.add('on'); const b=$('board'); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); }
-function present(){
-  if(S.busy||S.sel<0||!S.ev) return;
-  const r = R[S.round], si = S.sel, ek = S.ev; S.time--; S.lastCalm = false;
-  const lead = ['t','이걸 한번 볼래? '+EV[ek].name+'이야.'];
-  if(r.ok.st===si && r.ok.ev===ek){
-    stamp(); bump(S.round===3?100:22, -8);
-    say(r.ok.lines, ()=>{
-      if(S.round===3){ S.conf=100; hud(); end('win'); return; }
-      S.round++; S.sel=-1; S.ev=null; renderStatements(); renderCards(); hud();
-      say(R[S.round].intro, check);
-    });
-    return;
-  }
-  const nk = si+':'+ek;
-  if(r.near[nk]){
-    const first = !S.near[S.round+':'+nk]; S.near[S.round+':'+nk]=true;
-    bump(first?5:0, first?0:8); say([lead, ...r.near[nk]], check); return;
-  }
-  S.mistakes++;
-  if(ek==='mom'){ bump(-5,14); say([lead,['s','거봐요! 엄마도 제가 다 했대잖아요!','smug'],['n','(오히려 시연이 편을 들어 준 꼴이 됐다.)']], check); return; }
-  bump(0,22);
-  say([lead, ...WRONG[(S.mistakes-1)%WRONG.length]], check);
-}
-
-function grade(){
-  if(S.mistakes===0 && S.maxUpset<50) return '참\n잘했어요';
-  if(S.mistakes<=2 && S.maxUpset<80) return '잘했어요';
-  return '노력\n하세요';
-}
-function end(kind){
-  clearTimer(); closeDrawers(); S.over = true; hud();
-  const used = TOTAL - S.time;
-  const T = {
-    win:{k:'면담 종료 · '+clockText(), h:'진실을 받아냈다', p:'강아지도, 사촌 오빠도, 배탈도 없었다. 시연이는 내일 아침까지 「자전거 도둑」 독후감을 내기로 약속했다.'},
-    upset:{k:'면담 중단 · '+clockText(), h:'시연이가 울어 버렸다', p:'너무 몰아붙였다. 교감 선생님이 시연이를 데리고 나갔고, 오후에 학부모 전화가 올 예정이다. 다독이기로 억울함을 관리해 보자.'},
+Persuade({
+  EV, EV_ORDER, R, WRONG, REPRESS,
+  stage: 'board',
+  who: '시연', me: '나 (담임)',
+  clock: [12, 40],
+  pressedTag: '추궁함',
+  lead: '이걸 한번 볼래? ',
+  backfire: {ev:'mom', lines:[['s','거봐요! 엄마도 제가 다 했대잖아요!','smug'],['n','(오히려 시연이 편을 들어 준 꼴이 됐다.)']]},
+  lines: {
+    upset: [['s','으아앙! 선생님 미워요!!','cry'],['n','시연이가 교무실이 떠나가라 울기 시작했다. 옆자리 선생님들이 일제히 돌아본다.'],['n','문이 열리고 교감 선생님이 들어온다. "무슨 일이에요?"']],
+    bell: [['n','딩동댕동. 5교시 시작종이 울렸다.'],['s','앗, 다음 시간 체육이에요! 안녕히 계세요!','smug'],['n','시연이는 바람처럼 사라졌다. 진실도 함께.']],
+    warn: '(시연이 눈가가 촉촉하다. 한 번만 더 헛짚으면 터질 것 같다.)',
+    hint: '(진술 중에 증거와 어긋나는 문장이 있다. 찾아서 증거를 들이밀자.)',
+    calmFine: [['t','괜찮아, 선생님 화난 거 아니야.'],['s','저 멀쩡한데요? 그럼 이제 가도 돼요?','smug']],
+    calm: [['t','괜찮아. 혼내려는 거 아니야. 있었던 일만 듣고 싶어.'],['s','…(훌쩍) 네.','pout']],
+    opening: ['(교무실 문이 열리고 시연이가 쭈뼛쭈뼛 들어온다.)', 'sweat']
+  },
+  grades: ['참\n잘했어요', '잘했어요', '노력\n하세요'],
+  ends: c => ({
+    win:{k:'면담 종료 · '+c, h:'진실을 받아냈다', p:'강아지도, 사촌 오빠도, 배탈도 없었다. 시연이는 내일 아침까지 「자전거 도둑」 독후감을 내기로 약속했다.'},
+    upset:{k:'면담 중단 · '+c, h:'시연이가 울어 버렸다', p:'너무 몰아붙였다. 교감 선생님이 시연이를 데리고 나갔고, 오후에 학부모 전화가 올 예정이다. 다독이기로 억울함을 관리해 보자.'},
     bell:{k:'13:00 · 5교시 종', h:'점심시간이 끝났다', p:'핑계를 다 깨기 전에 종이 울렸다. 확실한 문장에만 시간을 쓰고, 이미 들은 말은 다시 묻지 말자.'}
-  }[kind];
-  const g = kind==='win' ? grade() : '';
-  $('screen').innerHTML = `<div class="sheet" role="dialog" aria-labelledby="endH">
-    <div class="grade" ${g?'':'hidden'}>${g.replace('\n','<br>')}</div>
-    <small class="k">${T.k}</small><h2 id="endH">${T.h}</h2><p>${T.p}</p>
-    <div class="stats"><div><b>${used}분</b>사용한 시간</div><div><b>${S.mistakes}번</b>헛짚은 증거</div><div><b>${S.maxUpset}</b>최고 억울함</div></div>
-    <div class="acts"><button class="go" id="again" type="button">다시 면담하기</button><a class="list" href="../index.html">게임 목록</a></div></div>`;
-  $('screen').hidden = false;
-  $('again').onclick = start;
-  setFace(kind==='win'?'normal':kind==='upset'?'cry':'smug');
-}
-function intro(){
-  $('screen').innerHTML = `<div class="sheet" role="dialog" aria-labelledby="inH">
-    <small class="k">10월 27일(화) 12:40 · 교무실</small>
-    <h2 id="inH">독후감, 시연이만 안 냈다</h2>
-    <p>오늘 아침 마감인 국어 독후감을 4학년 3반에서 오시연만 내지 않았다. 점심시간 20분 동안 불러다 이유를 물어보자. 시연이는 핑계를 네 번 바꿀 것이다.</p>
-    <ul>
-      <li>진술 중 증거와 어긋나는 <b>한 문장</b>을 고르고, 맞는 증거를 <b>제시</b>하면 핑계가 무너진다.</li>
-      <li><b>추궁하기</b>로 힌트를 얻을 수 있지만 같은 말을 또 물으면 시연이가 짜증을 낸다.</li>
-      <li>엉뚱한 증거를 들이밀면 <b>억울함</b>이 오른다. 100이 되면 울음이 터진다. <b>다독이기</b>로 달래자. 단, 연달아 쓸 수 없고 한 판에 두 번까지만.</li>
-      <li>모든 행동은 1분. 13:00 종이 울리면 시연이는 체육복 들고 도망간다.</li>
-      <li>대화는 한 글자씩 찍힌다. 칠판을 누르면 문장을 한 번에, 한 번 더 누르면 다음 대사로.</li>
-    </ul>
-    <button class="go" id="begin" type="button">면담 시작</button></div>`;
-  $('screen').hidden = false;
-  $('begin').onclick = ()=>{ $('screen').hidden = true; S.started = true; say(R[0].intro, check); };
-}
-function start(){ clearTimer(); closeDrawers();
-  S = fresh(); Q=[]; Qdone=null; resetLog(); setFace('normal'); $('stamp').classList.remove('on');
-  renderStatements(); renderCards(); show('n','(교무실 문이 열리고 시연이가 쭈뼛쭈뼛 들어온다.)','sweat');
-  hud(); intro();
-}
-
-$('stList').addEventListener('click', e=>{ const li=e.target.closest('li'); if(!li||S.over) return; S.sel = +li.dataset.i; renderStatements(); hud(); if(MQ.matches) closeDrawers(); });
-$('stList').addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); e.target.closest('li')?.click(); } });
-$('cards').addEventListener('click', e=>{ const c=e.target.closest('.card'); if(!c) return; S.ev = S.ev===c.dataset.k? null : c.dataset.k; renderCards(); hud(); });
-$('board').addEventListener('click', advance);
-$('btnStList').onclick = ()=> toggleDrawer('st');
-$('btnEvList').onclick = ()=> toggleDrawer('ev');
-$('btnEvPick').onclick = ()=>{ if(S.ev) closeDrawers(); };
-$('scrim').onclick = closeDrawers;
-document.querySelectorAll('[data-close]').forEach(b=>{ b.onclick = closeDrawers; });
-document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeDrawers(); });
-MQ.addEventListener('change', closeDrawers);
-document.addEventListener('keydown', e=>{ if((e.key==='Enter'||e.key===' ') && (S.busy||typing()) && !e.target.closest('button,li')){ e.preventDefault(); advance(); } });
-$('btnPress').onclick = press; $('btnPresent').onclick = present; $('btnCalm').onclick = calm;
-
-window.claude?.hot?.snapshot?.(()=>({S}));
-const boot = data => {
-  if(data && data.S && data.S.started && !data.S.over){
-    S = Object.assign(fresh(), data.S, {busy:false}); setFace(S.face||'normal');
-    renderStatements(); renderCards(); $('screen').hidden = true; check();
-  } else start();
-};
-window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
+  }),
+  labels: {used:'사용한 시간', upset:'최고 억울함', again:'다시 면담하기'},
+  intro: {
+    k: '10월 27일(화) 12:40 · 교무실',
+    h: '독후감, 시연이만 안 냈다',
+    p: '오늘 아침 마감인 국어 독후감을 4학년 3반에서 오시연만 내지 않았다. 점심시간 20분 동안 불러다 이유를 물어보자. 시연이는 핑계를 네 번 바꿀 것이다.',
+    rules: [
+      '진술 중 증거와 어긋나는 <b>한 문장</b>을 고르고, 맞는 증거를 <b>제시</b>하면 핑계가 무너진다.',
+      '<b>추궁하기</b>로 힌트를 얻을 수 있지만 같은 말을 또 물으면 시연이가 짜증을 낸다.',
+      '엉뚱한 증거를 들이밀면 <b>억울함</b>이 오른다. 100이 되면 울음이 터진다. <b>다독이기</b>로 달래자. 단, 연달아 쓸 수 없고 한 판에 두 번까지만.',
+      '모든 행동은 1분. 13:00 종이 울리면 시연이는 체육복 들고 도망간다.',
+      '대화는 한 글자씩 찍힌다. 칠판을 누르면 문장을 한 번에, 한 번 더 누르면 다음 대사로.'
+    ],
+    go: '면담 시작'
+  }
+});
 })();
 </script>
 

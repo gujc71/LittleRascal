@@ -348,6 +348,7 @@ h2{margin:0;font-family:var(--f-talk);font-weight:400;font-size:20px}
   </nav>
 </div>
 
+<script src="lib/common.js"></script>
 <script>
 // Puzzle engine: kids, statements, truth, solver
 const CAST = [
@@ -514,7 +515,6 @@ const memo=i=>st.memo[i]||(st.memo[i]={cards:{}});
 const levelOf=i=>PUZ[i].level;
 const inLevel=lv=>PUZ.map((p,i)=>i).filter(i=>PUZ[i].level===lv);
 
-const $=id=>document.getElementById(id);
 
 function renderTop(){
   const n=Object.keys(st.stars).length, s=Object.values(st.stars).reduce((a,b)=>a+b,0);
@@ -581,6 +581,7 @@ function renderDone(){
 function renderFinal(){
   const all=PUZ.length, n=Object.keys(st.stars).length, el=$('final');
   if(n<all){ el.hidden=true; return; }
+  markSolved();
   const s=Object.values(st.stars).reduce((a,b)=>a+b,0), max=all*3;
   const title = s>=max-2?'과학실 명탐정': s>=Math.round(max*.7)?'믿음직한 탐정':'성장하는 탐정';
   el.innerHTML=`<span>모든 사건 해결! 별 ${s}개 / ${max}개</span><b>${title}</b><span>처음부터 다시 풀려면 아래 버튼을 누르세요.</span><button class="ghost" style="justify-self:start;color:var(--lab-ink);border-color:currentColor" type="button" id="resetAll">기록 지우기</button>`;

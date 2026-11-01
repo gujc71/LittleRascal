@@ -60,6 +60,17 @@ a{color:inherit}
 .card .tag{font-size:11px;color:var(--muted);border:1px solid var(--line);
   border-radius:6px;padding:2px 7px;background:var(--paper)}
 
+/* Solved: a stamp in the corner, the card settles back a little, and the call to action becomes a replay */
+.card .done{position:absolute;top:12px;right:12px;font-family:var(--f-talk);font-size:12px;line-height:1;
+  color:#fff;background:var(--ok);border-radius:999px;padding:5px 9px 4px}
+.card.solved{background:var(--paper);border-color:#cfe6ee}
+.card.solved .ctx{padding-right:72px}
+.card.solved h3 em,.card.solved .go{color:var(--ok)}
+
+.progress{margin:12px 0 0;font-family:var(--f-talk);font-size:14px;color:var(--ok)}
+.progress b{font-family:var(--f-display);font-weight:400;font-size:18px}
+footer button{font:inherit;color:inherit;background:none;border:0;padding:0;text-decoration:underline;cursor:pointer}
+
 footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);
   color:var(--muted);font-size:12.5px;display:flex;flex-wrap:wrap;gap:10px 14px;
   justify-content:space-between;align-items:center}
@@ -74,16 +85,19 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);
     <small>개구쟁이들</small>
     <h1>오늘은 또 무슨 일이 벌어졌을까요?</h1>
     <p>오늘도 어딘가에서 예상치 못한 사건이 벌어졌어요! 이번엔 누가, 어떤 일을 벌였을까요? 설치도 로그인도 필요 없이, 딱 5~10분이면 즐길 수 있는 흥미진진한 이야기를 만나보세요.</p>
+    <p class="progress" id="progress" hidden></p>
   </header>
 
   <main id="games" class="grid"></main>
 
   <footer>
-    <span>모든 게임은 브라우저에서 바로 실행됩니다 · 기록을 저장하지 않습니다</span>
+    <span>모든 게임은 브라우저에서 바로 실행됩니다 · 해결 기록은 이 브라우저에만 저장됩니다</span>
+    <button type="button" id="reset" hidden>해결 기록 지우기</button>
   </footer>
 
 </div>
 
+<script src="games/lib/common.js"></script>
 <script>
 /* 게임을 추가할 때는 이 배열에 항목 하나만 넣으면 됩니다. 빌드도 서버도 필요 없습니다. */
 var GAMES = [
@@ -174,18 +188,35 @@ var GAMES = [
 
 ];
 
-function cardHTML(g) {
+function cardHTML(g, solved) {
   var tags = g.tags.map(function (t) { return '<span class="tag">' + t + '</span>'; }).join('');
-  return '<a class="card" href="games/' + g.slug + '.html">' +
+  return '<a class="card' + (solved ? ' solved' : '') + '" href="games/' + g.slug + '.html">' +
+         (solved ? '<span class="done">✓ 해결함</span>' : '') +
          '<span class="ctx">' + g.ctx + '</span>' +
          '<h3>' + g.title + '</h3>' +
          '<p class="desc">' + g.desc + '</p>' +
-         '<span class="go">조사 시작 →</span>' +
+         '<span class="go">' + (solved ? '다시 조사하기 →' : '조사 시작 →') + '</span>' +
          '<span class="meta">' + tags + '</span>' +
          '</a>';
 }
 
-document.getElementById('games').innerHTML = GAMES.map(cardHTML).join('');
+function renderGames() {
+  var solved = solvedGames();
+  var n = GAMES.filter(function (g) { return solved[g.slug]; }).length;
+  document.getElementById('games').innerHTML = GAMES.map(function (g) { return cardHTML(g, !!solved[g.slug]); }).join('');
+  var p = document.getElementById('progress');
+  p.innerHTML = '<b>' + GAMES.length + '</b>편 중 <b>' + n + '</b>편 해결' + (n === GAMES.length ? ' · 모든 사건을 해결했어요!' : '');
+  p.hidden = n === 0;
+  document.getElementById('reset').hidden = n === 0;
+}
+
+document.getElementById('reset').onclick = function () {
+  if (confirm('해결 기록을 모두 지울까요?')) { clearSolved(); renderGames(); }
+};
+/* 게임에서 뒤로 가기로 돌아오면 페이지가 캐시에서 그대로 살아나므로 기록을 다시 읽는다 */
+window.addEventListener('pageshow', function (e) { if (e.persisted) renderGames(); });
+
+renderGames();
 
 </script>
 </body>

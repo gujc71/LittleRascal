@@ -184,6 +184,7 @@ header .back:hover { color: var(--ink); }
 
 </div>
 
+<script src="lib/common.js"></script>
 <script>
 const ITEMS = {
   eraser:   { icon: "🦖", name: "공룡 지우개" },
@@ -319,10 +320,8 @@ const GAMEOVER = [
   ["내레이션", "다시 도전해 볼까요?"]
 ];
 let state;
-function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function fresh() { return { step: 0, fails: 0, sel: null, done: {}, busy: false, order: shuffle(Object.keys(PEOPLE)) }; }
 function step() { return state.step; }
-const $ = (id) => document.getElementById(id);
 
 function renderHearts() {
   const left = 3 - state.fails;
@@ -422,7 +421,7 @@ function give(id, item) {
   }
   state.fails++;
   const card = $("talk");
-  card.classList.remove("shake"); void card.offsetWidth; card.classList.add("shake");
+  replay(card, "shake");
   const lines = [[PEOPLE[id].name, REFUSE[id][item] || "고맙지만 나한테는 필요 없어.", "fail"]];
   if (state.fails < 3) lines.push(FAIL_NOTE[state.fails]);
   renderHearts();
@@ -437,6 +436,7 @@ function gameOver() {
   say(GAMEOVER, () => { $("talk").hidden = true; show("overCard"); $("retryBtn").focus(); });
 }
 function finish() {
+  markSolved();
   $("talk").hidden = true;
   $("endStat").textContent = state.fails === 0
     ? "한 번도 실패하지 않았어요! 사람들의 말을 정말 잘 들었네요."
