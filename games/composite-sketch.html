@@ -46,6 +46,8 @@ p{margin:0}
 .chip.pulse{animation:pulse 1.2s ease-in-out infinite}
 @keyframes pulse{50%{box-shadow:0 0 0 6px rgba(255,210,63,.35)}}
 .chip.landed{animation:land .5s ease}
+.chip .left{font-family:var(--f-code);font-size:12px;background:rgba(0,0,0,.14);border-radius:999px;padding:0 7px}
+.chip:disabled{opacity:.45;cursor:not-allowed;animation:none}
 @keyframes land{40%{transform:scale(1.15)}}
 
 /* stage: 작성지가 전체 폭을 쓰고, 조각 버튼은 작성지 안쪽 좌우 끝에 붙는다 */
@@ -149,6 +151,7 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
 .t-list li{display:flex;gap:10px;align-items:baseline;padding:5px 10px;border-radius:6px;background:#f1f3f8}
 .t-list li b{font-family:var(--f-code);font-size:12px;min-width:5em;color:var(--ink-soft)}
 .t-list li.done{background:#fff4c2}
+.t-left{color:var(--siren-r);font-size:13px}
 .switch{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-soft)}
 .switch input{width:18px;height:18px;accent-color:var(--siren-b)}
 .timer{height:5px;border-radius:3px;background:var(--siren-b);transform-origin:left;animation:shrink 3s linear forwards}
@@ -206,7 +209,7 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
       <button class="chip" id="missionBtn" type="button" hidden>
         <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1 2 3.5V8c0 3.3 2.5 6 6 7 3.5-1 6-3.7 6-7V3.5Z" fill="currentColor"/></svg>수사관의 임무</button>
       <button class="chip yellow" id="testiBtn" type="button" hidden>
-        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3h12v8H7l-3 3v-3H2Z" fill="currentColor"/></svg>지명이의 진술</button>
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3h12v8H7l-3 3v-3H2Z" fill="currentColor"/></svg>지명이의 진술 <span class="left" id="testiLeft">3</span></button>
     </div>
   </header>
 
@@ -249,6 +252,7 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
     </div>
     <ul class="t-list" id="tlist"></ul>
     <div class="timer" id="timer" hidden></div>
+    <small class="t-left" id="tLeftMsg"></small>
     <label class="switch"><input type="checkbox" id="memory"> 기억력 모드 (진술을 3초만 볼 수 있어요)</label>
   </div>
 </div>
@@ -408,14 +412,15 @@ const STORY=[
 const MISSION_HTML=`<div class="stamp-sm">수사 지시서 · 사건번호 2026-1030-112</div>
   <h2>수사관의 임무</h2>
   <ol>
-    <li><b>지명이의 진술</b> 버튼을 눌러 범인의 생김새를 확인해요.</li>
+    <li><b>지명이의 진술</b> 버튼을 눌러 범인의 생김새를 확인해요. 진술은 <b>3번</b>까지만 들을 수 있어요!</li>
     <li>몽타주 양쪽의 탭을 눌러 얼굴형, 머리, 눈썹, 눈, 코, 입, 특징을 골라요.</li>
     <li>7가지를 모두 고르면 <b>몽타주 제출</b>! 범인과 똑같으면 검거 성공이에요.</li>
   </ol>`;
 
 const LEFT=['face','hair','brows','eyes'], RIGHT=['nose','mouth','extra'];
 const TAB_LABEL={face:'얼굴형',hair:'머리',brows:'눈썹',eyes:'눈',nose:'코',mouth:'입',extra:'특징'};
-let sel={}, culprit={}, order=[], openCat=null, testiSeen=false;
+const TESTI_MAX=3;
+let sel={}, culprit={}, order=[], openCat=null, testiSeen=false, testiLeft=TESTI_MAX;
 const cat=k=>CATS.find(c=>c.key===k);
 
 function thumbSel(k,id){
@@ -488,6 +493,7 @@ function newCase(){
     const c=cat(k), o=c.opts.find(x=>x.id===culprit[k]);
     return `<li data-cat="${k}"><b>${c.name}</b><span>${o.clue}</span></li>`;
   }).join('');
+  testiLeft=TESTI_MAX; updateTestiBtn();
   update(false);
 }
 
@@ -548,19 +554,30 @@ $('missionBtn').addEventListener('click',()=>showMission(false));
 
 /* testimony */
 let tTimer=null;
-function openTesti(){
-  testiSeen=true; $('testiBtn').classList.remove('pulse');
-  $('testi').hidden=false; clearTimeout(tTimer);
-  const t=$('timer');
+function updateTestiBtn(){
+  const b=$('testiBtn');
+  $('testiLeft').textContent=testiLeft;
+  b.disabled=testiLeft<=0;
+  b.setAttribute('aria-label',`지명이의 진술 (${testiLeft}번 남음)`);
+}
+function startMemoryTimer(){
+  const t=$('timer'); clearTimeout(tTimer);
   if($('memory').checked){t.hidden=false;t.style.animation='none';void t.offsetWidth;t.style.animation='';tTimer=setTimeout(closeTesti,3000);}
   else t.hidden=true;
+}
+function openTesti(){
+  if(testiLeft<=0) return;
+  testiLeft--; updateTestiBtn();
+  testiSeen=true; $('testiBtn').classList.remove('pulse');
+  $('tLeftMsg').textContent=testiLeft?`진술은 앞으로 ${testiLeft}번 더 들을 수 있어요.`:'마지막 진술이에요! 잘 기억해 두세요.';
+  $('testi').hidden=false; startMemoryTimer();
   $('testiClose').focus({preventScroll:true});
 }
 function closeTesti(){clearTimeout(tTimer);$('testi').hidden=true;}
 $('testiBtn').addEventListener('click',openTesti);
 $('testiClose').addEventListener('click',closeTesti);
 $('testi').addEventListener('click',e=>{if(e.target===$('testi'))closeTesti()});
-$('memory').addEventListener('change',e=>{ if(e.target.checked) openTesti(); else {clearTimeout(tTimer);$('timer').hidden=true;} });
+$('memory').addEventListener('change',()=>{ if(!$('testi').hidden) startMemoryTimer(); });
 
 /* result */
 function runnerSVG(){
@@ -597,7 +614,7 @@ function submit(){
     r.innerHTML=`<h2 id="r-title">범인이 달아났어요!</h2>
       <div class="street"><div class="wall"></div><div class="runner">${runnerSVG()}</div></div>
       <div class="score">몽타주 일치 ${hits} / 7</div>
-      <p class="hint">지명이: “음… ${h.subj} 좀 달랐던 것 같아요. 진술을 다시 확인해 볼까요?”</p>
+      <p class="hint">지명이: “음… ${h.subj} 좀 달랐던 것 같아요. ${testiLeft?`진술을 다시 확인해 볼까요? (${testiLeft}번 남음)`:'이제 기억만으로 다시 그려 봐요!'}”</p>
       <div class="r-actions"><button class="btn light" id="newcase" type="button">새 사건</button><button class="btn main" id="retry" type="button">다시 그려 볼게요</button></div>`;
   }
   $('overlay').hidden=false;
