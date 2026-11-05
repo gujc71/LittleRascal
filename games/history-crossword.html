@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>역사 십자말풀이</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap">
+<style>
+/* Layout: 모눈 다이어리 같은 바탕 위 스티커 퍼즐판, 아래 말풍선 정답 카드, 탭으로 나눈 문제 목록 */
+:root{
+  --bg:#f6f6fb; --paper:#ffffff; --ink:#26243a; --muted:#77748f;
+  --lilac:#c9c3ee; --plum:#5b4fcf; --pink:#5b4fcf; --pink-soft:#ecebfb;
+  --mint:#e4e1fa; --mint-ink:#4a3fb8; --peach:#fff0b8; --line:#e3e1f0; --bad:#d4483b;
+  color-scheme:light;
+  --display:"Jua","Gowun Dodum",system-ui,sans-serif;
+  --body:"Gowun Dodum",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55}
+.wrap{max-width:980px;margin:0 auto;padding-block:20px 48px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 16px;margin-bottom:14px}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(1.7rem,6vw,2.4rem);margin:0;color:var(--plum);text-wrap:balance;position:relative;display:inline-block}
+.sub{margin:0;color:var(--muted);font-size:.95rem}
+.score{font-family:var(--display);font-size:1.05rem;color:var(--plum);background:var(--pink-soft);border-radius:999px;padding:3px 13px;
+  font-variant-numeric:tabular-nums}
+.score b{font-weight:400}
+.main{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:760px){.main{grid-template-columns:minmax(0,1fr)}}
+.boardbox{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px}
+.board{display:grid;gap:3px;width:100%;max-width:520px;margin:0 auto}
+.cell{aspect-ratio:1;position:relative;display:flex;align-items:center;justify-content:center;
+  font-family:var(--display);font-size:clamp(.9rem,4.2vw,1.4rem);color:var(--ink);
+  background:var(--paper);border:1.6px solid var(--lilac);border-radius:7px;cursor:pointer;
+  user-select:none;-webkit-tap-highlight-color:transparent;padding:0;max-width:100%;transition:background .15s}
+.cell.empty{background:transparent;border:none;cursor:default}
+.cell .n{position:absolute;top:1px;left:3px;font-family:var(--body);font-size:clamp(.5rem,1.9vw,.68rem);color:var(--muted);font-weight:700;line-height:1}
+.cell.solved{background:var(--mint);border-color:var(--lilac);color:var(--mint-ink)}
+.cell.inword{background:var(--pink-soft);border-color:var(--plum)}
+.cell.cur{background:var(--peach);border-color:var(--plum)}
+.cell.reveal{color:var(--bad)}
+.cell:focus-visible{outline:3px solid var(--plum);outline-offset:1px}
+
+.ask{margin-top:14px;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:14px}
+.ask .tag{display:inline-block;font-family:var(--display);font-size:.95rem;color:var(--paper);background:var(--plum);border-radius:999px;padding:1px 12px;margin-right:6px}
+.ask .len{color:var(--pink);font-family:var(--display);font-size:.95rem}
+.ask p{margin:8px 0 12px;font-size:1.05rem}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row input{flex:1 1 140px;min-width:0;font:inherit;font-size:1.15rem;padding:10px 14px;border-radius:999px;
+  border:2px solid var(--lilac);background:var(--bg);color:var(--ink)}
+.row input::placeholder{color:var(--muted);letter-spacing:.12em}
+.row input:focus{outline:none;border-color:var(--plum)}
+button{font-family:var(--display);font-size:1.05rem;border-radius:999px;padding:10px 18px;cursor:pointer;
+  border:none;background:var(--plum);color:var(--paper);transition:transform .1s}
+button:active{transform:translateY(2px)}
+button:focus-visible{outline:3px solid var(--pink);outline-offset:2px}
+.msg{min-height:1.5em;margin-top:8px;font-size:.98rem;font-family:var(--display)}
+.msg.ok{color:var(--mint-ink)} .msg.no{color:var(--bad)}
+.shake{animation:sh .35s}
+@keyframes sh{25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-3px)}}
+.pop{animation:pop .4s}
+@keyframes pop{40%{transform:scale(1.18)}}
+@media (prefers-reduced-motion:reduce){.shake,.pop{animation:none}}
+
+.clues{display:grid;gap:18px}
+.clues h2{font-family:var(--display);font-weight:400;font-size:1.3rem;margin:0 0 6px;color:var(--plum)}
+.clues ol{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.clues li{display:grid;grid-template-columns:2em minmax(0,1fr);gap:4px;padding:7px 10px;border-radius:12px;cursor:pointer;background:var(--paper);border:1.5px solid var(--line)}
+.clues li .k{font-family:var(--display);color:var(--pink);font-variant-numeric:tabular-nums}
+.clues li.on{background:var(--peach);border-color:#e9cf6a}
+.clues li.done{background:var(--mint);border-color:var(--lilac);color:var(--muted)}
+.clues li.done .k{color:var(--mint-ink)}
+.clues li.done .t{text-decoration:line-through;text-decoration-color:var(--mint-ink)}
+.clues li:focus-visible{outline:2px solid var(--plum)}
+.win{display:none;position:fixed;inset:0;z-index:20;align-items:center;justify-content:center;padding:16px;background:rgba(38,36,58,.45)}
+.win.show{display:flex}
+.wincard{width:100%;max-width:380px;padding:24px 20px 20px;border-radius:18px;background:var(--plum);color:var(--paper);text-align:center;
+  box-shadow:0 12px 32px rgba(40,36,80,.3);animation:pop .4s}
+.wincard p{margin:0 0 18px;font-family:var(--display);font-size:1.35rem;line-height:1.4;text-wrap:balance}
+.winbtns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.winbtns button{background:var(--paper);color:var(--plum)}
+.winbtns .ghost{background:transparent;color:var(--paper);border:1.5px solid rgba(255,255,255,.6)}
+.tabs{display:none}
+@media (max-width:760px){
+  .wrap{padding-block:6px 12px;padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
+  header{flex-wrap:nowrap;margin-bottom:6px}
+  h1{font-size:1.45rem;line-height:1.2}
+  .sub{font-size:.8rem;line-height:1.3}
+  .score{flex:none;font-size:.95rem;padding:2px 10px}
+  .main{gap:6px}
+  .boardbox{padding:5px;border-radius:14px}
+  .board{gap:2px;max-width:none}
+  .cell{border-width:1.3px;border-radius:5px}
+  .ask{position:sticky;bottom:0;z-index:5;margin-top:8px;padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));
+    border-radius:14px 14px 0 0;box-shadow:0 -4px 14px rgba(40,36,80,.08)}
+  .ask p{margin:2px 0 6px;font-size:.98rem;line-height:1.4}
+  .row{flex-wrap:nowrap}
+  .row input{flex:1 1 auto;font-size:1.1rem;padding:8px 12px}
+  button{padding:8px 16px}
+  .msg{min-height:1.2em;margin-top:2px;font-size:.9rem}
+  .msg:empty{min-height:0;margin:0}
+  .clues{gap:4px}
+  .tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;position:sticky;top:env(safe-area-inset-top,0px);z-index:4;background:var(--bg);padding-block:6px}
+  .tab{background:var(--paper);color:var(--plum);padding:6px;border:1.5px solid var(--lilac);box-shadow:none}
+  .tab[aria-selected="true"]{background:var(--plum);color:var(--paper);border-color:var(--plum)}
+  .col h2{display:none}
+  .col.hide{display:none}
+  .clues li{padding:6px 8px;font-size:.95rem;line-height:1.4}
+}
+.home{max-width:620px;margin:0 auto}
+.home h1{font-size:clamp(1.8rem,7vw,2.6rem)}
+.home .sub{margin-top:4px;font-size:1rem}
+.eras{list-style:none;margin:18px 0 0;padding:0;display:grid;gap:10px}
+.era{width:100%;display:grid;grid-template-columns:2.4rem minmax(0,1fr) auto;align-items:center;gap:12px;text-align:left;
+  background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:14px;padding:14px 16px;font-family:var(--body)}
+.era:hover{border-color:var(--plum)}
+.era .no{font-family:var(--display);font-size:1.3rem;color:var(--plum);background:var(--pink-soft);border-radius:999px;width:2.4rem;height:2.4rem;display:grid;place-items:center}
+.era .nm{font-family:var(--display);font-size:1.2rem;display:block;line-height:1.3}
+.era .ds{display:block;font-size:.86rem;color:var(--muted);line-height:1.35;margin-top:2px}
+.era .q{font-family:var(--display);font-size:.9rem;color:var(--muted);white-space:nowrap}
+.back{background:transparent;color:var(--plum);border:1px solid var(--lilac);padding:4px 12px;font-size:.92rem;margin-bottom:6px}
+.game[hidden],.home[hidden]{display:none}
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.top h1{flex:1 1 auto;min-width:0}
+.tohub{flex:none;white-space:nowrap;font-family:var(--display);font-size:.95rem;text-decoration:none;color:var(--plum);
+  background:var(--paper);border:1px solid var(--lilac);border-radius:999px;padding:6px 14px}
+.tohub:hover{border-color:var(--plum)}
+.tohub:focus-visible{outline:3px solid var(--plum);outline-offset:2px}
+@media (max-width:760px){
+  .back{padding:3px 10px;margin-bottom:4px}
+  .home{padding-top:6px}
+  .home h1{font-size:1.6rem;line-height:1.2}
+  .home .sub{font-size:.9rem}
+  .tohub{font-size:.85rem;padding:5px 11px}
+  .eras{margin-top:12px;gap:8px}
+  .era{grid-template-columns:2rem minmax(0,1fr) auto;gap:10px;padding:10px 12px}
+  .era .no{width:2rem;height:2rem;font-size:1.1rem}
+  .era .nm{font-size:1.05rem}
+  .era .ds{font-size:.8rem}
+  .era .q{font-size:.8rem}
+}
+</style>
+<div class="wrap">
+  <section class="home" id="home">
+    <div class="top">
+      <h1>역사 십자말풀이</h1>
+      <a class="tohub" href="../index.html">게임 목록</a>
+    </div>
+    <p class="sub">풀고 싶은 시대를 고르면 바로 시작해요.</p>
+    <ul class="eras" id="eras"></ul>
+  </section>
+
+  <section class="game" id="game" hidden>
+    <button type="button" class="back" id="back">← 시대 고르기</button>
+    <header>
+      <div>
+        <h1 id="eraName">조선 시대</h1>
+        <p class="sub">칸이나 문제를 누르고 정답을 써 보세요.</p>
+      </div>
+      <div class="score" aria-live="polite">맞힌 낱말 <b id="cnt">0</b> / <span id="tot">0</span></div>
+    </header>
+    <div class="main">
+      <section>
+        <div class="boardbox"><div class="board" id="board" role="grid" aria-label="십자말풀이 판"></div></div>
+        <div class="ask" id="ask">
+          <div><span class="tag" id="askTag">가로 1</span><span class="len" id="askLen">3글자</span></div>
+          <p id="askClue"></p>
+          <form class="row" id="form" autocomplete="off">
+            <input id="ans" type="text" inputmode="text" placeholder="정답을 써 보세요" aria-label="정답 입력">
+            <button type="submit">확인</button>
+          </form>
+          <div class="msg" id="msg" aria-live="polite"></div>
+        </div>
+        <div class="win" id="win" role="dialog" aria-modal="true" aria-labelledby="winMsg">
+          <div class="wincard">
+            <p id="winMsg"></p>
+            <div class="winbtns">
+              <button type="button" id="winBack">시대 고르기</button>
+              <button type="button" class="ghost" id="winClose">판 보기</button>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="clues">
+        <div class="tabs" role="tablist">
+          <button type="button" role="tab" class="tab" id="tabA" aria-selected="true">가로 문제</button>
+          <button type="button" role="tab" class="tab" id="tabD" aria-selected="false">세로 문제</button>
+        </div>
+        <div class="col" id="colA"><h2>가로 문제</h2><ol id="listA"></ol></div>
+        <div class="col" id="colD"><h2>세로 문제</h2><ol id="listD"></ol></div>
+      </section>
+    </div>
+  </section>
+</div>
+<script>
+const ERAS=[{"key":"gojoseon","name":"고조선과 초기 국가","desc":"고조선, 부여, 고구려, 옥저, 동예, 삼한","H":7,"W":8,"words":[{"w":"사출도","r":5,"c":0,"d":"A","clue":"부여에서 여러 가들이 따로 다스리던 지역이에요."},{"w":"제사장","r":4,"c":0,"d":"D","clue":"하늘에 제사를 지내던 사람이에요."},{"w":"돌도끼","r":4,"c":2,"d":"D","clue":"돌을 갈아 만든 도끼예요."},{"w":"돌칼","r":4,"c":2,"d":"A","clue":"돌을 갈아 만든 칼이에요."},{"w":"반달돌칼","r":1,"c":3,"d":"D","clue":"곡식 이삭을 자르던 반달 모양의 돌 도구예요."},{"w":"한반도","r":1,"c":2,"d":"A","clue":"우리나라가 자리한 땅으로, 삼면이 바다예요."},{"w":"마한","r":0,"c":2,"d":"D","clue":"삼한 가운데 가장 큰 나라로, 뒤에 백제가 되었어요."},{"w":"과하마","r":0,"c":0,"d":"A","clue":"과일나무 아래를 지나갈 만큼 키가 작은 동예의 말이에요."},{"w":"소도","r":0,"c":4,"d":"D","clue":"삼한에서 천군이 다스리던 신성한 곳으로, 죄인이 들어가도 잡지 못했어요."},{"w":"돌무지무덤","r":3,"c":3,"d":"A","clue":"돌을 쌓아 올려 만든 고구려 초기의 무덤이에요."},{"w":"민무늬토기","r":2,"c":6,"d":"D","clue":"무늬가 없는 고조선 시대의 토기예요."},{"w":"청동기","r":6,"c":4,"d":"A","clue":"구리와 주석을 섞어 만든 도구예요. 이 시대에 고조선이 세워졌어요."},{"w":"토성","r":5,"c":6,"d":"A","clue":"흙으로 쌓은 성이에요."}]},{"key":"samguk","name":"삼국 시대","desc":"고구려, 백제, 신라, 가야","H":11,"W":10,"words":[{"w":"칠지도","r":4,"c":7,"d":"A","clue":"백제가 왜에 보낸, 가지가 일곱 개인 칼이에요."},{"w":"화랑도","r":2,"c":9,"d":"D","clue":"신라의 청소년 수련 단체예요."},{"w":"고분벽화","r":2,"c":6,"d":"A","clue":"무덤 안 벽에 그린 그림이에요."},{"w":"지증왕","r":4,"c":8,"d":"D","clue":"나라 이름을 '신라'로 정한 왕이에요."},{"w":"무령왕릉","r":6,"c":6,"d":"A","clue":"벽돌로 만든 백제 무령왕의 무덤이에요."},{"w":"문무왕","r":5,"c":6,"d":"D","clue":"삼국 통일을 완성한 신라 왕이에요."},{"w":"근초고왕","r":0,"c":6,"d":"D","clue":"백제의 전성기를 이끈 왕이에요."},{"w":"성왕","r":7,"c":5,"d":"A","clue":"수도를 사비로 옮긴 백제 왕이에요."},{"w":"장수왕","r":3,"c":4,"d":"A","clue":"수도를 평양으로 옮기고 남쪽으로 영토를 넓힌 고구려 왕이에요."},{"w":"보장왕","r":2,"c":4,"d":"D","clue":"고구려의 마지막 왕이에요."},{"w":"성골","r":7,"c":5,"d":"D","clue":"신라 골품제에서 가장 높은 신분이에요."},{"w":"진골","r":8,"c":4,"d":"A","clue":"신라 골품제에서 성골 다음가는 신분이에요."},{"w":"진대법","r":8,"c":4,"d":"D","clue":"봄에 곡식을 빌려주고 가을에 갚게 한 고구려 제도예요."},{"w":"법흥왕","r":10,"c":4,"d":"A","clue":"불교를 공인하고 율령을 반포한 신라 왕이에요."},{"w":"대왕","r":9,"c":6,"d":"D","clue":"훌륭한 왕을 높여 부르는 말이에요."},{"w":"대가야","r":9,"c":6,"d":"A","clue":"고령 지역에 있던 후기 연맹의 중심 나라예요."},{"w":"가야금","r":8,"c":8,"d":"D","clue":"우륵이 만든 곡을 연주한 열두 줄 현악기예요."},{"w":"가야","r":8,"c":8,"d":"A","clue":"김수로왕이 낙동강 하류에 세운 연맹 왕국이에요."},{"w":"금관","r":10,"c":8,"d":"A","clue":"신라 왕이 쓰던, 금으로 만든 관이에요."},{"w":"무열왕","r":4,"c":2,"d":"A","clue":"김춘추가 왕이 된 뒤의 이름이에요."},{"w":"무용총","r":4,"c":2,"d":"D","clue":"춤추는 사람들과 사냥 그림이 있는 고구려 무덤이에요."},{"w":"첨성대","r":9,"c":2,"d":"A","clue":"하늘의 별을 관측하던 신라의 건축물이에요."},{"w":"천마총","r":6,"c":0,"d":"A","clue":"말다래에 그린 하늘을 나는 말 그림이 나온 신라 무덤이에요."},{"w":"천마도","r":6,"c":0,"d":"D","clue":"말다래에 그린, 하늘을 나는 말 그림이에요."}]},{"key":"nambuk","name":"남북국 시대","desc":"통일신라와 발해","H":11,"W":9,"words":[{"w":"성덕대왕신종","r":0,"c":6,"d":"D","clue":"에밀레종이라고도 불리는 큰 범종이에요."},{"w":"문무왕","r":3,"c":4,"d":"A","clue":"삼국 통일을 완성하고 바다에 묻힌 신라 왕이에요."},{"w":"해동성국","r":0,"c":4,"d":"A","clue":"'바다 동쪽의 번성한 나라'라는 뜻으로, 대조영이 세운 나라를 부른 이름이에요."},{"w":"신문왕","r":4,"c":6,"d":"A","clue":"국학을 세우고 녹읍을 없앤 통일신라 왕이에요."},{"w":"왕오천축국전","r":4,"c":8,"d":"D","clue":"혜초가 인도 다섯 나라를 다녀와 쓴 여행기예요."},{"w":"후삼국","r":8,"c":6,"d":"A","clue":"신라 말 나라가 다시 셋으로 나뉘어 겨룬 시기예요."},{"w":"후백제","r":8,"c":6,"d":"D","clue":"견훤이 완산주에 세운 나라예요."},{"w":"골품제","r":10,"c":4,"d":"A","clue":"혈통에 따라 신분을 나눈 신라의 제도예요."},{"w":"대왕암","r":2,"c":6,"d":"A","clue":"통일을 완성한 신라 왕의 수중릉으로 알려진 바닷속 바위예요."},{"w":"문왕","r":3,"c":4,"d":"D","clue":"제도를 정비하고 수도를 상경으로 옮긴 왕이에요."},{"w":"해상왕","r":4,"c":2,"d":"A","clue":"바다를 주름잡은 장보고를 높여 부르는 별명이에요."},{"w":"발해","r":3,"c":2,"d":"D","clue":"고구려 유민과 말갈족이 함께 세운 나라예요."},{"w":"상대등","r":4,"c":3,"d":"D","clue":"신라 귀족 회의인 화백 회의를 이끈 사람이에요."},{"w":"진골","r":9,"c":4,"d":"D","clue":"신라 골품제에서 성골 다음가는 신분이에요."},{"w":"청해진","r":9,"c":2,"d":"A","clue":"장보고가 완도에 세운 해상 기지예요."},{"w":"범종","r":5,"c":5,"d":"A","clue":"절에서 치는 큰 종이에요."},{"w":"해적","r":0,"c":4,"d":"D","clue":"장보고가 청해진에서 소탕한 바다의 도둑이에요."},{"w":"만파식적","r":1,"c":1,"d":"A","clue":"불면 나라의 근심이 사라졌다는, 신문왕 때의 신비한 피리예요."},{"w":"석등","r":6,"c":2,"d":"A","clue":"돌로 만든 등으로, 발해 상경에 큰 것이 남아 있어요."},{"w":"석탑","r":6,"c":2,"d":"D","clue":"돌로 쌓은 탑이에요."},{"w":"석가탑","r":7,"c":0,"d":"A","clue":"무구정광대다라니경이 발견된 탑이에요."},{"w":"석굴암","r":7,"c":0,"d":"D","clue":"돌로 굴을 만들고 본존불을 모신 곳이에요."}]},{"key":"goryeo","name":"고려 시대","desc":"왕건부터 고려 말까지, 팔만대장경","H":12,"W":11,"words":[{"w":"국자감","r":2,"c":2,"d":"A","clue":"고려 최고의 국립 교육 기관이에요."},{"w":"삼국유사","r":1,"c":2,"d":"D","clue":"승려 일연이 쓴 역사책으로, 단군 이야기가 실려 있어요."},{"w":"강감찬","r":1,"c":4,"d":"D","clue":"거란의 3차 침입 때 거란군을 크게 물리친 장군이에요."},{"w":"강화도","r":1,"c":4,"d":"A","clue":"몽골이 쳐들어오자 고려 조정이 수도를 옮긴 섬이에요."},{"w":"정도전","r":0,"c":6,"d":"D","clue":"이성계를 도와 조선을 세우고 새 도읍 한양을 설계한 학자예요."},{"w":"삼국사기","r":4,"c":0,"d":"A","clue":"김부식이 왕의 명령을 받아 쓴 역사책이에요. 지금 남아 있는 가장 오래된 우리 역사책이에요."},{"w":"삼별초","r":4,"c":0,"d":"D","clue":"고려 정부가 몽골과 화해한 뒤에도 끝까지 몽골에 맞서 싸운 군대예요."},{"w":"기인제도","r":4,"c":3,"d":"D","clue":"왕건이 지방 호족의 아들을 수도 개경에 머물게 한 제도예요."},{"w":"대장도감","r":7,"c":1,"d":"A","clue":"강화도에서 팔만대장경을 새기는 일을 맡았던 관청이에요."},{"w":"정중부","r":0,"c":6,"d":"A","clue":"1170년 무신정변을 이끈 장군이에요."},{"w":"대장경","r":7,"c":1,"d":"D","clue":"부처님의 가르침을 모두 모아 엮은 것을 이르는 말이에요."},{"w":"전시과","r":2,"c":6,"d":"A","clue":"관리에게 곡식을 걷을 땅과 땔감을 얻을 땅을 나누어 준 고려의 제도예요."},{"w":"서경","r":9,"c":0,"d":"A","clue":"고려 때 평양을 부르던 이름이에요."},{"w":"과거제","r":2,"c":8,"d":"D","clue":"시험을 보아 관리를 뽑는 제도예요."},{"w":"제주도","r":4,"c":8,"d":"A","clue":"몽골에 맞선 군대가 마지막까지 싸운, 우리나라에서 가장 큰 섬이에요."},{"w":"수월관음도","r":0,"c":10,"d":"D","clue":"물가 바위에 앉은 관음보살을 아주 섬세하게 그린 고려의 대표 불화예요."},{"w":"주진군","r":4,"c":9,"d":"D","clue":"고려 북쪽 국경 지방을 지키던 군대예요."},{"w":"위화도회군","r":6,"c":5,"d":"A","clue":"요동 정벌에 나섰던 이성계가 군대를 돌린 사건이에요."},{"w":"화통도감","r":6,"c":6,"d":"D","clue":"최무선의 건의로 화약 무기를 만들던 관청이에요."},{"w":"교정도감","r":9,"c":3,"d":"A","clue":"최충헌이 만든 무신 정권의 최고 권력 기관이에요."},{"w":"정몽주","r":9,"c":4,"d":"D","clue":"끝까지 고려를 지키려 한 충신이에요. 선죽교에서 목숨을 잃었어요."},{"w":"귀주대첩","r":11,"c":3,"d":"A","clue":"1019년 고려가 거란의 10만 대군을 크게 물리친 전투예요."},{"w":"진도","r":5,"c":7,"d":"D","clue":"삼별초가 용장성을 쌓고 싸운 섬이에요."},{"w":"도병마사","r":8,"c":6,"d":"A","clue":"국방 문제를 의논하던 고려의 회의 기구예요."},{"w":"사심관","r":8,"c":9,"d":"D","clue":"왕건이 지방 출신 높은 관리에게 고향을 책임지게 한 제도예요."},{"w":"윤관","r":10,"c":8,"d":"A","clue":"특별 부대 별무반을 만들어 북쪽 국경을 넓힌 장군이에요."},{"w":"서희","r":9,"c":0,"d":"D","clue":"거란 장수와 담판을 벌여 강동 6주를 얻은 사람이에요."}]},{"key":"joseon","name":"조선 시대","desc":"세종대왕, 임진왜란, 실학, 개항","H":12,"W":11,"words":[{"w":"한산도대첩","r":5,"c":7,"d":"D","clue":"학이 날개를 펼친 듯한 진으로 왜군을 무찌른 해전이에요."},{"w":"대동법","r":8,"c":7,"d":"A","clue":"특산물 대신 쌀로 세금을 내게 한 제도예요."},{"w":"균역법","r":6,"c":9,"d":"D","clue":"군포를 두 필에서 한 필로 줄인 제도예요."},{"w":"대동여지도","r":7,"c":3,"d":"A","clue":"김정호가 만든, 22첩으로 접히는 전국 지도예요."},{"w":"경국대전","r":5,"c":3,"d":"D","clue":"조선의 기본 법전이에요."},{"w":"명량대첩","r":9,"c":4,"d":"A","clue":"배 13척으로 왜선 133척에 맞서 이긴 해전이에요."},{"w":"대한제국","r":6,"c":0,"d":"A","clue":"왕이 황제가 되어 새로 정한 나라 이름이에요."},{"w":"경복궁","r":5,"c":3,"d":"A","clue":"조선을 세우고 가장 먼저 지은 궁궐이에요."},{"w":"세종대왕","r":4,"c":0,"d":"D","clue":"훈민정음을 만든 조선의 네 번째 왕이에요."},{"w":"세조","r":4,"c":0,"d":"A","clue":"조선의 일곱 번째 왕으로, 기본 법전 편찬을 시작했어요."},{"w":"신윤복","r":3,"c":4,"d":"D","clue":"여인들의 모습을 많이 그린 조선 후기 풍속화가예요."},{"w":"신미양요","r":3,"c":4,"d":"A","clue":"미국이 강화도를 침략한 사건이에요."},{"w":"한양","r":5,"c":7,"d":"A","clue":"조선의 수도로, 지금의 서울이에요."},{"w":"정조","r":3,"c":1,"d":"D","clue":"규장각을 세우고 수원 화성을 지은 왕이에요."},{"w":"병인양요","r":0,"c":7,"d":"D","clue":"프랑스가 강화도를 침략한 사건이에요."},{"w":"병자호란","r":0,"c":7,"d":"A","clue":"청나라가 조선을 침략한 전쟁이에요."},{"w":"양반","r":3,"c":6,"d":"D","clue":"조선 신분 가운데 가장 높은 계층이에요."},{"w":"정약전","r":8,"c":1,"d":"A","clue":"흑산도에서 「자산어보」를 쓴, 정약용의 형이에요."},{"w":"대마도","r":9,"c":6,"d":"D","clue":"세종 때 이종무가 왜구를 정벌한 섬이에요."},{"w":"정도전","r":8,"c":1,"d":"D","clue":"새 도읍을 설계하고 조선의 기틀을 닦은 학자예요."},{"w":"김홍도","r":11,"c":4,"d":"A","clue":"서당, 씨름 같은 풍속화를 그린 화가예요."},{"w":"정선","r":3,"c":1,"d":"A","clue":"우리 산천을 직접 보고 그린 진경산수화의 대가예요."},{"w":"거북선","r":1,"c":2,"d":"D","clue":"지붕을 철판과 송곳으로 덮은 조선의 전투선이에요."},{"w":"전봉준","r":10,"c":1,"d":"A","clue":"동학 농민 운동을 이끈 '녹두 장군'이에요."},{"w":"거중기","r":1,"c":2,"d":"A","clue":"무거운 돌을 쉽게 들어 올리는 기계예요."},{"w":"호패","r":0,"c":9,"d":"D","clue":"16세 이상 남자가 차고 다니던 신분증이에요."},{"w":"중인","r":1,"c":6,"d":"A","clue":"양반과 상민 사이의 신분으로, 역관과 의원 등이 있었어요."},{"w":"양인","r":2,"c":7,"d":"A","clue":"조선에서 노비가 아닌 자유로운 백성을 이르던 말이에요."}]},{"key":"ilje","name":"일제 강점기","desc":"독립운동가와 3·1 운동, 광복","H":11,"W":12,"words":[{"w":"주시경","r":7,"c":7,"d":"D","clue":"'한글'이라는 이름을 널리 쓴 국어학자예요."},{"w":"경술국치","r":9,"c":7,"d":"A","clue":"1910년 나라를 일본에 빼앗긴 일이에요."},{"w":"한인애국단","r":6,"c":9,"d":"D","clue":"임시 정부 주석이 만든 비밀 독립운동 단체예요."},{"w":"윤동주","r":7,"c":5,"d":"A","clue":"「서시」, 「별 헤는 밤」을 쓴 시인이에요."},{"w":"광주학생항일운동","r":0,"c":6,"d":"D","clue":"1929년 광주에서 시작된 학생들의 독립운동이에요."},{"w":"조선어학회","r":2,"c":3,"d":"A","clue":"우리말 사전을 만들려다 탄압받은 단체예요."},{"w":"토지조사사업","r":0,"c":3,"d":"D","clue":"땅을 조사한다며 많은 땅을 빼앗은 일제의 정책이에요."},{"w":"윤봉길","r":7,"c":5,"d":"D","clue":"훙커우 공원에서 폭탄을 던진 한인 애국단원이에요."},{"w":"백범일지","r":1,"c":0,"d":"A","clue":"임시 정부를 이끈 독립운동가가 쓴 자서전이에요."},{"w":"한용운","r":6,"c":9,"d":"A","clue":"「님의 침묵」을 쓴 승려이자 시인이에요."},{"w":"국채보상운동","r":2,"c":11,"d":"D","clue":"나랏빚을 갚으려고 국민이 돈을 모은 운동이에요."},{"w":"이육사","r":4,"c":1,"d":"A","clue":"「광야」, 「청포도」를 쓴 저항 시인이에요."},{"w":"이봉창","r":4,"c":1,"d":"D","clue":"일본 왕에게 폭탄을 던진 한인 애국단원이에요."},{"w":"홍범도","r":0,"c":1,"d":"D","clue":"봉오동 전투를 이끈 장군이에요."},{"w":"동아일보","r":4,"c":8,"d":"A","clue":"손기정 사진의 일장기를 지워 정간당한 신문이에요."},{"w":"김원봉","r":8,"c":3,"d":"A","clue":"의열단을 만든 독립운동가예요."},{"w":"안창호","r":6,"c":0,"d":"A","clue":"신민회와 흥사단을 만든 독립운동가예요."},{"w":"안중근","r":6,"c":0,"d":"D","clue":"하얼빈에서 이토 히로부미를 처단한 독립운동가예요."},{"w":"김구","r":8,"c":3,"d":"D","clue":"임시 정부를 이끈, 호가 백범인 독립운동가예요."},{"w":"광복","r":0,"c":6,"d":"A","clue":"1945년 8월 15일, 빛을 되찾았다는 뜻의 말이에요."},{"w":"김마리아","r":1,"c":9,"d":"D","clue":"대한민국 애국 부인회를 이끈 여성 독립운동가예요."},{"w":"동포","r":4,"c":8,"d":"D","clue":"같은 겨레를 정답게 부르는 말이에요."}]}];
+(function(){
+  const $=id=>document.getElementById(id);
+  // home list
+  ERAS.forEach((e,i)=>{
+    const li=document.createElement('li');
+    const b=document.createElement('button'); b.type='button'; b.className='era';
+    b.innerHTML='<span class="no"></span><span><span class="nm"></span><span class="ds"></span></span><span class="q"></span>';
+    b.querySelector('.no').textContent=i+1;
+    b.querySelector('.nm').textContent=e.name;
+    b.querySelector('.ds').textContent=e.desc;
+    b.querySelector('.q').textContent=e.words.length+'문제';
+    b.addEventListener('click',()=>{ show(e); setHash(e.key); });
+    li.appendChild(b); $('eras').appendChild(li);
+  });
+  let G=null; // current game state
+  function show(e){
+    $('win').classList.remove('show');
+    if(e){ start(e); $('home').hidden=true; $('game').hidden=false; }
+    else { $('game').hidden=true; $('home').hidden=false; G=null; }
+    try{ window.scrollTo(0,0); }catch(_){}
+  }
+  function route(){
+    let k=''; try{ k=location.hash.slice(1); }catch(_){}
+    show(ERAS.find(x=>x.key===k)||null);
+  }
+  function setHash(k){ try{ if(location.hash.slice(1)!==k) location.hash=k; }catch(_){} }
+  $('back').addEventListener('click',()=>{ show(null); setHash(''); });
+  $('winBack').addEventListener('click',()=>{ show(null); setHash(''); });
+  $('winClose').addEventListener('click',()=>$('win').classList.remove('show'));
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape') $('win').classList.remove('show'); });
+  try{ window.addEventListener('hashchange',route); }catch(_){}
+
+  function start(era){
+    const H=era.H,W=era.W;
+    const words=era.words.map(w=>Object.assign({},w));
+    $('eraName').textContent=era.name;
+    $('winMsg').textContent='모두 맞혔어요! '+era.name+' 역사 박사가 되었네요!';
+    $('win').classList.remove('show');
+    const board=$('board'); board.innerHTML='';
+    board.style.gridTemplateColumns=`repeat(${W},minmax(0,1fr))`;
+    board.style.maxWidth=(W*46)+"px";
+    const starts=[...new Set(words.map(w=>w.r*100+w.c))].sort((a,b)=>a-b);
+    const numAt={}; starts.forEach((k,i)=>numAt[k]=i+1);
+    words.forEach((w,i)=>{w.id=i;w.n=numAt[w.r*100+w.c];w.cells=[...w.w].map((_,j)=>[w.r+(w.d==='D'?j:0),w.c+(w.d==='A'?j:0)]);});
+    const cellWords={}; words.forEach(w=>w.cells.forEach(([r,c])=>{(cellWords[r*100+c]=cellWords[r*100+c]||[]).push(w)}));
+    const letter={}; words.forEach(w=>w.cells.forEach(([r,c],j)=>letter[r*100+c]=w.w[j]));
+    const els={};
+    for(let r=0;r<H;r++)for(let c=0;c<W;c++){
+      const k=r*100+c;
+      const d=document.createElement(letter[k]?'button':'div');
+      d.className='cell'+(letter[k]?'':' empty');
+      if(letter[k]){
+        d.type='button'; d.setAttribute('aria-label',`${r+1}행 ${c+1}열`);
+        if(numAt[k]){const s=document.createElement('span');s.className='n';s.textContent=numAt[k];d.appendChild(s);}
+        const t=document.createElement('span');t.className='t';d.appendChild(t);
+        d.addEventListener('click',()=>pickCell(k));
+        els[k]=d;
+      }
+      board.appendChild(d);
+    }
+    $('listA').innerHTML=''; $('listD').innerHTML='';
+    const lis={};
+    [...words].sort((a,b)=>a.n-b.n).forEach(w=>{
+      const li=document.createElement('li'); li.tabIndex=0;
+      li.innerHTML='<span class="k"></span><span class="t"></span>';
+      li.querySelector('.k').textContent=w.n;
+      li.querySelector('.t').textContent=`${w.clue} (${w.w.length}글자)`;
+      li.addEventListener('click',()=>select(w,true));
+      li.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();select(w,true)}});
+      (w.d==='A'?$('listA'):$('listD')).appendChild(li); lis[w.id]=li;
+    });
+    $('tot').textContent=words.length;
+    const solved=new Set(); let cur=null;
+    function paint(){
+      for(const k in els){
+        const ws=cellWords[k];
+        const ok=ws.some(w=>solved.has(w.id));
+        els[k].querySelector('.t').textContent=ok?letter[k]:'';
+        els[k].classList.toggle('solved',ok);
+        els[k].classList.toggle('inword',!!cur&&cur.cells.some(([r,c])=>r*100+c==k));
+        els[k].classList.remove('cur');
+      }
+      if(cur){const [r,c]=cur.cells[0];els[r*100+c].classList.add('cur');}
+      words.forEach(w=>{lis[w.id].classList.toggle('done',solved.has(w.id));lis[w.id].classList.toggle('on',cur===w)});
+      $('cnt').textContent=solved.size;
+    }
+    function pickCell(k){
+      const ws=cellWords[k]; let w=ws[0];
+      if(ws.length>1&&cur&&ws.includes(cur)) w=ws.find(x=>x!==cur);
+      else if(ws.length>1) w=ws.find(x=>!solved.has(x.id))||ws[0];
+      select(w,false);
+    }
+    function select(w,scroll){
+      cur=w;
+      $('askTag').textContent=(w.d==='A'?'가로 ':'세로 ')+w.n;
+      $('askLen').textContent=w.w.length+'글자';
+      $('askClue').textContent=w.clue;
+      const inp=$('ans');
+      inp.value=''; inp.placeholder=w.cells.map(([r,c])=>{const k=r*100+c;return cellWords[k].some(x=>solved.has(x.id))?letter[k]:'○'}).join('');
+      setMsg(solved.has(w.id)?'이미 맞힌 문제예요.':'','ok');
+      paint(); showTab(w.d);
+      if(scroll){const m=window.matchMedia('(max-width:760px)').matches;(m?board:$('ask')).scrollIntoView({behavior:'smooth',block:m?'start':'center'});}
+    }
+    function submit(){
+      if(!cur) return;
+      const v=$('ans').value.replace(/\s/g,'');
+      if(!v){setMsg('정답을 먼저 써 주세요.','no');return;}
+      if(v===cur.w){
+        solved.add(cur.id);
+        // a word whose every cell is already revealed by crossing words counts as solved too
+        const shown=([r,c])=>cellWords[r*100+c].some(x=>solved.has(x.id));
+        words.forEach(w=>{ if(!solved.has(w.id)&&w.cells.every(shown)) solved.add(w.id); });
+        cur.cells.forEach(([r,c])=>{const e=els[r*100+c];e.classList.remove('pop');void e.offsetWidth;e.classList.add('pop')});
+        setMsg('정답이에요! 잘했어요.','ok'); $('ans').value='';
+        const next=words.slice().sort((a,b)=>a.n-b.n||(a.d>b.d?1:-1)).find(w=>!solved.has(w.id));
+        paint();
+        if(!next){ $('ans').blur(); $('win').classList.add('show'); $('winBack').focus(); }
+        if(next) setTimeout(()=>{ if(G===state){select(next,false);setMsg('정답이에요! 다음 문제로 넘어갈게요.','ok')} },700);
+      }else{
+        const box=$('ask'); box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake');
+        setMsg(v.length!==cur.w.length?`${cur.w.length}글자 낱말이에요. 다시 생각해 보세요.`:'아쉬워요. 다시 생각해 보세요.','no');
+      }
+    }
+    const state={submit}; G=state;
+    select(words.slice().sort((a,b)=>a.n-b.n)[0],false);
+  }
+  function setMsg(t,cls){const m=$('msg');m.textContent=t;m.className='msg '+(cls||'');}
+  function showTab(d){
+    $('tabA').setAttribute('aria-selected',d==='A');
+    $('tabD').setAttribute('aria-selected',d==='D');
+    $('colA').classList.toggle('hide',d!=='A');
+    $('colD').classList.toggle('hide',d!=='D');
+  }
+  $('form').addEventListener('submit',e=>{e.preventDefault(); if(G) G.submit();});
+  $('tabA').addEventListener('click',()=>showTab('A'));
+  $('tabD').addEventListener('click',()=>showTab('D'));
+  route();
+})();
+</script>
