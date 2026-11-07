@@ -214,12 +214,12 @@ button:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--heat);outl
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.stamp.on{opacity:1}}
 </style>
 
+<style>.title-back{color:inherit;text-decoration:none;margin-right:.3em}.title-back:hover{opacity:.7}</style>
 </head>
 <body>
 <div class="app">
-<nav class="hub-back"><a href="../index.html">← 게임 목록</a></nav>
   <header class="hud">
-    <div class="brand"><small>6학년 강재인 · 밤 9시 거실 면담</small><h1>딱 <em>한 시간</em>만 했어요</h1></div>
+    <div class="brand"><small>6학년 강재인 · 밤 9시 거실 면담</small><h1><a class="title-back" href="../index.html" aria-label="게임 목록으로">←</a>딱 <em>한 시간</em>만 했어요</h1></div>
     <div class="clock" id="clockBox"><b id="clock">21:40</b><small>22:00 잘 시간</small></div>
     <div class="gauges">
       <div class="g g-conf"><label>실토</label><div class="bar"><i id="gConf"></i></div><b id="nConf">0</b><small>100이 되면 재인이가 진짜 게임 시간을 털어놓는다</small></div>

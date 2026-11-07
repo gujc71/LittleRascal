@@ -102,6 +102,13 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);
 /* 게임을 추가할 때는 이 배열에 항목 하나만 넣으면 됩니다. 빌드도 서버도 필요 없습니다. */
 var GAMES = [
   {
+    slug: 'snack-shop-hunt',
+    title: '몽이네 분식에 <em>두고 간 물건 찾기</em>',
+    ctx: '하교 시간이 지난 학교 앞 분식점',
+    desc: '친구들이 두고 간 분실물 아홉 개를 찾아 주세요. 몇개는 다른 물건 밑에 숨어 있어 치워 봐야 보여요.',
+    tags: ['숨은 그림', '분실물', '기록 도전']
+  },  
+  {
     slug: 'dog-ate-homework',
     title: '강아지가 먹은 <em>숙제</em>',
     ctx: '4학년 3반 · 교무실 면담',
@@ -187,22 +194,42 @@ var GAMES = [
   },
   {
     slug: 'history-crossword',
-    title: '십자말풀이 <em>(역사)</em>',
+    bonus: true,
+    title: '번외 - 십자말풀이 <em>(역사)</em>',
     ctx: '고조선부터 일제 강점기까지',
     desc: '풀고 싶은 시대를 골라 가로·세로 문제를 풀어 보세요. 낱말을 모두 맞히면 그 시대 역사 박사가 됩니다.',
     tags: ['낱말 퍼즐', '한국사', '시대 6개']
+  },
+  {
+    slug: 'bookshelf-hunt',
+    bonus: true,
+    title: '번외 - 책장 속 <em>책 찾기</em>',
+    ctx: '벽 한가득 꽂힌 책장 앞',
+    desc: '제시된 책 5권을 빽빽한 책장에서 찾아보세요. 분류 이름표를 따라가면 더 빨리 찾을 수 있어요.',
+    tags: ['책 찾기', '분류', '기록 도전']
+  },
+  {
+    slug: 'spelling-ox-speed',
+    bonus: true,
+    title: '번외 - 맞춤법 <em>O/X 스피드</em>',
+    ctx: '받아쓰기 대신!',
+    desc: '밑줄 친 말이 맞으면 O, 틀리면 X를 눌러요. 문제당 5초, 15문제 중 몇 개나 맞힐 수 있을까요?',
+    tags: ['맞춤법', '스피드 퀴즈', '15문제']
   }
 
 ];
 
 function cardHTML(g, solved) {
   var tags = g.tags.map(function (t) { return '<span class="tag">' + t + '</span>'; }).join('');
+  var go = g.bonus
+    ? (solved ? '다시 시작하기 →' : '시작하기 →')
+    : (solved ? '다시 조사하기 →' : '조사 시작 →');
   return '<a class="card' + (solved ? ' solved' : '') + '" href="games/' + g.slug + '.html">' +
          (solved ? '<span class="done">✓ 해결함</span>' : '') +
          '<span class="ctx">' + g.ctx + '</span>' +
          '<h3>' + g.title + '</h3>' +
          '<p class="desc">' + g.desc + '</p>' +
-         '<span class="go">' + (solved ? '다시 조사하기 →' : '조사 시작 →') + '</span>' +
+         '<span class="go">' + go + '</span>' +
          '<span class="meta">' + tags + '</span>' +
          '</a>';
 }

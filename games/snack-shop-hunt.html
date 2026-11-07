@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light;box-sizing:border-box}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<title>몽이네 분식에 두고 간 물건 찾기</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap">
+<style>
+/* Layout: illustrated shop scene on the left, chalkboard checklist on the right; stacks on phones. Single deliberate look. */
+:root{
+  --page:#DDE8DC;      /* 교실 타일 민트 */
+  --board:#2F4A3C;     /* 칠판 */
+  --board-2:#3A5A49;
+  --chalk:#F4F1E6;
+  --chalk-dim:#B9C8BC;
+  --sauce:#D8432C;     /* 떡볶이 빨강 */
+  --gold:#F2B43C;
+  --ink:#24302A;
+  --f-display:"Jua","Gowun Dodum",system-ui,sans-serif;
+  --f-body:"Gowun Dodum","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  color-scheme:light;
+}
+html,body{background:var(--page);color:var(--ink)}
+body{font-family:var(--f-body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 32px}
+.wrap{max-width:960px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;align-items:start}
+@media (max-width:820px){.wrap{grid-template-columns:minmax(0,1fr)}}
+.stage{position:relative;border-radius:14px;overflow:hidden;box-shadow:0 10px 30px rgba(36,48,42,.18);background:#2b2f33;max-width:100%}
+.stage svg{display:block;width:100%;height:auto;cursor:crosshair;user-select:none;-webkit-user-select:none;touch-action:pan-y}
+.stage svg.zoomed{touch-action:none}
+.stage svg.panning,.stage svg.panning *{cursor:grabbing!important}
+.ztip{margin:0;font-size:.8rem;color:var(--chalk-dim);line-height:1.5}
+.mov{cursor:grab;transform-box:fill-box;transform-origin:center;transition:transform .7s cubic-bezier(.3,1.4,.5,1),filter .2s}
+.mov:hover{filter:brightness(1.06) drop-shadow(0 3px 2px rgba(0,0,0,.25))}
+.mov.pulse{animation:pulse 1s ease-in-out 3}
+@keyframes pulse{50%{filter:drop-shadow(0 0 10px #FFE066) brightness(1.15)}}
+.item .hit{fill:transparent;cursor:crosshair}
+.item.locked,.item.locked *{pointer-events:none}
+.done-card[hidden]{display:none}
+.ring{fill:none;stroke:#E0362B;stroke-width:4.5;stroke-linecap:round;stroke-dasharray:200;stroke-dashoffset:200;animation:draw .5s ease-out forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.miss{fill:none;stroke:#fff;stroke-width:4;stroke-linecap:round;animation:fade 0.8s ease-out forwards}
+@keyframes fade{0%{opacity:1}100%{opacity:0;transform:translateY(-6px)}}
+.hintring{fill:rgba(255,224,102,.18);stroke:#FFE066;stroke-width:3;stroke-dasharray:8 6;animation:hint 1.2s ease-in-out 3 forwards}
+@keyframes hint{0%,100%{opacity:.2}50%{opacity:1}}
+
+.board{background:var(--board);color:var(--chalk);border-radius:14px;padding:20px 20px 18px;border:8px solid #8A6A45;box-shadow:inset 0 0 40px rgba(0,0,0,.25),0 10px 30px rgba(36,48,42,.18);display:flex;flex-direction:column;gap:14px}
+.top{max-width:960px;margin:0 auto 16px;background:var(--board);color:var(--chalk);border-radius:14px;padding:12px 16px;border:6px solid #8A6A45;box-shadow:inset 0 0 40px rgba(0,0,0,.25),0 10px 30px rgba(36,48,42,.18);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.top h1{font-family:var(--f-display);font-weight:400;font-size:1.6rem;line-height:1.2;margin:0;text-wrap:balance}
+.top h1 span{color:var(--gold)}
+.top .stats{flex:0 1 auto}
+.top .stat{display:flex;align-items:baseline;gap:6px;white-space:nowrap;flex-direction:row-reverse}
+.top .stat b{display:inline}
+.top .stats .b-hint{flex:none;white-space:nowrap}
+.lead{margin:0;font-size:.92rem;line-height:1.55;color:var(--chalk-dim)}
+.sec h2{font-family:var(--f-display);font-weight:400;font-size:1rem;margin:0 0 8px;letter-spacing:.04em;color:var(--gold);display:flex;justify-content:space-between}
+.sec h2 small{color:var(--chalk-dim);font-family:var(--f-body);font-size:.8rem;letter-spacing:0}
+.list{list-style:none;margin:0;padding:0 0 6px;display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
+.list li{flex:none;min-width:76px;box-sizing:border-box;scroll-snap-align:start;white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border:1.5px dashed rgba(244,241,230,.35);border-radius:10px;position:relative;font-family:var(--f-display);font-size:.95rem}
+.list li svg{width:38px;height:38px}
+.list li.done{border-style:solid;border-color:var(--gold);background:rgba(242,180,60,.12)}
+.list li.done::after{content:"";position:absolute;inset:6px;border:3px solid #E0362B;border-radius:50%;opacity:.85}
+.stats{display:flex;gap:10px;font-variant-numeric:tabular-nums}
+.stat{flex:1;background:var(--board-2);border-radius:10px;padding:8px 10px}
+.stat b{display:block;font-family:var(--f-display);font-weight:400;font-size:1.3rem}
+.stat span{font-size:.75rem;color:var(--chalk-dim)}
+.msg{min-height:1.4em;margin:0;font-family:var(--f-display);font-size:1rem;color:var(--gold)}
+.btns{display:flex;gap:8px}
+button{font-family:var(--f-display);font-size:1rem;border:0;border-radius:10px;padding:10px 12px;cursor:pointer;flex:1}
+.b-hint{background:var(--gold);color:var(--ink)}
+.b-hint:disabled{opacity:.4;cursor:default}
+button:focus-visible{outline:3px solid #FFE066;outline-offset:2px}
+
+.start-card div{max-width:340px}
+.start-card p{text-align:left;font-size:1.02rem;line-height:1.7;word-break:keep-all}
+.done-card{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(36,48,42,.55);padding:16px}
+.done-card div{background:var(--chalk);color:var(--ink);border-radius:16px;padding:24px 22px;text-align:center;max-width:300px;box-shadow:0 12px 30px rgba(0,0,0,.3)}
+.done-card h3{font-family:var(--f-display);font-weight:400;font-size:1.7rem;margin:0 0 6px;color:var(--sauce)}
+.done-card p{margin:0 0 16px;line-height:1.5}
+.done-card button{background:var(--sauce);color:#fff;width:100%}
+@media (prefers-reduced-motion:reduce){.mov{transition:none}.ring,.miss,.hintring,.mov.pulse{animation:none;stroke-dashoffset:0}}
+</style>
+<style>.title-back{color:inherit;text-decoration:none;margin-right:.3em}.title-back:hover{opacity:.7}.done-card .home{display:block;margin-top:10px;color:inherit;opacity:.8}</style>
+</head>
+<body>
+<header class="top">
+  <h1><a class="title-back" href="../index.html" aria-label="게임 목록으로">←</a><span>몽이네 분식</span> 두고 간 물건 찾기</h1>
+  <div class="stats"><div class="stat"><b id="time">0:00</b><span>걸린 시간</span></div><div class="stat"><b id="miss">0</b><span>헛손질</span></div><button type="button" class="b-hint" id="hint">힌트 (3)</button></div>
+</header>
+<div class="wrap">
+<div class="stage" id="stage">
+<svg id="scene" viewBox="0 100 768 924" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="몽이네 분식점 그림">
+<defs>
+  <!-- 숨은 물건 -->
+  <symbol id="s-pencil" viewBox="0 0 10 56"><rect x="1" y="8" width="8" height="38" fill="#F2A33A"/><rect x="4" y="8" width="2" height="38" fill="#E08E22"/><rect x="1" y="4" width="8" height="5" fill="#B9BDC0"/><rect x="1" y="0" width="8" height="5" rx="2" fill="#F08AA0"/><path d="M1 46 L5 55 L9 46 Z" fill="#F3D9A8"/><path d="M3.6 52 L5 55 L6.4 52 Z" fill="#333"/></symbol>
+  <symbol id="s-star" viewBox="0 0 20 20"><path d="M10 1 L12.6 7 L19 7.4 L14 11.6 L15.7 18.4 L10 14.6 L4.3 18.4 L6 11.6 L1 7.4 L7.4 7 Z" fill="#EDAA1F" stroke="#C88512" stroke-width="1"/><circle cx="8" cy="9" r=".9" fill="#7A4B10"/><circle cx="12" cy="9" r=".9" fill="#7A4B10"/><path d="M8 11.6 Q10 13 12 11.6" stroke="#7A4B10" stroke-width=".8" fill="none"/></symbol>
+  <symbol id="s-key" viewBox="0 0 16 34"><circle cx="8" cy="7" r="6" fill="none" stroke="#9AA1A6" stroke-width="3"/><rect x="6.5" y="12" width="3" height="20" fill="#9AA1A6"/><rect x="9" y="24" width="4" height="2.5" fill="#9AA1A6"/><rect x="9" y="28.5" width="3" height="2.5" fill="#9AA1A6"/></symbol>
+  <symbol id="s-test" viewBox="0 0 60 42"><rect x="1" y="1" width="58" height="40" fill="#FFFDF5" stroke="#C9C3B0"/><path d="M8 10 H38 M8 17 H44 M8 24 H34 M8 31 H40" stroke="#9AA4B0" stroke-width="1.5"/><text x="46" y="32" font-family="Jua,sans-serif" font-size="15" fill="#E0362B" text-anchor="middle">100</text><ellipse cx="46" cy="27" rx="13" ry="10" fill="none" stroke="#E0362B" stroke-width="1.6"/></symbol>
+  <symbol id="s-ddakji" viewBox="0 0 40 40"><rect x="3" y="3" width="34" height="34" fill="#2F6FD6"/><path d="M3 3 L37 37 M37 3 L3 37" stroke="#1F4FA3" stroke-width="1.5"/><path d="M20 3 L37 20 L20 37 L3 20 Z" fill="#E2483A"/><path d="M20 3 L20 37 M3 20 L37 20" stroke="#B53327" stroke-width="1.2"/></symbol>
+  <symbol id="s-marble" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="#3FA7D6"/><path d="M4 12 Q10 4 16 9" stroke="#F2C230" stroke-width="2.5" fill="none"/><circle cx="7" cy="6" r="2.2" fill="#fff" opacity=".8"/></symbol>
+  <symbol id="s-letter" viewBox="0 0 40 28"><rect x="1" y="1" width="38" height="26" rx="2" fill="#FFF3D6" stroke="#D9B98A"/><path d="M1 2 L20 16 L39 2" stroke="#D9B98A" stroke-width="1.5" fill="none"/><path d="M20 20 c-3-3-6-1-4 2 l4 4 l4-4 c2-3-1-5-4-2z" fill="#E0362B"/></symbol>
+  <symbol id="s-eraser" viewBox="0 0 30 16"><rect x="1" y="1" width="28" height="14" rx="2" fill="#F7F7F2" stroke="#C9C9C2"/><rect x="9" y="1" width="20" height="14" fill="#2F6FD6"/><text x="19" y="11" font-family="Jua,sans-serif" font-size="7" fill="#fff" text-anchor="middle">몽이</text></symbol>
+  <symbol id="s-shoe" viewBox="0 0 70 32"><path d="M4 26 C2 14 10 8 20 9 L40 10 C50 10 58 12 64 18 C68 22 67 27 62 28 L8 29 Z" fill="#F7F7F2" stroke="#C8CBC6" stroke-width="1.2"/><path d="M14 13 L46 14 L44 20 L12 20 Z" fill="#3E8EDB"/><path d="M4 27 L64 27" stroke="#A8ADA8" stroke-width="3"/></symbol>
+
+  <pattern id="brick" width="48" height="22" patternUnits="userSpaceOnUse"><rect width="48" height="22" fill="#B35740"/><rect x="0" y="0" width="23" height="10" fill="#B9603F"/><rect x="25" y="12" width="23" height="10" fill="#A9503A"/><path d="M0 0.5 H48 M0 11.5 H48 M0.5 0 V11 M24.5 11 V22" stroke="#D5B39E" stroke-width="1.6"/></pattern>
+  <linearGradient id="steel" x1="0" x2="1"><stop offset="0" stop-color="#AEB3B6"/><stop offset=".35" stop-color="#D9DCDE"/><stop offset=".6" stop-color="#B6BBBE"/><stop offset="1" stop-color="#C9CDD0"/></linearGradient>
+  <linearGradient id="steelV" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C8CCCF"/><stop offset="1" stop-color="#9DA3A7"/></linearGradient>
+  <linearGradient id="ceil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3B4044"/><stop offset="1" stop-color="#5A6064"/></linearGradient>
+  <linearGradient id="wood" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#D6AC72"/><stop offset=".5" stop-color="#E3BD86"/><stop offset="1" stop-color="#CFA268"/></linearGradient>
+  <radialGradient id="glow"><stop offset="0" stop-color="#FFF6D6" stop-opacity=".9"/><stop offset="1" stop-color="#FFF6D6" stop-opacity="0"/></radialGradient>
+</defs>
+
+<!-- 윗벽과 메뉴판 -->
+<rect y="100" width="768" height="225" fill="#EFEAD8"/>
+<g font-family="Jua,sans-serif">
+  <g transform="translate(122 165)">
+    <rect width="102" height="140" fill="#F3A546"/>
+    <text x="8" y="17" font-size="13" fill="#B8281E">몽이네 분식</text>
+    <rect x="8" y="25" width="38" height="9" rx="4.5" fill="#B8281E"/><text x="27" y="32" font-size="6.5" fill="#fff" text-anchor="middle">떡볶이</text>
+    <g font-size="6.5" fill="#5A2A10"><text x="8" y="46">떡볶이 3500</text><text x="8" y="56">순대 4000</text><text x="8" y="66">튀김 3000</text><text x="8" y="76">어묵 1000</text><text x="54" y="46">김밥 3000</text><text x="54" y="56">라면 4000</text><text x="54" y="66">쫄면 5000</text></g>
+    <rect x="54" y="25" width="40" height="9" rx="4.5" fill="#B8281E"/><text x="74" y="32" font-size="6.5" fill="#fff" text-anchor="middle">식사</text>
+    <ellipse cx="34" cy="122" rx="22" ry="11" fill="#C8432A"/><ellipse cx="34" cy="119" rx="18" ry="7" fill="#E25B33"/><rect x="10" y="108" width="7" height="18" fill="#D6372B"/>
+    <text x="80" y="128" font-size="7" fill="#B8281E">맛있다!</text>
+  </g>
+  <g transform="translate(228 165)">
+    <rect width="100" height="140" fill="#F8D27E"/>
+    <text x="7" y="17" font-size="12" fill="#B8281E">몽이네 분식</text>
+    <text x="7" y="31" font-size="11" fill="#B8281E">set menu</text>
+    <g font-size="7" fill="#5A2A10"><text x="7" y="50">떡꼬치</text><text x="7" y="72">컵떡볶이</text><text x="7" y="94">몽이 세트</text><text x="7" y="116">튀김 세트</text></g>
+    <g font-size="9" fill="#2F2A1E"><text x="72" y="50" text-anchor="end">1300</text><text x="72" y="72" text-anchor="end">1800</text><text x="72" y="94" text-anchor="end">10000</text><text x="72" y="116" text-anchor="end">7000</text></g>
+    <g fill="#EDAA1F" stroke="#C88512"><circle cx="88" cy="22" r="7"/><circle cx="88" cy="118" r="6"/></g>
+    <g fill="#7A4B10"><circle cx="86" cy="21" r=".9"/><circle cx="90" cy="21" r=".9"/><circle cx="86" cy="117" r=".8"/><circle cx="90" cy="117" r=".8"/></g>
+    <rect x="18" y="128" width="54" height="8" rx="4" fill="#2C5AA0"/><text x="45" y="134" font-size="5" fill="#fff" text-anchor="middle">TREAT YOURSELF</text>
+  </g>
+  <g transform="translate(330 165)">
+    <rect width="102" height="140" fill="#F3A546"/>
+    <text x="8" y="17" font-size="13" fill="#B8281E">몽이네 분식</text>
+    <rect x="8" y="25" width="38" height="9" rx="4.5" fill="#B8281E"/><text x="27" y="32" font-size="6.5" fill="#fff" text-anchor="middle">튀김</text>
+    <g font-size="6.5" fill="#5A2A10"><text x="8" y="46">김말이 800</text><text x="8" y="56">야채 800</text><text x="8" y="66">오징어 1000</text><text x="8" y="76">고구마 800</text><text x="54" y="46">순대 4000</text><text x="54" y="56">모둠 5000</text><text x="54" y="66">떡꼬치 1300</text></g>
+    <rect x="54" y="25" width="40" height="9" rx="4.5" fill="#B8281E"/><text x="74" y="32" font-size="6.5" fill="#fff" text-anchor="middle">사이드</text>
+    <ellipse cx="34" cy="122" rx="22" ry="11" fill="#C8432A"/><ellipse cx="34" cy="119" rx="18" ry="7" fill="#E25B33"/><rect x="10" y="108" width="7" height="18" fill="#D6372B"/>
+    <text x="80" y="128" font-size="7" fill="#B8281E">든든!</text>
+  </g>
+  <g transform="translate(434 165)">
+    <rect width="100" height="140" fill="#F8D27E"/>
+    <text x="7" y="17" font-size="12" fill="#B8281E">몽이네 분식</text>
+    <text x="7" y="31" font-size="11" fill="#B8281E">set menu</text>
+    <g font-size="7" fill="#5A2A10"><text x="7" y="50">떡꼬치</text><text x="7" y="72">컵떡볶이</text><text x="7" y="94">몽이 세트</text><text x="7" y="116">튀김 세트</text></g>
+    <g font-size="9" fill="#2F2A1E"><text x="72" y="50" text-anchor="end">1200</text><text x="72" y="72" text-anchor="end">1800</text><text x="72" y="94" text-anchor="end">10000</text><text x="72" y="116" text-anchor="end">7000</text></g>
+    <g fill="#EDAA1F" stroke="#C88512"><circle cx="88" cy="22" r="7"/><circle cx="88" cy="46" r="6"/><circle cx="88" cy="94" r="6"/></g>
+    <g fill="#7A4B10"><circle cx="86" cy="21" r=".9"/><circle cx="90" cy="21" r=".9"/><circle cx="86" cy="45" r=".8"/><circle cx="90" cy="45" r=".8"/><circle cx="86" cy="93" r=".8"/><circle cx="90" cy="93" r=".8"/></g>
+    <rect x="18" y="128" width="54" height="8" rx="4" fill="#2C5AA0"/><text x="45" y="134" font-size="5" fill="#fff" text-anchor="middle">TREAT YOURSELF</text>
+  </g>
+</g>
+
+<!-- 주방 안쪽 -->
+<rect x="85" y="330" width="683" height="520" fill="#E9E7E1"/>
+<rect x="650" y="330" width="118" height="300" fill="#F1EFEA"/>
+<rect x="335" y="338" width="318" height="34" fill="#E9A93A"/><rect x="335" y="368" width="318" height="8" fill="#6F6A62"/>
+<!-- 노란 그릇 선반 -->
+<path d="M150 470 H285" stroke="#9AA0A4" stroke-width="3"/><path d="M150 478 H285" stroke="#9AA0A4" stroke-width="1.5"/>
+<g fill="#F6C823" stroke="#D9A90E" stroke-width="1">
+  <path d="M152 468 Q166 452 180 468 Z"/><path d="M162 468 Q176 450 190 468 Z"/><path d="M174 468 Q188 452 202 468 Z"/>
+</g>
+<g class="item locked" id="i-marble"><use href="#s-marble" x="238" y="455" width="13" height="13"/><circle class="hit" cx="244" cy="461" r="18"/></g>
+<g class="mov" id="m-bowls" data-move="translate(70px,-45px) rotate(12deg)" fill="#F6C823" stroke="#D9A90E" stroke-width="1">
+  <path d="M212 468 Q226 450 240 468 Z"/><path d="M226 468 Q240 452 254 468 Z"/><path d="M240 468 Q254 450 268 468 Z"/><path d="M254 468 Q268 452 282 468 Z"/>
+</g>
+<!-- 싱크대 쪽 -->
+<rect x="145" y="540" width="190" height="30" fill="url(#steelV)"/>
+<path d="M185 545 V505 Q185 495 196 495 Q206 495 206 505 V512" stroke="#8D9396" stroke-width="5" fill="none"/>
+<rect x="244" y="500" width="12" height="20" rx="2" fill="#4A4F53"/><rect x="236" y="514" width="28" height="6" fill="#6C7175"/>
+<!-- 키친타월 (옮길 수 있는 물건) -->
+<g class="mov" id="m-towel" data-move="translate(-50px,30px) rotate(-20deg)">
+  <rect x="278" y="485" width="28" height="44" rx="3" fill="#FAFAF7" stroke="#D3D4CF"/><ellipse cx="292" cy="485" rx="14" ry="4" fill="#E4E5E0"/><ellipse cx="292" cy="485" rx="5" ry="2" fill="#B9B3A6"/>
+</g>
+<!-- 뒤쪽 조리대 -->
+<rect x="330" y="568" width="325" height="10" fill="#B6BBBE"/>
+<rect x="330" y="578" width="325" height="40" fill="#8F959A"/>
+<g class="item locked" id="i-eraser"><use href="#s-eraser" x="358" y="549" width="26" height="14"/><circle class="hit" cx="371" cy="556" r="20"/></g>
+<g class="mov" id="m-pan" data-move="translate(-40px,-60px) rotate(-18deg)">
+  <path d="M336 552 L340 566 Q372 576 404 566 L408 552 Z" fill="#2E2A28"/><ellipse cx="372" cy="552" rx="36" ry="10" fill="#45403C"/><ellipse cx="372" cy="553" rx="30" ry="7" fill="#24201E"/><path d="M406 552 L434 545" stroke="#2E2A28" stroke-width="5" stroke-linecap="round"/>
+</g>
+<rect x="404" y="530" width="11" height="34" rx="3" fill="#D3322A"/><rect x="406" y="522" width="7" height="9" fill="#F0EDE6"/>
+<rect x="418" y="534" width="10" height="30" rx="3" fill="#F2C230"/><rect x="420" y="527" width="6" height="8" fill="#E44031"/>
+<rect x="440" y="548" width="50" height="14" fill="#C8CCCE"/><path d="M445 548 L452 538 L460 548 M468 548 L476 539 L484 548" stroke="#9EA4A7" stroke-width="2" fill="none"/>
+<!-- 튀김기 -->
+<rect x="548" y="525" width="64" height="42" rx="3" fill="url(#steel)"/><rect x="552" y="512" width="56" height="14" fill="#A9AEB1"/><rect x="556" y="540" width="20" height="5" fill="#2B2B2B"/><rect x="584" y="540" width="20" height="5" fill="#2B2B2B"/>
+<rect x="525" y="555" width="14" height="13" rx="2" fill="#E25B33"/>
+<rect x="634" y="562" width="12" height="40" rx="4" fill="#E4B83E" opacity=".9"/><rect x="636" y="555" width="8" height="8" fill="#3D7A3A"/>
+<!-- 오른쪽 작업대와 조리도구 -->
+<rect x="612" y="610" width="156" height="12" fill="#C3C8CB"/><rect x="612" y="622" width="156" height="130" fill="#7C8287"/><path d="M612 680 H768" stroke="#5E6468" stroke-width="3"/>
+<rect x="612" y="600" width="38" height="10" fill="#EDEDE8"/>
+<g stroke-linecap="round">
+  <path d="M694 590 L686 552" stroke="#D63A2C" stroke-width="5"/><path d="M698 590 L700 548" stroke="#D63A2C" stroke-width="5"/>
+  <path d="M704 590 L712 552" stroke="#222" stroke-width="4"/><rect x="706" y="540" width="12" height="14" rx="2" fill="#222" transform="rotate(12 712 547)"/>
+  <path d="M724 592 L722 560" stroke="#D63A2C" stroke-width="5"/><path d="M730 592 L740 562" stroke="#9AA0A4" stroke-width="4"/><circle cx="742" cy="558" r="7" fill="none" stroke="#9AA0A4" stroke-width="3"/>
+</g>
+<!-- 숨은 물건: 연필 -->
+<g class="item" id="i-pencil"><use href="#s-pencil" x="702" y="546" width="9" height="50" transform="rotate(14 706 571)"/><circle class="hit" cx="706" cy="566" r="26"/></g>
+<rect x="684" y="586" width="26" height="34" rx="2" fill="url(#steel)"/><rect x="714" y="588" width="26" height="32" rx="2" fill="url(#steel)"/>
+
+<!-- 냉장고 -->
+<rect x="90" y="328" width="56" height="370" fill="url(#steel)"/><path d="M90 330 V698" stroke="#7F868A" stroke-width="2"/>
+<rect x="138" y="380" width="5" height="150" rx="2" fill="#8E9599"/>
+<g class="item locked" id="i-letter"><use href="#s-letter" x="99" y="446" width="34" height="24"/><circle class="hit" cx="116" cy="458" r="22"/></g>
+<g class="mov" id="m-poster" data-move="translate(-10px,70px) rotate(-28deg)" font-family="Jua,sans-serif"><rect x="95" y="400" width="40" height="120" fill="#F3A546"/><text x="100" y="416" font-size="8" fill="#B8281E">몽이네</text><text x="100" y="427" font-size="8" fill="#B8281E">분식</text><g font-size="5" fill="#5A2A10"><text x="100" y="442">떡볶이</text><text x="100" y="452">순대</text><text x="100" y="462">튀김</text><text x="100" y="472">김밥</text></g><rect x="100" y="490" width="30" height="20" fill="#F8D27E"/></g>
+<rect x="104" y="390" width="10" height="8" rx="1" fill="#F0EDE6"/>
+<!-- 숨은 물건: 열쇠 -->
+<g class="item" id="i-key"><use href="#s-key" x="134" y="528" width="12" height="27" transform="rotate(-8 140 541)"/><circle cx="140" cy="530" r="2" fill="#5D6367"/><circle class="hit" cx="140" cy="542" r="24"/></g>
+
+<!-- 앞벽 기둥과 처마 -->
+<rect x="0" y="318" width="85" height="560" fill="#EFEAD8"/>
+<rect x="85" y="318" width="683" height="14" fill="#E2DCC6"/>
+
+<!-- 바닥 -->
+<rect x="0" y="842" width="768" height="182" fill="url(#brick)"/>
+<rect x="0" y="842" width="768" height="6" fill="#8C3F2E" opacity=".35"/>
+
+<!-- 앞 조리대 -->
+<rect x="80" y="688" width="474" height="160" fill="url(#steel)"/>
+<path d="M80 700 H554" stroke="#9FA5A8" stroke-width="2"/>
+<rect x="310" y="848" width="10" height="28" fill="#8F959A"/><rect x="530" y="848" width="10" height="28" fill="#8F959A"/><rect x="100" y="848" width="10" height="28" fill="#8F959A"/>
+<rect x="62" y="672" width="505" height="18" fill="#CDD1D4"/><path d="M62 672 H567" stroke="#EEF0F1" stroke-width="2"/>
+<rect x="272" y="676" width="34" height="11" fill="#FBFBF7" stroke="#C9C9C2"/><text x="289" y="685" font-family="Jua,sans-serif" font-size="8" fill="#333" text-anchor="middle">2000</text>
+<!-- 철망 쟁반과 접시 -->
+<rect x="72" y="650" width="140" height="22" fill="#B9BEC1"/><path d="M76 654 H208 M76 660 H208 M76 666 H208" stroke="#8E9498" stroke-width="1"/>
+<!-- 숨은 물건: 시험지 (비닐봉지 아래) -->
+<g class="item locked" id="i-test" data-cover="m-bag"><use href="#s-test" x="164" y="606" width="66" height="46" transform="rotate(-6 197 629)"/><circle class="hit" cx="197" cy="628" r="28"/></g>
+<ellipse cx="160" cy="650" rx="44" ry="10" fill="#DADDDF"/><ellipse cx="160" cy="645" rx="40" ry="8" fill="#ECEEEF"/>
+<!-- 비닐봉지 (옮길 수 있는 물건) -->
+<g class="mov" id="m-bag" data-move="translate(-150px,-120px) rotate(-25deg)">
+  <path d="M138 652 C128 620 142 590 172 578 L168 560 C172 552 182 552 186 560 L190 576 C228 584 260 612 252 652 Z" fill="#F4F5F2" opacity=".97"/>
+  <path d="M150 640 C160 615 170 600 186 592 M200 645 C210 620 222 606 238 600 M168 650 C175 630 186 615 200 610" stroke="#D3D6D2" stroke-width="2" fill="none"/>
+  <path d="M168 560 C176 548 186 552 186 560" stroke="#C9CCC8" stroke-width="3" fill="none"/>
+</g>
+<!-- 떡볶이 판 -->
+<rect x="250" y="606" width="172" height="26" rx="4" fill="#9EA4A8"/><rect x="256" y="610" width="160" height="18" rx="3" fill="#C7361F"/>
+<g fill="#F2D6C2"><rect x="266" y="614" width="16" height="6" rx="3"/><rect x="290" y="619" width="16" height="6" rx="3"/><rect x="318" y="613" width="16" height="6" rx="3"/><rect x="346" y="618" width="16" height="6" rx="3"/><rect x="376" y="613" width="16" height="6" rx="3"/></g>
+<path d="M300 606 L318 584" stroke="#D63A2C" stroke-width="5" stroke-linecap="round"/>
+<!-- 튀김 -->
+<rect x="212" y="640" width="138" height="32" fill="#C1C6C9"/>
+<g fill="#C98A3A" stroke="#A86D25" stroke-width="1">
+  <rect x="218" y="636" width="34" height="9" rx="4"/><rect x="216" y="646" width="36" height="9" rx="4"/><rect x="218" y="656" width="34" height="9" rx="4"/>
+  <rect x="258" y="644" width="30" height="8" rx="3" fill="#B97A30"/><rect x="258" y="653" width="30" height="8" rx="3" fill="#B97A30"/>
+  <ellipse cx="312" cy="652" rx="16" ry="8"/><ellipse cx="318" cy="660" rx="14" ry="7"/><ellipse cx="336" cy="654" rx="12" ry="7"/>
+</g>
+<!-- 호일 -->
+<path d="M346 648 L560 644 L566 672 L340 672 Z" fill="#CDD2D5"/><path d="M360 656 L380 664 L400 652 L430 666 L460 654 L500 664 L540 652" stroke="#E9ECEE" stroke-width="2" fill="none"/>
+<rect x="398" y="634" width="32" height="26" rx="6" fill="#3A2320"/><ellipse cx="414" cy="636" rx="16" ry="4" fill="#5A3A30"/>
+<!-- 바트 통 속 딱지 -->
+<rect x="432" y="602" width="94" height="46" fill="#7E8489"/>
+<g class="item locked" id="i-ddakji" data-cover="m-lid"><use href="#s-ddakji" x="457" y="607" width="40" height="40" transform="rotate(10 477 627)"/><circle class="hit" cx="477" cy="627" r="26"/></g>
+<!-- 뚜껑 (옮길 수 있는 물건) -->
+<g class="mov" id="m-lid" data-move="translate(60px,-110px) rotate(14deg)">
+  <rect x="428" y="596" width="102" height="56" rx="3" fill="#BEC3C6"/><rect x="432" y="600" width="94" height="48" fill="url(#steel)"/>
+  <path d="M440 612 L470 606 L500 616 L520 608" stroke="#ECEEF0" stroke-width="2.5" fill="none"/><rect x="464" y="592" width="30" height="7" rx="3" fill="#8E9498"/>
+</g>
+
+<!-- 왼쪽 식탁과 실내화 -->
+<rect x="0" y="710" width="152" height="18" fill="url(#wood)"/><rect x="0" y="728" width="152" height="6" fill="#B8894F"/>
+<rect x="132" y="734" width="10" height="210" fill="#2E2A27"/>
+<g class="item locked" id="i-shoe" data-cover="m-chairL"><use href="#s-shoe" x="76" y="684" width="66" height="30" transform="rotate(-4 109 699)"/><circle class="hit" cx="109" cy="700" r="28"/></g>
+<!-- 왼쪽 의자 (옮길 수 있는 물건) -->
+<g class="mov" id="m-chairL" data-move="translate(150px,70px)">
+  <rect x="58" y="680" width="196" height="58" rx="4" fill="url(#wood)" stroke="#B8894F"/>
+  <path d="M66 692 H246" stroke="#C99A5E" stroke-width="1.5"/>
+  <rect x="60" y="736" width="12" height="230" fill="#D3A66B"/><rect x="238" y="736" width="12" height="230" fill="#D3A66B"/>
+  <rect x="62" y="768" width="186" height="22" rx="3" fill="url(#wood)" stroke="#B8894F"/>
+  <rect x="42" y="830" width="226" height="20" rx="3" fill="#E1B97E" stroke="#B8894F"/>
+  <rect x="48" y="850" width="10" height="110" fill="#C99A5E"/><rect x="252" y="850" width="10" height="110" fill="#C99A5E"/>
+  <path d="M60 920 H250" stroke="#C99A5E" stroke-width="7"/>
+</g>
+
+<!-- 오른쪽 식탁과 의자 -->
+<rect x="616" y="732" width="152" height="18" fill="url(#wood)"/><rect x="616" y="750" width="152" height="6" fill="#B8894F"/>
+<rect x="736" y="756" width="12" height="230" fill="#2E2A27"/>
+<g class="mov" id="m-chairR" data-move="translate(-70px,40px)">
+  <rect x="630" y="680" width="122" height="44" rx="4" fill="url(#wood)" stroke="#B8894F"/>
+  <rect x="634" y="722" width="11" height="230" fill="#D3A66B"/><rect x="738" y="722" width="11" height="200" fill="#D3A66B"/>
+  <rect x="636" y="758" width="112" height="18" rx="3" fill="url(#wood)" stroke="#B8894F"/>
+  <rect x="620" y="828" width="140" height="18" rx="3" fill="#E1B97E" stroke="#B8894F"/>
+  <rect x="624" y="846" width="10" height="100" fill="#C99A5E"/>
+</g>
+<g><rect x="690" y="790" width="78" height="40" rx="4" fill="url(#wood)" stroke="#B8894F"/><rect x="694" y="828" width="11" height="196" fill="#D3A66B"/><rect x="700" y="880" width="68" height="18" fill="#E1B97E"/></g>
+<g><rect x="0" y="872" width="78" height="38" rx="4" fill="url(#wood)" stroke="#B8894F"/><rect x="62" y="908" width="11" height="116" fill="#D3A66B"/></g>
+
+<!-- 메뉴판 위 숨은 별 (가장 위에 그려 클릭되도록) -->
+<g class="item" id="i-star"><use href="#s-star" x="307" y="226" width="18" height="18"/><circle class="hit" cx="316" cy="235" r="22"/></g>
+
+<g id="fx"></g>
+</svg>
+<div class="done-card start-card" id="startCard"><div><h3>몽이네 분실물 찾기</h3><p>하교 시간이 지나고 몽이네 분식점이 조용해졌어요. 오늘도 아이들이 이것저것 두고 갔네요. 내일 아침 등굣길에 돌려줄 수 있게 몽이 사장님을 도와 분실물을 찾아 주세요!</p><button type="button" id="startBtn">시작</button></div></div>
+<div class="done-card" id="doneCard" hidden><div><h3>다 찾았어요!</h3><p id="doneText"></p><button type="button" id="again">다시 하기</button><a class="home" href="../index.html">게임 목록으로</a></div></div>
+</div>
+
+<aside class="board">
+  <div class="sec"><h2>찾을 물건 <small id="c1">0 / 9</small></h2><ul class="list" id="list"></ul></div>
+  <p class="msg" id="msg" aria-live="polite"></p>
+</aside>
+</div>
+
+<script src="lib/common.js"></script>
+<script>
+const ITEMS=[
+  {id:'pencil',name:'연필',kind:'open',sym:'s-pencil',cx:706,cy:566,r:30},
+  {id:'star',name:'별 배지',kind:'open',sym:'s-star',cx:316,cy:235,r:22},
+  {id:'key',name:'열쇠',kind:'open',sym:'s-key',cx:140,cy:542,r:26},
+  {id:'test',name:'100점 시험지',kind:'hidden',sym:'s-test',cx:197,cy:628,r:38,cover:'m-bag'},
+  {id:'ddakji',name:'딱지',kind:'hidden',sym:'s-ddakji',cx:477,cy:627,r:30,cover:'m-lid'},
+  {id:'shoe',name:'실내화',kind:'hidden',sym:'s-shoe',cx:109,cy:699,r:40,cover:'m-chairL'},
+  {id:'marble',name:'구슬',kind:'hidden',sym:'s-marble',cx:244,cy:461,r:20,cover:'m-bowls'},
+  {id:'eraser',name:'지우개',kind:'hidden',sym:'s-eraser',cx:371,cy:556,r:24,cover:'m-pan'},
+  {id:'letter',name:'쪽지 편지',kind:'hidden',sym:'s-letter',cx:116,cy:458,r:26,cover:'m-poster'}
+];
+const NS='http://www.w3.org/2000/svg';
+const svg=document.getElementById('scene'),fx=document.getElementById('fx');
+let found=new Set(),misses=0,hints=3,start=null,timer=null,doneAt=null;
+
+function renderLists(){
+  const ul=document.getElementById('list');ul.innerHTML='';ul.scrollLeft=0;
+  ITEMS.forEach(i=>{
+    const li=document.createElement('li');li.id='li-'+i.id;
+    li.innerHTML=`<svg viewBox="0 0 40 40"><use href="#${i.sym}" x="4" y="4" width="32" height="32"/></svg>${i.name}`;
+    ul.appendChild(li);
+  });
+}
+function fmt(s){return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
+function tick(){if(start)document.getElementById('time').textContent=fmt(Math.floor((Date.now()-start)/1000))}
+function ensureTimer(){if(!start){start=Date.now();timer=setInterval(tick,500)}}
+function say(t){document.getElementById('msg').textContent=t}
+function pt(evt){const p=svg.createSVGPoint();p.x=evt.clientX;p.y=evt.clientY;return p.matrixTransform(svg.getScreenCTM().inverse())}
+function updateCounts(){
+  document.getElementById('c1').textContent=found.size+' / '+ITEMS.length;
+}
+function markFound(item){
+  if(found.has(item.id))return;
+  found.add(item.id);
+  const c=document.createElementNS(NS,'circle');
+  c.setAttribute('cx',item.cx);c.setAttribute('cy',item.cy);c.setAttribute('r',item.r);c.setAttribute('class','ring');
+  fx.appendChild(c);
+  document.getElementById('li-'+item.id).classList.add('done');
+  updateCounts();
+  say('찾았다! '+item.name);
+  if(found.size===ITEMS.length)finish();
+}
+function finish(){
+  clearInterval(timer);tick();markSolved();
+  const secs=Math.floor((Date.now()-start)/1000);
+  document.getElementById('doneText').textContent=`${fmt(secs)} 만에 아홉 개를 모두 찾았어요. 헛손질 ${misses}번, 힌트 ${3-hints}번.`;
+  setTimeout(()=>{document.getElementById('doneCard').hidden=false},700);
+}
+svg.addEventListener('click',e=>{
+  if(found.size===ITEMS.length)return;
+  ensureTimer();
+  const itemEl=e.target.closest('.item');
+  if(itemEl&&!itemEl.classList.contains('locked')){
+    const it=ITEMS.find(i=>'i-'+i.id===itemEl.id);
+    if(it.cover&&document.getElementById(it.cover).dataset.moved!=='1')return;
+    if(found.has(it.id)){say('이미 찾은 물건이에요.');return}
+    markFound(it);return;
+  }
+  const mov=e.target.closest('.mov');
+  if(mov){
+    const moved=mov.dataset.moved==='1';
+    mov.dataset.moved=moved?'0':'1';
+    mov.style.transform=moved?'':mov.dataset.move;
+    ITEMS.filter(i=>i.cover===mov.id).forEach(i=>{
+      document.getElementById('i-'+i.id).classList.toggle('locked',moved);
+    });
+    say(moved?'제자리에 돌려놨어요.':'슥, 옮겼어요. 밑에 뭐가 있나 볼까요?');
+    return;
+  }
+  misses++;document.getElementById('miss').textContent=misses;
+  const p=pt(e),g=document.createElementNS(NS,'path');
+  g.setAttribute('d',`M${p.x-9} ${p.y-9} L${p.x+9} ${p.y+9} M${p.x+9} ${p.y-9} L${p.x-9} ${p.y+9}`);
+  g.setAttribute('class','miss');fx.appendChild(g);setTimeout(()=>g.remove(),800);
+  say('거기엔 없어요.');
+});
+document.getElementById('hint').addEventListener('click',()=>{
+  if(hints<=0)return;
+  const left=ITEMS.filter(i=>!found.has(i.id));if(!left.length)return;
+  ensureTimer();
+  const it=left[Math.floor(Math.random()*left.length)];
+  hints--;const b=document.getElementById('hint');b.textContent=`힌트 (${hints})`;b.disabled=hints===0;
+  if(it.cover&&document.getElementById(it.cover).dataset.moved!=='1'){
+    const m=document.getElementById(it.cover);m.classList.remove('pulse');void m.getBBox();m.classList.add('pulse');
+    say(`${it.name}은(는) 반짝이는 물건 밑에 있어요.`);
+  }else{
+    const c=document.createElementNS(NS,'circle');
+    c.setAttribute('cx',it.cx+(Math.random()*40-20));c.setAttribute('cy',it.cy+(Math.random()*40-20));c.setAttribute('r',70);c.setAttribute('class','hintring');
+    fx.appendChild(c);setTimeout(()=>c.remove(),3700);
+    say(`${it.name}은(는) 노란 동그라미 근처에 있어요.`);
+  }
+});
+function reset(){
+  found.clear();misses=0;hints=3;start=null;clearInterval(timer);
+  fx.innerHTML='';document.getElementById('miss').textContent='0';document.getElementById('time').textContent='0:00';
+  const b=document.getElementById('hint');b.textContent='힌트 (3)';b.disabled=false;
+  document.querySelectorAll('.mov').forEach(m=>{m.dataset.moved='0';m.style.transform='';m.classList.remove('pulse')});
+  ITEMS.filter(i=>i.cover).forEach(i=>document.getElementById('i-'+i.id).classList.add('locked'));
+  if(typeof applyVB==='function'){vb={...BASE};applyVB()}
+  document.getElementById('doneCard').hidden=true;
+  document.getElementById('startCard').hidden=false;
+  renderLists();updateCounts();say('');
+}
+
+/* 확대·축소·이동 */
+const BASE={x:0,y:100,w:768,h:924},MAXZ=4;
+let vb={...BASE};
+function scale(){return BASE.w/vb.w}
+function applyVB(){
+  svg.setAttribute('viewBox',`${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+  const z=scale();
+  svg.classList.toggle('zoomed',z>1.001);
+}
+function clampVB(){
+  vb.x=Math.min(Math.max(vb.x,BASE.x),BASE.x+BASE.w-vb.w);
+  vb.y=Math.min(Math.max(vb.y,BASE.y),BASE.y+BASE.h-vb.h);
+}
+function zoomAt(f,cx,cy){
+  const nz=Math.min(MAXZ,Math.max(1,scale()*f));
+  const nw=BASE.w/nz,nh=BASE.h/nz;
+  vb.x=cx-(cx-vb.x)*(nw/vb.w);vb.y=cy-(cy-vb.y)*(nh/vb.h);
+  vb.w=nw;vb.h=nh;clampVB();applyVB();
+}
+function toSvg(clientX,clientY){
+  const r=svg.getBoundingClientRect();
+  return {x:vb.x+(clientX-r.left)*vb.w/r.width,y:vb.y+(clientY-r.top)*vb.h/r.height};
+}
+svg.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const p=toSvg(e.clientX,e.clientY);
+  zoomAt(Math.pow(1.0015,-e.deltaY),p.x,p.y);
+},{passive:false});
+
+let dragged=false,last=null,pinch=null;
+/* 마우스: 확대 상태에서 끌면 이동 */
+svg.addEventListener('pointerdown',e=>{
+  if(e.pointerType==='touch')return;
+  dragged=false;last={x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY};
+});
+window.addEventListener('pointermove',e=>{
+  if(e.pointerType==='touch'||!last||scale()<=1.001)return;
+  if(!dragged&&Math.hypot(e.clientX-last.sx,e.clientY-last.sy)<6)return;
+  dragged=true;svg.classList.add('panning');panBy(e.clientX-last.x,e.clientY-last.y);
+  last.x=e.clientX;last.y=e.clientY;
+});
+window.addEventListener('pointerup',e=>{if(e.pointerType!=='touch'){last=null;svg.classList.remove('panning')}});
+function panBy(dx,dy){
+  const r=svg.getBoundingClientRect();
+  vb.x-=dx*vb.w/r.width;vb.y-=dy*vb.h/r.height;clampVB();applyVB();
+}
+/* 터치: 두 손가락 = 확대·축소, 한 손가락 = 확대 상태에서 이동 */
+function tmid(t){return {x:(t[0].clientX+t[1].clientX)/2,y:(t[0].clientY+t[1].clientY)/2}}
+function tdist(t){return Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY)}
+svg.addEventListener('touchstart',e=>{
+  const t=e.touches;
+  if(t.length===1){dragged=false;pinch=null;last={x:t[0].clientX,y:t[0].clientY,sx:t[0].clientX,sy:t[0].clientY}}
+  else if(t.length>=2){e.preventDefault();dragged=true;last=null;pinch={d:tdist(t),m:tmid(t)}}
+},{passive:false});
+svg.addEventListener('touchmove',e=>{
+  const t=e.touches;
+  if(t.length>=2&&pinch){
+    e.preventDefault();
+    const d=tdist(t),m=tmid(t);
+    panBy(m.x-pinch.m.x,m.y-pinch.m.y);
+    const c=toSvg(m.x,m.y);
+    if(pinch.d>0)zoomAt(d/pinch.d,c.x,c.y);
+    pinch={d,m};return;
+  }
+  if(t.length===1&&last&&scale()>1.001){
+    e.preventDefault();
+    if(!dragged&&Math.hypot(t[0].clientX-last.sx,t[0].clientY-last.sy)<6)return;
+    dragged=true;panBy(t[0].clientX-last.x,t[0].clientY-last.y);
+    last.x=t[0].clientX;last.y=t[0].clientY;
+  }
+},{passive:false});
+svg.addEventListener('touchend',e=>{
+  const t=e.touches;
+  if(t.length<2)pinch=null;
+  if(t.length===1)last={x:t[0].clientX,y:t[0].clientY,sx:t[0].clientX,sy:t[0].clientY};
+  if(t.length===0)last=null;
+});
+svg.addEventListener('touchcancel',()=>{pinch=null;last=null});
+['gesturestart','gesturechange'].forEach(n=>svg.addEventListener(n,e=>e.preventDefault()));
+// 끌어서 옮긴 뒤 손을 뗄 때 생기는 클릭은 게임 클릭으로 치지 않음
+svg.addEventListener('click',e=>{if(dragged){e.stopImmediatePropagation();dragged=false}},true);
+applyVB();
+document.getElementById('again').addEventListener('click',reset);
+document.getElementById('startBtn').addEventListener('click',()=>{document.getElementById('startCard').hidden=true;ensureTimer()});
+reset();
+</script>
+
+</body></html>

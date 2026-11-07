@@ -217,12 +217,12 @@ button:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--heat);outl
 .hub-back a:hover{color:var(--ink)}
 .hub-back a:focus-visible{outline:3px solid var(--heat,var(--ink));outline-offset:2px}
 </style>
+<style>.title-back{color:inherit;text-decoration:none;margin-right:.3em}.title-back:hover{opacity:.7}</style>
 </head>
 <body>
 <div class="app">
-<nav class="hub-back"><a href="../index.html">← 게임 목록</a></nav>
   <header class="hud">
-    <div class="brand"><small>우리 집 거실 · 아빠가 아끼던 게임기 사건</small><h1><em>깨어진</em> 아빠의 게임기</h1></div>
+    <div class="brand"><small>우리 집 거실 · 아빠가 아끼던 게임기 사건</small><h1><a class="title-back" href="../index.html" aria-label="게임 목록으로">←</a><em>깨어진</em> 아빠의 게임기</h1></div>
     <div class="clock" id="clockBox"><b id="clock">18:40</b><small>19:00 엄마 퇴근</small></div>
     <div class="gauges">
       <div class="g g-conf"><label>실토</label><div class="bar"><i id="gConf"></i></div><b id="nConf">0</b><small>100이 되면 지명이가 무슨 일이 있었는지 털어놓는다</small></div>

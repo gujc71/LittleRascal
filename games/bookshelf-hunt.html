@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>책장 속 책 찾기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@500;700;900&family=Noto+Serif+KR:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#f3e9d4; --ink-dim:#c9b796; --panel:#1c130d; --panel2:#2a1c13;
+    --accent:#e7b84f; --ok:#5fd18b; --bad:#ff6b5b;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;overflow:hidden;background:#3b2a1f;color:var(--ink);
+    font-family:"Noto Sans KR",system-ui,sans-serif;user-select:none;-webkit-user-select:none}
+  canvas{position:fixed;inset:0;width:100%;height:100%;touch-action:none;display:block;cursor:grab}
+  canvas.dragging{cursor:grabbing}
+
+  /* HUD */
+  #hud{position:fixed;left:0;right:0;top:0;z-index:5;
+    background:rgba(20,13,8,.97);
+    border-bottom:1px solid rgba(231,184,79,.25);box-shadow:0 6px 20px rgba(0,0,0,.35);
+    padding:8px 10px 9px}
+  .row1{display:flex;align-items:center;gap:10px}
+  .brand{font-family:"Noto Serif KR",serif;font-weight:900;font-size:15px;letter-spacing:-.3px;color:var(--accent);white-space:nowrap}
+  .brand .hub-back{color:inherit;text-decoration:none;opacity:.75;padding:4px 2px}
+  .brand .hub-back:hover{opacity:1}
+  .timer{font-variant-numeric:tabular-nums;font-weight:900;font-size:22px;letter-spacing:.5px;margin-left:auto}
+  .count{font-weight:700;font-size:13px;color:var(--ink-dim);white-space:nowrap}
+  .count b{color:var(--ink);font-size:15px}
+  .btn{appearance:none;border:1px solid rgba(231,184,79,.45);background:rgba(231,184,79,.1);color:var(--ink);
+    font:700 12px "Noto Sans KR",sans-serif;padding:6px 10px;border-radius:8px;cursor:pointer;white-space:nowrap}
+  .btn:active{transform:translateY(1px)}
+  .btn.primary{background:var(--accent);color:#2a1a0c;border-color:var(--accent);font-size:15px;padding:11px 22px;border-radius:10px}
+  .targets{display:flex;gap:6px;margin-top:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:1px}
+  .targets::-webkit-scrollbar{display:none}
+  .chip{flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:5px 10px 5px 7px;border-radius:999px;
+    background:var(--panel2);border:1px solid rgba(243,233,212,.14);font-family:"Noto Serif KR",serif;font-weight:700;font-size:13px}
+  .chip .no{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font:900 11px "Noto Sans KR";
+    background:rgba(243,233,212,.12);color:var(--ink-dim)}
+  .chip .t{font:700 11px "Noto Sans KR";color:var(--ok);font-variant-numeric:tabular-nums;display:none}
+  .chip.found{border-color:rgba(95,209,139,.6);background:rgba(95,209,139,.12)}
+  .chip.found .name{text-decoration:line-through;text-decoration-color:rgba(95,209,139,.8);color:var(--ink-dim)}
+  .chip.found .no{background:var(--ok);color:#0f2a19}
+  .chip.found .t{display:inline}
+  .chip{cursor:pointer}
+  .chip.current{border-color:var(--accent);box-shadow:0 0 0 1px rgba(231,184,79,.35) inset}
+  .chip.current .no{background:var(--accent);color:#2a1a0c}
+  .btn:disabled{opacity:.4;cursor:default}
+  #hintBar{position:relative;display:flex;align-items:center;gap:8px;margin-top:7px;padding:6px 10px 7px;border-radius:8px;
+    background:rgba(243,233,212,.05);border:1px solid rgba(243,233,212,.12);overflow:hidden}
+  #hintBar.hidden{display:none}
+  .hb-text{font-size:14px;font-weight:500;color:var(--ink);flex:1;min-width:0}
+  .hb-text b{color:var(--accent);font-size:14px;font-weight:700;margin-left:2px}
+  .hb-text .ttl{font-family:"Noto Serif KR",serif}
+  .hb-sec{font:500 12px "Noto Sans KR";color:var(--ink-dim);font-variant-numeric:tabular-nums}
+  .hb-prog{position:absolute;left:0;right:0;bottom:0;height:2px;background:rgba(0,0,0,.2)}
+  .hb-prog i{display:block;height:100%;width:100%;background:rgba(231,184,79,.55);transform-origin:left}
+  .praise{word-break:keep-all;font-family:"Noto Serif KR",serif;font-weight:900;font-size:17px;color:var(--ink);line-height:1.6;margin:6px 0 14px}
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0}
+  .stat{background:rgba(0,0,0,.28);border-radius:12px;padding:12px 8px}
+  .stat .k{font-size:12px;color:var(--ink-dim);font-weight:700}
+  .stat .v{font-size:30px;font-weight:900;font-variant-numeric:tabular-nums;margin-top:2px}
+  .chip.pop{animation:pop .45s ease}
+  @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.12)}100%{transform:scale(1)}}
+
+  /* zoom controls */
+  #zoom{position:fixed;right:12px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:5;display:flex;flex-direction:column;gap:8px}
+  #zoom button{width:46px;height:46px;border-radius:12px;border:1px solid rgba(231,184,79,.4);
+    background:rgba(20,13,8,.88);color:var(--ink);font:900 22px "Noto Sans KR";cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+  #zoom button.small{font-size:11px;font-weight:700}
+  #goBar{position:fixed;left:0;right:0;bottom:calc(18px + env(safe-area-inset-bottom));z-index:6;display:flex;justify-content:center;pointer-events:none}
+  #goBar.hidden{display:none}
+  #goBar .btn{pointer-events:auto;font-size:17px;padding:13px 34px;box-shadow:0 8px 24px rgba(0,0,0,.45)}
+  .notice{word-break:keep-all;background:rgba(231,184,79,.1);border:1px solid rgba(231,184,79,.35);border-radius:10px;padding:10px 12px;margin:0 0 14px!important;color:var(--ink)!important;font-size:13.5px!important}
+  .notice b{color:var(--accent)}
+  .catcard{width:min(520px,100%)}
+  .cattable{margin:12px 0 16px;font-size:13px}
+  .cattable thead td{color:var(--ink-dim);font-size:12px;font-weight:700}
+  .cattable td{vertical-align:top;padding:9px 6px}
+  .cattable .col{font-weight:900;color:var(--accent);font-size:15px;width:28px}
+  .cattable .big{font-family:"Noto Serif KR",serif;font-weight:700;font-size:14px;white-space:nowrap;margin:0}
+  .cattable .sub{display:flex;justify-content:space-between;gap:10px;line-height:1.7;word-break:keep-all}
+  .cattable .sub span:last-child{color:var(--ink-dim);white-space:nowrap;font-variant-numeric:tabular-nums}
+  #loadOv{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:#1c130d;transition:opacity .35s}
+  #loadOv.hide{opacity:0;pointer-events:none}
+  .loader{text-align:center}
+  .spines{display:flex;gap:5px;align-items:flex-end;justify-content:center;height:54px;margin-bottom:16px}
+  .spines i{display:block;width:12px;border-radius:2px;animation:shelve 1.1s ease-in-out infinite}
+  .spines i:nth-child(1){height:40px;background:#9c2f2a}
+  .spines i:nth-child(2){height:50px;background:#2a6f73;animation-delay:.12s}
+  .spines i:nth-child(3){height:36px;background:#d39a3a;animation-delay:.24s}
+  .spines i:nth-child(4){height:46px;background:#3b5a9a;animation-delay:.36s}
+  .spines i:nth-child(5){height:42px;background:#556b2f;animation-delay:.48s}
+  @keyframes shelve{0%,100%{transform:translateY(0)}35%{transform:translateY(-10px)}60%{transform:translateY(0)}}
+  .ltext{font-family:"Noto Serif KR",serif;font-weight:700;font-size:17px;color:var(--ink)}
+  .dots::after{content:"";display:inline-block;width:1.2em;text-align:left;animation:dots 1.2s steps(4) infinite}
+  @keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
+  .pre{font-size:13px;color:var(--ink-dim);padding:5px 2px;white-space:normal}
+  .pre b{color:var(--ink)}
+  #zlabel{display:none;position:fixed;left:12px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:5;font:700 11px "Noto Sans KR";
+    color:var(--ink-dim);background:rgba(20,13,8,.75);padding:5px 9px;border-radius:8px;pointer-events:none}
+
+  #toast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.9);z-index:8;opacity:0;pointer-events:none;
+    background:rgba(20,13,8,.92);border:1px solid rgba(231,184,79,.5);padding:10px 18px;border-radius:12px;font-weight:700;font-size:15px;
+    transition:opacity .2s, transform .2s;text-align:center}
+  #toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  #toast.ok{border-color:var(--ok)} #toast.bad{border-color:var(--bad)}
+
+  /* overlay */
+  .overlay{position:fixed;inset:0;z-index:10;display:grid;place-items:center;padding:18px;
+    background:radial-gradient(ellipse at center,rgba(30,20,12,.82),rgba(10,6,3,.94))}
+  .overlay.hidden{display:none}
+  .card{width:min(440px,100%);max-height:calc(100vh - 36px);overflow:auto;background:linear-gradient(180deg,#2a1c13,#1b120c);
+    border:1px solid rgba(231,184,79,.35);border-radius:18px;padding:24px 22px;box-shadow:0 20px 60px rgba(0,0,0,.5);text-align:center}
+  .card h1{font-family:"Noto Serif KR",serif;font-weight:900;font-size:28px;margin:0 0 6px;color:var(--accent);letter-spacing:-.5px}
+  .card h2{font-family:"Noto Serif KR",serif;font-weight:900;font-size:24px;margin:0 0 4px;color:var(--accent)}
+  .card p{word-break:keep-all;color:var(--ink-dim);font-size:14px;line-height:1.65;margin:8px 0}
+  .rules{text-align:left;background:rgba(0,0,0,.25);border-radius:12px;padding:12px 14px;margin:14px 0;font-size:13px;line-height:1.75;color:var(--ink)}
+  .rules li{margin-left:-6px}
+  .big{font-size:44px;font-weight:900;font-variant-numeric:tabular-nums;margin:6px 0 2px}
+  .sub{font-size:13px;color:var(--ink-dim)}
+  .newbest{display:inline-block;margin-top:6px;background:var(--accent);color:#2a1a0c;font-weight:900;font-size:12px;padding:3px 10px;border-radius:999px}
+  table{width:100%;border-collapse:collapse;margin:14px 0 6px;font-size:13px}
+  td{padding:7px 4px;border-bottom:1px solid rgba(243,233,212,.08);text-align:left}
+  td.r{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  td.ttl{font-family:"Noto Serif KR",serif;font-weight:700}
+  .muted{color:var(--ink-dim)}
+  .sect{font-weight:900;font-size:12px;letter-spacing:1px;color:var(--ink-dim);text-align:left;margin-top:16px}
+  #fontwarm{position:absolute;left:-9999px;top:0;font-size:8px;opacity:0;white-space:nowrap}
+</style>
+<style>.title-back{color:inherit;text-decoration:none;margin-right:.3em}.title-back:hover{opacity:.7}</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<div id="hud">
+  <div class="row1">
+    <div class="brand"><a class="hub-back" href="../index.html" aria-label="게임 목록으로" title="게임 목록으로">←</a> 책 찾기</div>
+    <div class="count"><b id="cnt">0</b> / 5</div>
+    <button class="btn" id="hintBtn">힌트</button>
+    <button class="btn" id="catBtn">분류</button>
+    <div class="timer" id="timer">0:00.0</div>
+  </div>
+  <div class="targets" id="targets"></div>
+  <div id="hintBar" class="hidden"><div class="hb-text" id="hintText"></div><div class="hb-sec" id="hintSec" style="display:none"></div></div>
+</div>
+
+<div id="zoom">
+  <button id="zin" aria-label="확대">+</button>
+  <button id="zout" aria-label="축소">−</button>
+  <button id="zfit" class="small" aria-label="전체 보기">전체</button>
+</div>
+<div id="goBar" class="hidden"><button class="btn primary" id="goBtn">게임 시작</button></div>
+<div id="zlabel">×1.0</div>
+<div id="toast"></div>
+<div id="fontwarm"></div>
+
+<div id="loadOv">
+  <div class="loader">
+    <div class="spines"><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="ltext">책장 정리 중<span class="dots"></span></div>
+  </div>
+</div>
+<div class="overlay" id="startOv">
+  <div class="card">
+    <h1><a class="title-back" href="../index.html" aria-label="게임 목록으로">←</a>책장 속 책 찾기</h1>
+    <p>벽 한가득 꽂힌 책 사이에서<br>제시된 책 <b style="color:var(--ink)">5권</b>을 찾아보세요.</p>
+    <ul class="rules">
+      <li>두 손가락으로 벌리거나 휠/버튼으로 <b>확대·축소</b>, 끌어서 <b>이동</b>하며 책 제목을 확인하세요</li>
+      <li>책장의 열은 왼쪽부터 <b>A, B, C, D</b>, 칸은 아래에서부터 <b>1, 2, 3…</b></li>
+      <li>열마다 비슷한 종류의 책이 모여 있어요 — <b>A 한국 문학 · B 어린이·청소년 · C 서양 문학 · D 인문·동양 고전</b>. 칸은 세부 분류로 나뉘고, 칸 아래 선반에 이름표가 붙어 있어요</li>
+      <li>찾아야 할 <b>책 제목</b>을 클릭하면 책의 분류를 알 수 있어요</li>
+      <li>힌트는 <b>아직 못 찾은 책 중 가장 앞 번호</b>의 책에 대해서만 나와요. <b>몇 열 몇 번째 칸</b>에 있는지 <b>3초</b> 동안 알려줘요</li>
+    </ul>
+    <p class="notice">닫기를 누르면 책장이 나와요. 책 제목을 충분히 둘러본 뒤 화면 하단의 <b>게임 시작</b> 버튼을 누르면 시작돼요.</p>
+    <button class="btn primary" id="startBtn">닫기</button>
+    <div id="startRecords"></div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="catOv">
+  <div class="card catcard">
+    <h2>책 분류 안내</h2>
+    <p>열마다 큰 분류, 칸마다 세부 분류로 꽂혀 있어요. 칸은 아래에서부터 1, 2, 3…</p>
+    <table class="cattable"><thead><tr><td>열</td><td>분류</td><td>세부 분류 (칸)</td></tr></thead><tbody id="catBody"></tbody></table>
+    <button class="btn primary" id="catClose">닫기</button>
+  </div>
+</div>
+<div class="overlay hidden" id="endOv">
+  <div class="card" id="endCard"></div>
+</div>
+
+<script src="lib/common.js"></script>
+<script>
+(() => {
+"use strict";
+// ---------- utils ----------
+const $ = id => document.getElementById(id);
+let seed = 1;
+const rnd = () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+  t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const ri = (a, b) => a + Math.floor(rnd() * (b - a + 1));
+const pick = arr => arr[Math.floor(rnd() * arr.length)];
+const shuffle = arr => { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; };
+const fmt = ms => { const t = Math.max(0, ms) / 1000; const m = Math.floor(t / 60); const s = t - m * 60;
+  return m + ":" + (s < 10 ? "0" : "") + s.toFixed(1); };
+const store = {
+  get(){ try { return JSON.parse(localStorage.getItem("shelf-hunt-records-v1") || "[]"); } catch(e){ return []; } },
+  set(v){ try { localStorage.setItem("shelf-hunt-records-v1", JSON.stringify(v)); } catch(e){} }
+};
+
+// ---------- titles: 초·중·고 추천 도서와 한국·유럽(세계) 고전 ----------
+const CATS = [
+  { name: "한국 문학", subs: [
+    { name: "고전 소설·옛이야기", titles: "홍길동전|춘향전|심청전|흥부전|토끼전|구운몽|사씨남정기|박씨전|임경업전|유충렬전|조웅전|숙향전|운영전|금오신화|이생규장전|만복사저포기|장화홍련전|콩쥐팥쥐전|옹고집전|배비장전|이춘풍전|양반전|허생전|호질|인현왕후전|홍계월전|전우치전|채봉감별곡|규중칠우쟁론기|조침문|별주부전|바리데기|해와 달이 된 오누이|견우와 직녀|선녀와 나무꾼|혹부리 영감|금도끼 은도끼|우렁각시|팥죽 할멈과 호랑이".split("|") },
+    { name: "고전 시가·현대 시", titles: "동명왕편|용비어천가|관동별곡|사미인곡|속미인곡|청산별곡|오우가|어부사시사|진달래꽃|님의 침묵|하늘과 바람과 별과 시|사슴|청록집|광야|절정|청포도|국화 옆에서|초혼|엄마야 누나야|승무|나그네|산유화|껍데기는 가라|귀천".split("|") },
+    { name: "근대 소설", titles: "무정|혈의 누|자유종|금수회의록|상록수|흙|고향|탁류|태평천하|레디메이드 인생|치숙|논 이야기|미스터 방|날개|봄봄|동백꽃|만무방|소낙비|금 따는 콩밭|운수 좋은 날|빈처|B사감과 러브레터|술 권하는 사회|감자|배따라기|광염 소나타|붉은 산|발가락이 닮았다|메밀꽃 필 무렵|사랑손님과 어머니|백치 아다다|벙어리 삼룡이|물레방아|탈출기|홍염|화수분|소나기|독 짓는 늙은이|삼대|만세전|사하촌|나비를 잡는 아버지|소설가 구보씨의 일일|천변풍경|성탄제".split("|") },
+    { name: "현대 소설", titles: "카인의 후예|나무들 비탈에 서다|목넘이 마을의 개|수난이대|학마을 사람들|꺼삐딴 리|광장|회색인|무진기행|서울 1964년 겨울|난장이가 쏘아올린 작은 공|원미동 사람들|장마|아홉 켤레의 구두로 남은 사내|삼포 가는 길|객지|한씨연대기|우리들의 일그러진 영웅|사람의 아들|젊은 날의 초상|관촌수필|토지|태백산맥|아리랑|혼불|임꺽정|장길산|객주|당신들의 천국|서편제|눈길|병신과 머저리|화랑의 후예|무녀도|등신불|역마|까치소리|비 오는 날|잉여인간|오발탄|유예|요한시집|표본실의 청개구리|모래톱 이야기|갯마을|원고료 이백원|그 여자네 집|엄마의 말뚝|그 많던 싱아는 누가 다 먹었을까|나목|마당 깊은 집|기억 속의 들꽃|외딴방|칼의 노래|현의 노래|남한산성|흑산|하얼빈|엄마를 부탁해|채식주의자|소년이 온다|작별하지 않는다|흰|82년생 김지영|7년의 밤|종의 기원|살인자의 기억법|쇼코의 미소|내게 무해한 사람|피프티 피플|시선으로부터|보건교사 안은영|아버지의 해방일지|밝은 밤|천 개의 파랑|지구 끝의 온실|우리가 빛의 속도로 갈 수 없다면|두근두근 내 인생|고래|불편한 편의점|달러구트 꿈 백화점".split("|") }
+  ] },
+  { name: "어린이·청소년", subs: [
+    { name: "한국 동화", titles: "마당을 나온 암탉|몽실 언니|강아지똥|엄마 까투리|괭이부리말 아이들|너도 하늘말나리야|기찻길 옆 동네|문제아|나쁜 어린이표|아홉 살 인생|자전거 도둑|하늘은 맑건만|엄마 마중|만년 샤쓰|칠칠단의 비밀|내 짝꿍 최영대|잘못 뽑은 반장|아드님 진지 드세요|짜장면 불어요|수일이와 수일이|초정리 편지|책과 노니는 집|연어|구름빵|알사탕|장수탕 선녀님|수박 수영장".split("|") },
+    { name: "한국 청소년 소설", titles: "완득이|아몬드|우아한 거짓말|시간을 파는 상점|위저드 베이커리|페인트|유진과 유진|스프링 벅|열일곱 살의 털|체리새우: 비밀글입니다|담을 넘은 아이|순례 주택|일수의 탄생|긴긴밤|푸른 사자 와니니".split("|") },
+    { name: "세계 동화·그림책", titles: "모모|끝없는 이야기|에밀과 탐정들|하늘을 나는 교실|로테와 루이제|꿀벌 마야의 모험|기관사 짐 크노프|책 먹는 여우|그림 동화|안데르센 동화|인어 공주|미운 오리 새끼|성냥팔이 소녀|벌거벗은 임금님|눈의 여왕|브레멘 음악대|헨젤과 그레텔|백설 공주|신데렐라|잠자는 숲속의 공주|빨간 모자|장화 신은 고양이|라푼젤|이솝 우화|라 퐁텐 우화|괴물들이 사는 나라|무지개 물고기|지각대장 존|돼지책|행복한 청소부|우동 한 그릇|마법의 설탕 두 조각|어린 왕자|꽃들에게 희망을|아낌없이 주는 나무|행복한 왕자|꼬마 니콜라|나무를 심은 사람|갈매기의 꿈|은하철도의 밤".split("|") },
+    { name: "세계 명작·모험", titles: "홍당무|걸리버 여행기|로빈슨 크루소|로빈 후드의 모험|아서 왕 이야기|보물섬|지킬 박사와 하이드|이상한 나라의 앨리스|거울 나라의 앨리스|피터 팬|오즈의 마법사|정글북|버드나무에 부는 바람|나니아 연대기|호빗|반지의 제왕|해리 포터와 마법사의 돌|샬롯의 거미줄|마틸다|찰리와 초콜릿 공장|멋진 여우 씨|플랜더스의 개|하이디|엄마 찾아 삼만 리|사랑의 학교|피노키오|비밀의 화원|소공녀|소공자|작은 아씨들|빨간 머리 앤|키다리 아저씨|톰 소여의 모험|허클베리 핀의 모험|왕자와 거지|15소년 표류기|80일간의 세계 일주|해저 2만 리|지구 속 여행|신비의 섬|말괄량이 삐삐|사자왕 형제의 모험|시튼 동물기|파브르 곤충기|꼬마 흡혈귀|기억 전달자|클로디아의 비밀|원더|시간의 주름|구덩이|프린들 주세요|화요일의 두꺼비|나의 라임오렌지나무|창가의 토토|초원의 집|안네의 일기".split("|") }
+  ] },
+  { name: "서양 문학", subs: [
+    { name: "영미 문학", titles: "오만과 편견|이성과 감성|엠마|설득|노생거 사원|맨스필드 파크|제인 에어|폭풍의 언덕|아그네스 그레이|올리버 트위스트|위대한 유산|두 도시 이야기|크리스마스 캐럴|데이비드 코퍼필드|황폐한 집|어려운 시절|테스|이름 없는 주드|캐스터브리지의 시장|프랑켄슈타인|드라큘라|도리언 그레이의 초상|셜록 홈즈의 모험|바스커빌가의 개|주홍색 연구|네 사람의 서명|햄릿|맥베스|오셀로|리어 왕|로미오와 줄리엣|베니스의 상인|한여름 밤의 꿈|템페스트|십이야|실낙원|천로역정|허영의 시장|미들마치|사일러스 마너|플로스강의 물방앗간|아이반호|캔터베리 이야기|베어울프|어둠의 심연|로드 짐|등대로|댈러웨이 부인|율리시스|젊은 예술가의 초상|더블린 사람들|인간의 굴레에서|달과 6펜스|아들과 연인|전망 좋은 방|인도로 가는 길|타임머신|투명인간|우주 전쟁|모로 박사의 섬|레베카|그리고 아무도 없었다|오리엔트 특급 살인|애크로이드 살인 사건|파리대왕|동물농장|1984|멋진 신세계|시녀 이야기|마지막 잎새|큰 바위 얼굴|주홍 글씨|모비 딕|노인과 바다|무기여 잘 있거라|누구를 위하여 종은 울리나|위대한 개츠비|호밀밭의 파수꾼|앵무새 죽이기|분노의 포도|생쥐와 인간|에덴의 동쪽|톰 아저씨의 오두막|풀잎|화씨 451|어셔가의 몰락|검은 고양이|황금 벌레|립 밴 윙클|슬리피 할로의 전설|세일즈맨의 죽음|욕망이라는 이름의 전차|유리 동물원|우리 읍내|바람과 함께 사라지다|대지|빌러비드".split("|") },
+    { name: "프랑스 문학", titles: "인간의 대지|야간 비행|레 미제라블|노트르담의 꼽추|웃는 남자|93년|삼총사|몬테크리스토 백작|철가면|춘희|카르멘|적과 흑|고리오 영감|마담 보바리|감정 교육|여자의 일생|목걸이|비계 덩어리|벨아미|제르미날|목로주점|좁은 문|전원 교향곡|지상의 양식|이방인|페스트|구토|인간의 조건|장 크리스토프|마지막 수업|슬픔이여 안녕|자기 앞의 생|클레브 공작부인|위험한 관계|캉디드|타르튀프|수전노|인간 혐오자|르 시드|페드르|악의 꽃|파리의 우울|지옥에서 보낸 한철|잃어버린 시간을 찾아서|마농 레스코|오페라의 유령|괴도 뤼팽|롤랑의 노래|시라노".split("|") },
+    { name: "독일·북유럽 문학", titles: "파우스트|젊은 베르테르의 슬픔|빌헬름 마이스터의 수업시대|빌헬름 텔|데미안|수레바퀴 아래서|싯다르타|유리알 유희|황야의 이리|크눌프|변신|소송|마의 산|토니오 크뢰거|베니스에서의 죽음|양철북|향수|좀머 씨 이야기|비둘기|서부 전선 이상 없다|개선문|인형의 집|페르 귄트|니벨룽겐의 노래".split("|") },
+    { name: "러시아 문학", titles: "죄와 벌|카라마조프가의 형제들|백치|지하로부터의 수기|가난한 사람들|악령|안나 카레니나|전쟁과 평화|부활|사람은 무엇으로 사는가|이반 일리치의 죽음|바보 이반|갈매기|벚꽃 동산|세 자매|바냐 아저씨|귀여운 여인|개를 데리고 다니는 부인|외투|검찰관|죽은 혼|아버지와 아들|첫사랑|대위의 딸|예브게니 오네긴|우리 시대의 영웅|오블로모프|어머니|밑바닥에서|닥터 지바고|이반 데니소비치의 하루|거장과 마르가리타".split("|") },
+    { name: "고대·남유럽·중남미", titles: "돈키호테|신곡|데카메론|일리아스|오디세이아|아이네이스|오이디푸스 왕|안티고네|메데이아|변신 이야기|고도를 기다리며|연금술사|장미의 이름|백년의 고독|그리스인 조르바|보이지 않는 도시들|나무 위의 남작|반쪼가리 자작|약혼자들".split("|") }
+  ] },
+  { name: "인문·동양 고전", subs: [
+    { name: "한국 고전 산문·역사", titles: "열하일기|한중록|계축일기|난중일기|목민심서|징비록|삼국유사|삼국사기|북학의|택리지|동의보감|하멜 표류기|격몽요결|명심보감|천자문|백범일지|나의 문화유산 답사기|한국사 편지|나의 한국현대사".split("|") },
+    { name: "동양 고전·문학", titles: "아라비안나이트|탈무드|삼국지|수호지|서유기|홍루몽|아Q정전|논어|맹자|도덕경|장자|손자병법|사기열전|채근담|대학|중용|나는 고양이로소이다|도련님|마음|설국|인간 실격|라쇼몽|빙점|나미야 잡화점의 기적|연을 쫓는 아이".split("|") },
+    { name: "서양 철학·인문", titles: "군주론|유토피아|월든|소피의 세계|시민의 불복종|국가|소크라테스의 변명|향연|니코마코스 윤리학|시학|명상록|고백록|방법서설|팡세|에밀|사회계약론|리바이어던|국부론|자본론|자유론|순수이성비판|차라투스트라는 이렇게 말했다|꿈의 해석|역사란 무엇인가|과학혁명의 구조|시지프 신화|그리스 로마 신화|자기만의 방".split("|") },
+    { name: "과학·사회", titles: "거꾸로 읽는 세계사|과학 콘서트|미술관에 간 화학자|시간의 역사|코스모스|이기적 유전자|침묵의 봄|총 균 쇠|사피엔스|페르마의 마지막 정리|수학 귀신|오래된 미래|정의란 무엇인가|팩트풀니스|로마인 이야기|지리의 힘".split("|") }
+  ] }
+];
+const units = s => { let u = 0; for (const ch of s) u += ch === " " ? 0.4 : 1; return u; };
+
+// ---------- palette ----------
+const BOOK_COLORS = ["#7b1e1e","#9c2f2a","#b8452f","#c46a2b","#d39a3a","#c9b27a","#e4d7b5","#efe6d0","#556b2f","#2f5d3a","#1f4d4a","#2a6f73","#1d3b5c","#26477d","#3b5a9a","#4b3b6b","#6a3d6e","#8a4b6b","#4d3d35","#2d3340","#5c4a3a","#7a6248","#a88a5f","#8b8f86","#4e5a65","#b3a28a","#d2c2a0","#6e2433","#5e3e28","#264d2b"];
+const lum = hex => { const n = parseInt(hex.slice(1), 16); const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255; };
+const shade = (hex, k) => { const n = parseInt(hex.slice(1), 16); let r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  const f = v => Math.max(0, Math.min(255, Math.round(k < 0 ? v * (1 + k) : v + (255 - v) * k)));
+  return "rgb(" + f(r) + "," + f(g) + "," + f(b) + ")"; };
+
+// ---------- world ----------
+const FRAME = 40, DIV = 16, BOARD = 16, CELLW = 440, CELLH = 212, CROWN = 54, BASE = 64;
+let W = 0, H = 0, cols = 0, rows = 0, cells = [], books = [];
+
+let layout = [];
+function buildLibrary(){
+  // each column holds one category of books; order inside a column is shuffled
+  cols = CATS.length;
+  rows = 10;
+  W = FRAME * 2 + cols * CELLW + (cols - 1) * DIV;
+  H = CROWN + rows * (CELLH + BOARD) + BASE;
+  cells = []; books = [];
+  // inside a column, sub-categories get whole shelves (top to bottom), sized by how many books they have
+  const plan = CATS.map(cat => {
+    const n = cat.subs.map(() => 1);
+    while (n.reduce((a, v) => a + v, 0) < rows) {
+      let bi = 0, bv = -1;
+      cat.subs.forEach((sb, i) => { const q = sb.titles.length / n[i]; if (q > bv) { bv = q; bi = i; } });
+      n[bi]++;
+    }
+    const out = [];
+    cat.subs.forEach((sb, i) => {
+      const list = shuffle(sb.titles.slice()), N = list.length;
+      for (let j = 0; j < n[i]; j++) out.push({ sub: sb.name, titles: list.slice(Math.floor(N * j / n[i]), Math.floor(N * (j + 1) / n[i])) });
+    });
+    return out;
+  });
+  layout = CATS.map((cat, c) => {
+    let top = rows; const subs = [];
+    cat.subs.forEach(sb => { const n = plan[c].filter(x => x.sub === sb.name).length;
+      subs.push({ name: sb.name, from: top - n + 1, to: top }); top -= n; });
+    return { name: cat.name, subs };
+  });
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+    const idx = cells.length, slot = plan[c][r];
+    const cx = FRAME + c * (CELLW + DIV), cy = CROWN + r * (CELLH + BOARD);
+    const cell = { x: cx, y: cy, w: CELLW, h: CELLH, books: [], idx, cat: c, sub: slot.sub };
+    cells.push(cell);
+    const mine = slot.titles.slice();
+    const floor = cy + CELLH, left = cx + 3, inner = CELLW - 6;
+    // lying stack: always in sparse cells, sometimes otherwise, never in crowded ones
+    let stack = [];
+    const sparse = mine.length < 14;
+    if (mine.length >= 6 && mine.length < 20 && (sparse || rnd() < .32)) {
+      const n = mine.length < 11 ? 3 : ri(2, 3);
+      for (let i = mine.length - 1; i >= 0 && stack.length < n; i--) if (units(mine[i]) <= 10) stack.push(mine.splice(i, 1)[0]);
+    }
+    let stackW = 0; const stackPlan = [];
+    for (const t of stack) { const bw = Math.min(196, Math.max(ri(128, 166), Math.ceil(units(t) * 1.02 * 9.8 + 20))); const off = ri(0, 8);
+      stackPlan.push({ t, bw, off }); stackW = Math.max(stackW, bw + off); }
+    if (stackW) stackW += 4;
+    const avail = inner - stackW;
+    const raw = mine.map(() => 15 + rnd() * 15);
+    const sum = raw.reduce((a, v) => a + v, 0) || 1;
+    const cap = sparse ? 2.1 : 1.25;
+    let scale = avail / sum; let slack = 0;
+    if (scale > cap) { slack = avail - sum * cap; scale = cap; }
+    const gapAt = slack > 0 ? ri(0, mine.length) : -1;
+    const stackAtStart = rnd() < .5;
+    let x = left;
+    if (stackW && stackAtStart) { placeStack(cell, x, floor, stackPlan); x += stackW; }
+    mine.forEach((t, i) => {
+      if (i === gapAt) x += slack;
+      const bw = raw[i] * scale;
+      const need = Math.ceil(units(t) * 1.06 * 9.5 + 36);
+      const bh = Math.min(CELLH - 8, Math.max(ri(120, CELLH - 10), need));
+      books.push(makeBook(cell, x, floor - bh, bw, bh, t, false));
+      x += bw;
+    });
+    if (stackW && !stackAtStart) placeStack(cell, x, floor, stackPlan);
+  }
+  buildCaches();
+  // warm up web fonts for all glyphs used
+  const chars = new Set(); books.forEach(b => { for (const ch of b.title) chars.add(ch); });
+  const s = [...chars].join("");
+  buildCaches();
+  $("fontwarm").innerHTML = '<span style="font-family:\'Noto Serif KR\';font-weight:700">' + s + '</span><span style="font-family:\'Noto Sans KR\';font-weight:700">' + s + '</span>';
+}
+function placeStack(cell, x, floor, plan){
+  let y = floor;
+  for (const p of plan) { const bh = ri(18, 25); y -= bh; books.push(makeBook(cell, x + p.off, y, p.bw, bh, p.t, true)); }
+}
+function makeBook(cell, x, y, w, h, title, lying){
+  const color = pick(BOOK_COLORS); const L = lum(color);
+  const gold = L < .35 && rnd() < .35;
+  const text = gold ? "#e8c66a" : (L > .55 ? "#2a1d12" : "#f4ead6");
+  const serif = rnd() < .55;
+  const u = units(title); let fs;
+  if (lying) fs = Math.min(h * .58, (w - 18) / (u * 1.02));
+  else fs = Math.min(w * .62, 19, (h - 34) / (u * 1.06));
+  const b = { x, y, w, h, title, lying, color, text, serif, fs, cell: cell.idx,
+    band: rnd() < .45, bandColor: gold || rnd() < .5 ? "#d9b75c" : text, dark: shade(color, -.35), light: shade(color, .18),
+    found: 0, wrong: 0, target: -1 };
+  cell.books.push(b); return b;
+}
+
+// ---------- canvas / view ----------
+const cv = $("cv"), mainCtx = cv.getContext("2d"); let ctx = mainCtx;
+let dpr = 1, vw = 0, vh = 0, topInset = 0;
+let s = 0.2, tx = 0, ty = 0, minS = .05; const MAXS = 4.5;
+function resize(){
+  dpr = Math.min(window.devicePixelRatio || 1, 2);
+  vw = innerWidth; vh = innerHeight;
+  cv.width = Math.round(vw * dpr); cv.height = Math.round(vh * dpr);
+  topInset = $("hud").getBoundingClientRect().height;
+  computeMin(); clampView(); draw();
+}
+function fitScale(){ return Math.min((vw - 16) / W, (vh - topInset - 16) / H); }
+function computeMin(){ minS = fitScale() * .85; }
+function fit(animate){
+  const fs = fitScale(); const nx = (vw - W * fs) / 2, ny = topInset + (vh - topInset - H * fs) / 2;
+  if (animate) animateTo(fs, nx, ny); else { s = fs; tx = nx; ty = ny; draw(); }
+}
+function clampView(){
+  s = Math.max(minS, Math.min(MAXS, s));
+  const areaH = vh - topInset;
+  tx = Math.min(vw * .5, Math.max(vw * .5 - W * s, tx));
+  ty = Math.min(topInset + areaH * .5, Math.max(topInset + areaH * .5 - H * s, ty));
+}
+function zoomAt(px, py, ns){
+  ns = Math.max(minS, Math.min(MAXS, ns));
+  const wx = (px - tx) / s, wy = (py - ty) / s;
+  s = ns; tx = px - wx * s; ty = py - wy * s; clampView(); draw();
+}
+let anim = null;
+function animateTo(ns, nx, ny){
+  const s0 = s, x0 = tx, y0 = ty, t0 = performance.now(), D = 240;
+  touchInteract();
+  anim = t => { touchInteract(); let k = Math.min(1, (t - t0) / D); k = 1 - Math.pow(1 - k, 3);
+    s = s0 + (ns - s0) * k; tx = x0 + (nx - x0) * k; ty = y0 + (ny - y0) * k;
+    if (k >= 1) { anim = null; clampView(); } };
+  requestDraw();
+}
+function zoomButton(f){
+  const px = vw / 2, py = topInset + (vh - topInset) / 2;
+  const ns = Math.max(minS, Math.min(MAXS, s * f));
+  const wx = (px - tx) / s, wy = (py - ty) / s;
+  animateTo(ns, px - wx * ns, py - wy * ns);
+}
+
+// ---------- drawing ----------
+let rafPending = false;
+function requestDraw(){ if (!rafPending) { rafPending = true; requestAnimationFrame(frame); } }
+function frame(t){ rafPending = false; if (anim) anim(t); draw(t); if (anim || needsAnim(t)) requestDraw(); }
+function needsAnim(t){
+  if (hint) return true;
+  for (const b of flashing) if (t < b.wrong || t < b.found + 700) return true;
+  return false;
+}
+const flashing = new Set();
+
+// ---------- static rendering (cached) ----------
+// The bookcase never changes during a game, so it is rendered once into bitmaps:
+// an overview image (+ smaller mipmaps) for zoomed-out views, per-cell tiles for
+// mid zoom, and live vector drawing only when very few books are on screen.
+function drawStatic(px, vx0, vy0, vx1, vy1){
+  ctx.fillStyle = "#6b4428"; ctx.fillRect(Math.max(0, vx0), Math.max(0, vy0), Math.min(W, vx1) - Math.max(0, vx0), Math.min(H, vy1) - Math.max(0, vy0));
+  ctx.fillStyle = "#7d5232"; ctx.fillRect(0, 0, W, 16); ctx.fillRect(0, H - BASE + 14, W, BASE - 14);
+  ctx.fillStyle = "#4f311c"; ctx.fillRect(0, 16, W, 4); ctx.fillRect(0, H - 10, W, 10);
+  ctx.fillStyle = "rgba(255,220,170,.10)"; ctx.fillRect(0, 0, W, 3);
+  for (const cell of cells) {
+    if (cell.x - DIV > vx1 || cell.x + cell.w + DIV < vx0 || cell.y > vy1 || cell.y + cell.h + BOARD < vy0) continue;
+    const bg = ctx.createLinearGradient(0, cell.y, 0, cell.y + cell.h);
+    bg.addColorStop(0, "#140b06"); bg.addColorStop(.25, "#2a1a10"); bg.addColorStop(1, "#33200f");
+    ctx.fillStyle = bg; ctx.fillRect(cell.x, cell.y, cell.w, cell.h);
+    for (const b of cell.books) if (b.x <= vx1 && b.x + b.w >= vx0 && b.y <= vy1 && b.y + b.h >= vy0) drawBook(b, px, 0);
+    const sg = ctx.createLinearGradient(0, cell.y, 0, cell.y + 26);
+    sg.addColorStop(0, "rgba(0,0,0,.55)"); sg.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = sg; ctx.fillRect(cell.x, cell.y, cell.w, 26);
+    ctx.fillStyle = "rgba(0,0,0,.25)"; ctx.fillRect(cell.x, cell.y, 6, cell.h); ctx.fillRect(cell.x + cell.w - 6, cell.y, 6, cell.h);
+    const by = cell.y + cell.h;
+    ctx.fillStyle = "#83563a"; ctx.fillRect(cell.x - DIV / 2, by, cell.w + DIV, BOARD);
+    ctx.fillStyle = "rgba(255,225,180,.16)"; ctx.fillRect(cell.x - DIV / 2, by, cell.w + DIV, 2.5);
+    ctx.fillStyle = "rgba(0,0,0,.22)"; ctx.fillRect(cell.x - DIV / 2, by + BOARD - 3, cell.w + DIV, 3);
+    // small shelf plate with the sub-category
+    if (cell.sub && 8.5 / px >= 3.5) {
+      ctx.font = '700 8.5px "Noto Sans KR",sans-serif'; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      const tw = ctx.measureText(cell.sub).width + 12, pxl = cell.x + cell.w / 2 - tw / 2;
+      ctx.fillStyle = "#5b3a22"; ctx.fillRect(pxl, by + 2, tw, 12);
+      ctx.fillStyle = "rgba(255,225,180,.14)"; ctx.fillRect(pxl, by + 2.5, tw, 1);
+      ctx.fillStyle = "rgba(236,214,178,.72)"; ctx.fillText(cell.sub, cell.x + cell.w / 2, by + 8.4);
+    }
+  }
+  for (let c = 1; c < cols; c++) {
+    const x = FRAME + c * (CELLW + DIV) - DIV;
+    if (x > vx1 || x + DIV < vx0) continue;
+    ctx.fillStyle = "#74492b"; ctx.fillRect(x, CROWN - 4, DIV, H - CROWN - BASE + 8);
+    ctx.fillStyle = "rgba(255,225,180,.08)"; ctx.fillRect(x, CROWN - 4, 2, H - CROWN - BASE + 8);
+  }
+}
+function withCtx(c, fn){ const old = ctx; ctx = c; try { fn(); } finally { ctx = old; } }
+function makeCanvas(w, h){ const c = document.createElement("canvas"); c.width = Math.max(1, Math.ceil(w)); c.height = Math.max(1, Math.ceil(h)); return c; }
+
+let mips = [];               // [{scale, canvas}] largest first
+const tiles = new Map();     // key -> {c, px}
+let tilePx = 0; const TILE_BUDGET = 28e6;
+function buildCaches(){
+  tiles.clear(); tilePx = 0; mips = [];
+  if (!books.length) return;
+  const OV = 1.25;
+  const c = makeCanvas(W * OV, H * OV), g = c.getContext("2d");
+  g.scale(OV, OV);
+  withCtx(g, () => drawStatic(1 / OV, 0, 0, W, H));
+  mips.push({ scale: OV, c });
+  let prev = c, sc = OV;
+  while (sc > 0.2) {
+    sc /= 2; const m = makeCanvas(W * sc, H * sc), mg = m.getContext("2d");
+    mg.imageSmoothingQuality = "high"; mg.drawImage(prev, 0, 0, m.width, m.height);
+    mips.push({ scale: sc, c: m }); prev = m;
+  }
+  requestDraw();
+}
+let fontTimer = 0;
+function fontsChanged(){ clearTimeout(fontTimer); fontTimer = setTimeout(buildCaches, 250); }
+const TILE_LEVELS = [2, 3.5];
+function tileRect(cell){
+  // edge tiles also take in the outer frame, so tiles together cover the whole bookcase
+  const c = cell.idx % cols, r = Math.floor(cell.idx / cols);
+  const x0 = c === 0 ? 0 : cell.x - DIV / 2, x1 = c === cols - 1 ? W : cell.x + cell.w + DIV / 2;
+  const y0 = r === 0 ? 0 : cell.y, y1 = r === rows - 1 ? H : cell.y + cell.h + BOARD;
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+}
+let interacting = false, interactTimer = 0;
+function touchInteract(){ interacting = true; clearTimeout(interactTimer); interactTimer = setTimeout(() => { interacting = false; requestDraw(); }, 160); }
+function getTile(cell, L, mayBuild){
+  const key = cell.idx + "@" + L;
+  let t = tiles.get(key);
+  if (t) { tiles.delete(key); tiles.set(key, t); return t; }
+  if (!mayBuild) return null;
+  const r = tileRect(cell);
+  const c = makeCanvas(r.w * L, r.h * L), g = c.getContext("2d");
+  g.scale(L, L); g.translate(-r.x, -r.y);
+  withCtx(g, () => drawStatic(1 / L, r.x, r.y, r.x + r.w, r.y + r.h));
+  t = { c, px: c.width * c.height }; tiles.set(key, t); tilePx += t.px;
+  for (const [k, v] of tiles) { if (tilePx <= TILE_BUDGET) break; if (k === key) continue; tiles.delete(k); tilePx -= v.px; }
+  return t;
+}
+
+function draw(now){
+  now = now || performance.now();
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const g = ctx.createLinearGradient(0, 0, 0, vh);
+  g.addColorStop(0, "#4a3527"); g.addColorStop(1, "#2e2018");
+  ctx.fillStyle = g; ctx.fillRect(0, 0, vw, vh);
+  if (!books.length || !mips.length) return;
+  ctx.translate(tx, ty); ctx.scale(s, s);
+  const vx0 = -tx / s, vy0 = -ty / s, vx1 = vx0 + vw / s, vy1 = vy0 + vh / s;
+  const px = 1 / s, e = s * dpr;
+  let more = false;
+
+  ctx.fillStyle = "rgba(0,0,0,.28)"; ctx.fillRect(14, 20, W, H);
+  if (e > 3.5 && !interacting) {
+    drawStatic(px, vx0, vy0, vx1, vy1);           // still and close: draw live, crisp
+  } else if (e <= mips[0].scale * 1.05) {
+    let m = mips[0]; for (const mm of mips) if (mm.scale >= e * .9) m = mm;
+    const sx0 = Math.max(0, vx0), sy0 = Math.max(0, vy0), sx1 = Math.min(W, vx1), sy1 = Math.min(H, vy1);
+    if (sx1 > sx0 && sy1 > sy0) ctx.drawImage(m.c, sx0 * m.scale, sy0 * m.scale, (sx1 - sx0) * m.scale, (sy1 - sy0) * m.scale, sx0, sy0, sx1 - sx0, sy1 - sy0);
+  } else {
+    const L = e > 2 ? TILE_LEVELS[1] : TILE_LEVELS[0], alt = L === TILE_LEVELS[0] ? TILE_LEVELS[1] : TILE_LEVELS[0];
+    let budget = interacting ? 1 : 3; const draws = []; let missing = false;
+    for (const cell of cells) {
+      const r = tileRect(cell);
+      if (r.x > vx1 || r.x + r.w < vx0 || r.y > vy1 || r.y + r.h < vy0) continue;
+      const have = tiles.has(cell.idx + "@" + L);
+      let t = null;
+      if (have || budget > 0) { if (!have) budget--; t = getTile(cell, L, true); }
+      else { more = true; t = tiles.get(cell.idx + "@" + alt) || null; }
+      if (!t) missing = true;
+      draws.push([t, r]);
+    }
+    if (missing) { // fall back to the overview underneath any tile not built yet
+      const m = mips[0];
+      const sx0 = Math.max(0, vx0), sy0 = Math.max(0, vy0), sx1 = Math.min(W, vx1), sy1 = Math.min(H, vy1);
+      if (sx1 > sx0 && sy1 > sy0) ctx.drawImage(m.c, sx0 * m.scale, sy0 * m.scale, (sx1 - sx0) * m.scale, (sy1 - sy0) * m.scale, sx0, sy0, sx1 - sx0, sy1 - sy0);
+    }
+    for (const [t, r] of draws) if (t) ctx.drawImage(t.c, r.x, r.y, r.w, r.h);
+  }
+  for (const b of flashing) if (!b.found && now < b.wrong) drawDynamic(b, px, now);
+  for (const b of targets) if (b.found) { drawDynamic(b, px, now); drawBadge(b, px, now); }
+  drawLabels();
+  if (more) requestDraw();
+}
+function labelBadge(x, y, text, hi, onFrame){
+  // subtle: engraved text on the wooden frame; a faint small tag only when floating over books
+  ctx.font = '700 11px "Noto Sans KR",sans-serif';
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  if (!onFrame || hi) {
+    const w = Math.max(16, ctx.measureText(text).width + 8), h = 16;
+    ctx.fillStyle = hi ? "rgba(231,184,79,.75)" : "rgba(20,13,8,.45)";
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x - w / 2, y - h / 2, w, h, 4) : ctx.rect(x - w / 2, y - h / 2, w, h); ctx.fill();
+  }
+  if (onFrame && !hi) { ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.fillText(text, x, y + 1.5); }
+  ctx.fillStyle = hi ? "#2a1a0c" : (onFrame ? "rgba(236,214,178,.62)" : "rgba(243,233,212,.6)");
+  ctx.fillText(text, x, y + .5);
+}
+function drawLabels(){
+  // column names engraved on the bookcase crown: they move and scale with the bookcase
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const y = ty + (CROWN / 2 + 2) * s;
+  const fs = Math.max(8, Math.min(26, 24 * s));
+  if (y < topInset - fs || y > vh + fs) return;
+  ctx.font = '700 ' + fs.toFixed(1) + 'px "Noto Sans KR",sans-serif';
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  for (let c = 0; c < cols; c++) {
+    const cx = tx + (FRAME + c * (CELLW + DIV) + CELLW / 2) * s, cw = CELLW * s;
+    if (cx + cw / 2 < 0 || cx - cw / 2 > vw) continue;
+    const full = colName(c) + " · " + CATS[c].name;
+    const text = cw > ctx.measureText(full).width + 10 ? full : colName(c);
+    ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.fillText(text, cx, y + Math.max(1, fs * .08));
+    ctx.fillStyle = "rgba(236,214,178,.7)"; ctx.fillText(text, cx, y);
+  }
+}
+
+function drawBook(b, px, now){
+  const { x, y, w, h } = b;
+  ctx.fillStyle = b.color; ctx.fillRect(x, y, w, h);
+  if (w * (1 / px) > 3) {
+    if (b.lying) {
+      ctx.fillStyle = b.light; ctx.globalAlpha = .35; ctx.fillRect(x, y + 1.5, w, h * .22); ctx.globalAlpha = 1;
+      ctx.fillStyle = b.dark; ctx.fillRect(x, y + h - 2, w, 2); ctx.fillRect(x, y, w, 1);
+    } else {
+      ctx.fillStyle = b.light; ctx.globalAlpha = .35; ctx.fillRect(x + w * .14, y, w * .2, h); ctx.globalAlpha = 1;
+      ctx.fillStyle = b.dark; ctx.fillRect(x + w - 1.8, y, 1.8, h); ctx.fillRect(x, y, 1, h);
+    }
+    if (b.band) {
+      ctx.fillStyle = b.bandColor; ctx.globalAlpha = .75;
+      if (b.lying) { ctx.fillRect(x + 6, y + 2, 1.6, h - 4); ctx.fillRect(x + w - 8, y + 2, 1.6, h - 4); }
+      else { ctx.fillRect(x + 2, y + 9, w - 4, 1.6); ctx.fillRect(x + 2, y + 12.5, w - 4, 1); ctx.fillRect(x + 2, y + h - 11, w - 4, 1.6); }
+      ctx.globalAlpha = 1;
+    }
+  }
+  const sfs = b.fs / px; // screen font size
+  if (sfs < 3.6) {
+    // level of detail: a faint bar where the title is
+    if (w / px > 2.5) {
+      ctx.fillStyle = b.text; ctx.globalAlpha = .38;
+      const u = units(b.title);
+      if (b.lying) { const L = u * b.fs; ctx.fillRect(x + (w - L) / 2, y + h / 2 - b.fs * .25, L, b.fs * .5); }
+      else { const L = u * b.fs * 1.06; ctx.fillRect(x + w / 2 - b.fs * .28, y + 18, b.fs * .56, L); }
+      ctx.globalAlpha = 1;
+    }
+  } else {
+    ctx.fillStyle = b.text;
+    ctx.font = "700 " + b.fs.toFixed(2) + "px " + (b.serif ? '"Noto Serif KR",serif' : '"Noto Sans KR",sans-serif');
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    if (b.lying) ctx.fillText(b.title, x + w / 2, y + h / 2 + b.fs * .04);
+    else {
+      let cy = y + 18 + b.fs * .55; const cx = x + w / 2 - .4;
+      for (const ch of b.title) { if (ch === " ") { cy += b.fs * .4; continue; } ctx.fillText(ch, cx, cy); cy += b.fs * 1.06; }
+    }
+    if (!b.lying && h > 140 && sfs > 5) { // little publisher mark
+      ctx.globalAlpha = .55; ctx.beginPath(); ctx.arc(x + w / 2, y + h - 8, Math.min(w * .16, 3), 0, 7); ctx.fill(); ctx.globalAlpha = 1;
+    }
+  }
+}
+function drawDynamic(b, px, now){
+  const { x, y, w, h } = b;
+  if (now < b.wrong) {
+    const k = (b.wrong - now) / 450;
+    ctx.fillStyle = "rgba(255,80,60," + (.55 * k) + ")"; ctx.fillRect(x, y, w, h);
+  }
+  if (b.found) {
+    ctx.fillStyle = "rgba(95,209,139,.22)"; ctx.fillRect(x, y, w, h);
+    ctx.lineWidth = Math.max(2.2, 3 * px); ctx.strokeStyle = "#5fd18b";
+    ctx.strokeRect(x - ctx.lineWidth / 2, y - ctx.lineWidth / 2, w + ctx.lineWidth, h + ctx.lineWidth);
+  }
+}
+function drawBadge(b, px, now){
+  const r = Math.max(9, 11 * px);
+  const cx = b.x + b.w / 2, cy = b.lying ? b.y - r - 2 : b.y - r - 3;
+  const age = now - b.found;
+  if (age < 700) { const k = age / 700;
+    ctx.strokeStyle = "rgba(95,209,139," + (1 - k) + ")"; ctx.lineWidth = Math.max(2, 3 * px);
+    ctx.beginPath(); ctx.arc(cx, b.y + b.h / 2, (Math.max(b.w, b.h) * .6) + k * 40 * px * 3, 0, 7); ctx.stroke(); }
+  ctx.fillStyle = "#5fd18b"; ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.fill();
+  ctx.strokeStyle = "#0f2a19"; ctx.lineWidth = r * .22; ctx.lineCap = "round"; ctx.lineJoin = "round";
+  ctx.beginPath(); ctx.moveTo(cx - r * .45, cy + r * .02); ctx.lineTo(cx - r * .1, cy + r * .38); ctx.lineTo(cx + r * .48, cy - r * .35); ctx.stroke();
+}
+
+// ---------- game ----------
+const HINT_MS = 3000;
+let targets = [], startT = 0, running = false, misses = 0, hintsUsed = 0, hint = null, timerId = 0, foundLog = [];
+const colName = c => String.fromCharCode(65 + c);
+const cellPos = idx => ({ col: idx % cols, row: rows - Math.floor(idx / cols) }); // row: 1 = bottom
+function newGame(){
+  // build a fresh bookcase the player can look around before starting
+  seed = (Date.now() ^ Math.floor(Math.random() * 1e9)) | 0;
+  buildLibrary();
+  running = false; clearInterval(timerId);
+  targets = []; misses = 0; hintsUsed = 0; hint = null; info = null; foundLog = []; flashing.clear();
+  $("targets").innerHTML = '<div class="pre">책장을 둘러본 뒤 아래 <b>게임 시작</b>을 누르면 찾을 책 5권이 나와요.</div>';
+  $("cnt").textContent = "0"; $("timer").textContent = fmt(0); updateHintUI();
+  topInset = $("hud").getBoundingClientRect().height;
+  computeMin(); fit(false);
+  $("goBar").classList.remove("hidden");
+}
+function startGame(){
+  $("goBar").classList.add("hidden");
+  const usedCells = new Set(); targets = [];
+  const pool = shuffle(books.slice());
+  for (const b of pool) { if (targets.length >= 5) break; if (usedCells.has(b.cell)) continue; usedCells.add(b.cell); b.target = targets.length; b.hintLevel = 0; targets.push(b); }
+  misses = 0; hintsUsed = 0; hint = null; foundLog = []; flashing.clear();
+  renderChips(); $("cnt").textContent = "0";
+  running = true; updateHintUI();
+  topInset = $("hud").getBoundingClientRect().height; clampView(); requestDraw();
+  startT = performance.now();
+  clearInterval(timerId); timerId = setInterval(tick, 100); tick();
+}
+const elapsed = () => performance.now() - startT;
+const current = () => targets.find(b => !b.found);
+function tick(){
+  if (info && performance.now() > info.until) { info = null; updateHintUI(); }
+  if (!running) return;
+  $("timer").textContent = fmt(elapsed());
+  if (hint) {
+    const left = hint.until - performance.now();
+    if (left <= 0) { hint = null; updateHintUI(); requestDraw(); }
+    else { $("hintSec").textContent = Math.ceil(left / 1000) + "초"; }
+  }
+}
+function renderChips(){
+  $("targets").innerHTML = targets.map((b, i) =>
+    '<div class="chip" id="chip' + i + '" data-i="' + i + '"><span class="no">' + (i + 1) + '</span><span class="name">' + b.title + '</span><span class="t" id="ct' + i + '"></span></div>').join("");
+}
+// tapping a target chip tells which category / sub-category the book belongs to
+let info = null;
+function showBookInfo(b){
+  const cell = cells[b.cell];
+  info = { text: (b.target + 1) + "번 『" + b.title + "』 · 분류: " + CATS[cell.cat].name + " › " + cell.sub, until: performance.now() + 3000 };
+  hint = null;
+  if (!running) setTimeout(tick, 3050);
+  updateHintUI();
+}
+$("targets").addEventListener("click", e => {
+  const chip = e.target.closest(".chip"); if (!chip) return;
+  const b = targets[+chip.dataset.i]; if (b) showBookInfo(b);
+});
+function updateHintUI(){
+  const cur = current();
+  targets.forEach((b, i) => { const c = $("chip" + i); if (c) c.classList.toggle("current", b === cur); });
+  const btn = $("hintBtn");
+  if (!cur || !running && targets.length && foundLog.length === 5) { btn.disabled = true; btn.textContent = "힌트"; }
+  else { btn.disabled = false; btn.textContent = "힌트 " + (cur.target + 1) + "번"; }
+  if (hint) {
+    const p = cellPos(hint.target.cell);
+    const t = hint.target.title;
+    $("hintText").textContent = (hint.target.target + 1) + "번 『" + t + "』" + topicP(t) + " " + colName(p.col) + "열 " + p.row + "번째 칸에 있어요.";
+    $("hintBar").classList.remove("hidden");
+  } else if (info) {
+    $("hintText").textContent = info.text;
+    $("hintBar").classList.remove("hidden");
+  } else $("hintBar").classList.add("hidden");
+  topInset = $("hud").getBoundingClientRect().height;
+}
+function topicP(w){
+  const ch = w.charAt(w.length - 1), c = ch.charCodeAt(0);
+  if (c >= 0xAC00 && c <= 0xD7A3) return (c - 0xAC00) % 28 ? "은" : "는";
+  const d = "0123456789".indexOf(ch); if (d >= 0) return [1,1,0,1,0,0,1,1,1,0][d] ? "은" : "는";
+  return "은(는)";
+}
+function toast(msg, cls){
+  const t = $("toast"); t.className = "show " + (cls || ""); t.textContent = msg;
+  clearTimeout(t._h); t._h = setTimeout(() => t.className = "", 900);
+}
+function tapAt(sx, sy){
+  if (!running) return;
+  const wx = (sx - tx) / s, wy = (sy - ty) / s;
+  const slop = Math.max(0, 4 / s);
+  let hit = null, best = 1e9;
+  for (const b of books) {
+    if (wx >= b.x - slop && wx <= b.x + b.w + slop && wy >= b.y - slop && wy <= b.y + b.h + slop) {
+      const d = Math.abs(wx - (b.x + b.w / 2)) / b.w + Math.abs(wy - (b.y + b.h / 2)) / b.h;
+      if (d < best) { best = d; hit = b; }
+    }
+  }
+  if (!hit) return;
+  const now = performance.now();
+  if (hit.target >= 0) {
+    if (hit.found) { toast("이미 찾은 책이에요"); return; }
+    hit.found = now; flashing.add(hit);
+    const t = elapsed(); foundLog.push({ title: hit.title, t, no: hit.target + 1 });
+    const i = hit.target; const chip = $("chip" + i);
+    chip.classList.add("found", "pop"); 
+    chip.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    $("cnt").textContent = foundLog.length;
+    if (hint && hint.target === hit) hint = null;
+    toast("찾았다! 『" + hit.title + "』", "ok");
+    if (navigator.vibrate) try { navigator.vibrate(30); } catch(e){}
+    if (foundLog.length === 5) { hint = null; finish(); }
+    updateHintUI();
+  } else {
+    hit.wrong = now + 450; flashing.add(hit); misses++;
+    toast("『" + hit.title + "』 — 찾는 책이 아니에요", "bad");
+  }
+  requestDraw();
+}
+function useHint(){
+  if (!running) return;
+  const cur = current(); if (!cur) return;
+  hintsUsed++;
+  info = null;
+  hint = { target: cur, level: 2, until: performance.now() + HINT_MS };
+  updateHintUI(); tick(); requestDraw();
+}
+function finish(){
+  running = false; clearInterval(timerId); markSolved();
+  const total = foundLog[foundLog.length - 1].t; $("timer").textContent = fmt(total);
+  const recs = store.get(); const prevBest = recs.length ? Math.min(...recs.map(r => r.total)) : Infinity;
+  recs.push({ total, misses, hints: hintsUsed, date: Date.now() }); store.set(recs.slice(-50));
+  const isBest = total < prevBest;
+  let prev = 0;
+  const rowsHtml = foundLog.map((f, i) => { const d = f.t - prev; prev = f.t;
+    return '<tr><td class="muted">' + f.no + '번</td><td class="ttl">' + f.title + '</td><td class="r">' + fmt(f.t) + '</td><td class="r muted">+' + fmt(d) + '</td></tr>'; }).join("");
+  setTimeout(() => {
+    $("endCard").innerHTML =
+      '<h2>5권 모두 찾았어요!</h2>' +
+      '<div class="praise">' + praise(total, hintsUsed, misses) + '</div>' +
+      '<div class="stats"><div class="stat"><div class="k">소요 시간</div><div class="v">' + fmt(total) + '</div></div>' +
+      '<div class="stat"><div class="k">힌트 사용</div><div class="v">' + hintsUsed + '<span style="font-size:16px">회</span></div></div></div>' +
+      (isBest ? '<div class="newbest">최고 기록!</div>' : (isFinite(prevBest) ? '<div class="sub" style="margin-top:4px">최고 기록 ' + fmt(prevBest) + '</div>' : '')) +
+      recordsHtml() +
+      '<div style="display:flex;gap:8px;justify-content:center;margin-top:16px"><a class="btn" href="../index.html" style="text-decoration:none;display:inline-flex;align-items:center">게임 목록으로</a><button class="btn primary" id="againBtn">새 게임</button></div>';
+    $("endOv").classList.remove("hidden");
+    $("againBtn").onclick = () => { $("endOv").classList.add("hidden"); loadGame(); };  }, 700);
+}
+function praise(t, h, m){
+  const sec = t / 1000;
+  if (h === 0 && sec < 90) return "놀라워요! 힌트 한 번 없이 번개처럼 찾아냈어요.<br>진짜 책벌레 사서님이네요!";
+  if (h === 0) return "훌륭해요! 힌트 없이 끝까지 스스로 찾아냈어요.<br>책장 구석구석을 꿰뚫고 있군요.";
+  if (h <= 3) return "아주 잘했어요! 힌트를 똑똑하게 활용했어요.<br>책장 탐험가다운 솜씨예요.";
+  if (h <= 6) return "잘했어요! 차근차근 다섯 권을 모두 찾아냈어요.<br>다음엔 힌트를 조금 줄여 볼까요?";
+  return "끝까지 해낸 것이 대단해요!<br>여러 번 하다 보면 금방 빨라질 거예요.";
+}
+function recordsHtml(){
+  const recs = store.get(); if (!recs.length) return "";
+  const top = recs.slice().sort((a, b) => a.total - b.total).slice(0, 5);
+  return '<div class="sect">나의 기록 TOP 5</div><table>' + top.map((r, i) => {
+    const d = new Date(r.date);
+    return '<tr><td class="muted">' + (i + 1) + '</td><td class="r" style="text-align:left;font-weight:700">' + fmt(r.total) + '</td><td class="r muted">실수 ' + r.misses + ' · 힌트 ' + r.hints + '</td><td class="r muted">' + (d.getMonth() + 1) + '/' + d.getDate() + '</td></tr>'; }).join("") + '</table>';
+}
+
+// ---------- input ----------
+const ptrs = new Map(); let gesture = null;
+cv.addEventListener("pointerdown", e => {
+  cv.setPointerCapture(e.pointerId); anim = null;
+  ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (ptrs.size === 1) gesture = { mode: "pan", sx: e.clientX, sy: e.clientY, lx: e.clientX, ly: e.clientY, moved: false, multi: false };
+  else if (ptrs.size === 2) startPinch();
+});
+function startPinch(){
+  const [a, b] = [...ptrs.values()];
+  const d = Math.hypot(a.x - b.x, a.y - b.y) || 1, mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+  gesture = { mode: "pinch", d0: d, s0: s, wx: (mx - tx) / s, wy: (my - ty) / s, moved: true, multi: true };
+}
+cv.addEventListener("pointermove", e => {
+  if (!ptrs.has(e.pointerId) || !gesture) return;
+  ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (gesture.mode === "pan" && ptrs.size === 1) {
+    if (!gesture.moved && Math.hypot(e.clientX - gesture.sx, e.clientY - gesture.sy) > 8) { gesture.moved = true; cv.classList.add("dragging"); }
+    if (gesture.moved) { touchInteract(); tx += e.clientX - gesture.lx; ty += e.clientY - gesture.ly; clampView(); requestDraw(); }
+    gesture.lx = e.clientX; gesture.ly = e.clientY;
+  } else if (gesture.mode === "pinch" && ptrs.size >= 2) {
+    const [a, b] = [...ptrs.values()];
+    const d = Math.hypot(a.x - b.x, a.y - b.y) || 1, mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+    touchInteract(); s = Math.max(minS, Math.min(MAXS, gesture.s0 * d / gesture.d0));
+    tx = mx - gesture.wx * s; ty = my - gesture.wy * s; clampView(); requestDraw();
+  }
+});
+function endPtr(e){
+  if (!ptrs.has(e.pointerId)) return;
+  ptrs.delete(e.pointerId);
+  if (ptrs.size === 0) {
+    if (gesture && gesture.mode === "pan" && !gesture.moved && !gesture.multi && e.type === "pointerup") tapAt(e.clientX, e.clientY);
+    gesture = null; cv.classList.remove("dragging");
+  } else if (ptrs.size === 1) {
+    const p = [...ptrs.values()][0];
+    gesture = { mode: "pan", sx: p.x, sy: p.y, lx: p.x, ly: p.y, moved: true, multi: true };
+  }
+}
+cv.addEventListener("pointerup", endPtr);
+cv.addEventListener("pointercancel", endPtr);
+cv.addEventListener("wheel", e => {
+  e.preventDefault(); anim = null; touchInteract();
+  const k = Math.exp(-e.deltaY * (e.ctrlKey ? 0.012 : 0.0018));
+  zoomAt(e.clientX, e.clientY, s * k);
+}, { passive: false });
+["gesturestart", "gesturechange"].forEach(n => document.addEventListener(n, e => e.preventDefault()));
+
+$("zin").onclick = () => zoomButton(1.8);
+$("zout").onclick = () => zoomButton(1 / 1.8);
+$("zfit").onclick = () => fit(true);
+$("hintBtn").onclick = useHint;
+function showCats(){
+  $("catBody").innerHTML = layout.map((col, c) =>
+    '<tr><td class="col">' + colName(c) + '</td><td><div class="big">' + col.name + '</div></td><td>' +
+    col.subs.map(sb => '<div class="sub"><span>' + sb.name + '</span><span>' + (sb.from === sb.to ? sb.to + '칸' : sb.to + '~' + sb.from + '칸') + '</span></div>').join("") +
+    '</td></tr>').join("");
+  $("catOv").classList.remove("hidden");
+}
+$("catBtn").onclick = showCats;
+$("catClose").onclick = () => $("catOv").classList.add("hidden");
+$("catOv").addEventListener("click", e => { if (e.target.id === "catOv") $("catOv").classList.add("hidden"); });
+window.addEventListener("resize", resize);
+if (document.fonts) { document.fonts.addEventListener && document.fonts.addEventListener("loadingdone", fontsChanged); document.fonts.ready.then(fontsChanged); }
+
+// start screen
+$("startRecords").innerHTML = recordsHtml();
+$("startBtn").onclick = () => { $("startOv").classList.add("hidden"); };
+$("goBtn").onclick = startGame;
+// background preview library before start
+// loading screen while fonts arrive and the bookcase is drawn
+function showLoading(){ const o = $("loadOv"); o.style.display = ""; o.classList.remove("hide"); }
+function hideLoading(){ const o = $("loadOv"); o.classList.add("hide"); setTimeout(() => { if (o.classList.contains("hide")) o.style.display = "none"; }, 400); }
+async function whenReady(){
+  await new Promise(r => setTimeout(r, 60));
+  try { if (document.fonts) await Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 8000))]); } catch (e) {}
+  clearTimeout(fontTimer); buildCaches();
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  hideLoading();
+}
+function loadGame(){ showLoading(); setTimeout(() => { newGame(); whenReady(); }, 50); }
+resize(); newGame(); whenReady();
+})();
+</script>
+</body>
+</html>

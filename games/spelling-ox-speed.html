@@ -1,0 +1,339 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>맞춤법 O/X 스피드</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&family=Gaegu:wght@700&display=swap" rel="stylesheet">
+<style>
+/* Layout: one-screen ruled notebook page — sentence written on the page, teacher's red-pen marks on answers, O/X keys in the thumb zone */
+:root{
+  --paper:#f4f7fb; --line:#d6e0ee; --margin:#ec9e9e; --sheet:#ffffff;
+  --ink:#1c2541; --muted:#5b6886; --blue:#2453c4; --red:#d23638;
+  --hl:#ffe36a; --good:#178a55; --shadow:rgba(28,37,65,.10); --soft:#e9eef7;
+  --f-display:"Jua","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-body:"Gowun Dodum","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-hand:"Gaegu","Jua",cursive;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#121826; --line:#222d42; --margin:#7a3b45; --sheet:#1a2234;
+  --ink:#e7ecf6; --muted:#9aa7c2; --blue:#7fa6ff; --red:#ff6f6f;
+  --hl:rgba(255,214,10,.38); --good:#4fd18f; --shadow:rgba(0,0,0,.35); --soft:#242e45;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#121826; --line:#222d42; --margin:#7a3b45; --sheet:#1a2234;
+  --ink:#e7ecf6; --muted:#9aa7c2; --blue:#7fa6ff; --red:#ff6f6f;
+  --hl:rgba(255,214,10,.38); --good:#4fd18f; --shadow:rgba(0,0,0,.35); --soft:#242e45;
+  color-scheme:dark}
+
+html,body{height:100%}
+body{
+  background:repeating-linear-gradient(to bottom,transparent 0 33px,var(--line) 33px 34px),var(--paper);
+  color:var(--ink);font-family:var(--f-body);font-size:16px;overflow:hidden;
+  -webkit-tap-highlight-color:transparent;user-select:none;
+}
+body::after{content:"";position:fixed;top:0;bottom:0;left:max(8px,env(safe-area-inset-left,0px));width:2px;background:var(--margin);pointer-events:none}
+.app{height:100%;max-width:520px;margin:0 auto;position:relative;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));}
+.screen{height:100%;display:flex;flex-direction:column;gap:16px;padding-block:16px 22px;overflow-y:auto}
+h1,h2{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+
+/* start */
+.hero{display:flex;flex-direction:column;gap:6px;padding-top:8px}
+.eyebrow{font-family:var(--f-hand);font-size:22px;color:var(--red);transform:rotate(-3deg);transform-origin:left;width:max-content}
+.hero h1{font-size:clamp(38px,11vw,52px);line-height:1.05}
+.hero h1 b{font-weight:400;color:var(--blue)}
+.hero h1 i{font-style:normal;color:var(--red)}
+.hero p{margin:0;color:var(--muted);line-height:1.6}
+.rules{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.rule{background:var(--sheet);border-radius:14px;padding:12px 8px;text-align:center;box-shadow:0 2px 0 var(--line)}
+.rule strong{display:block;font-family:var(--f-display);font-size:26px;font-variant-numeric:tabular-nums}
+.rule span{font-size:13px;color:var(--muted)}
+.sample{background:var(--sheet);border-radius:18px;padding:18px;position:relative;box-shadow:0 6px 18px var(--shadow)}
+.sample .lbl{font-size:13px;color:var(--muted);letter-spacing:.04em}
+.sample .sent{font-size:22px;margin:10px 0 6px;line-height:1.5}
+.sample .fix{font-family:var(--f-hand);font-size:22px;color:var(--red)}
+.primary{margin-top:auto;background:var(--blue);color:var(--sheet);font-family:var(--f-display);font-size:24px;
+  border-radius:18px;padding:16px;box-shadow:0 5px 0 color-mix(in srgb,var(--blue) 60%,#000);transition:transform .08s}
+.primary:active{transform:translateY(4px);box-shadow:0 1px 0 color-mix(in srgb,var(--blue) 60%,#000)}
+
+mark{background:linear-gradient(transparent 52%,var(--hl) 52%);color:inherit;padding:0 2px;
+  border-bottom:2px solid var(--ink);font-weight:700}
+
+/* play */
+.hud{display:flex;justify-content:space-between;align-items:center;font-variant-numeric:tabular-nums}
+.hud .q{font-family:var(--f-display);font-size:20px}
+.hud .q small{color:var(--muted);font-size:15px}
+.combo{font-family:var(--f-hand);font-size:22px;color:var(--red);min-width:70px;text-align:center;transition:transform .2s}
+.combo.pop{transform:scale(1.35) rotate(-6deg)}
+.timer{height:10px;border-radius:99px;background:var(--soft);overflow:hidden}
+.timer i{display:block;height:100%;width:100%;background:var(--blue);border-radius:99px;transform-origin:left}
+.timer.hurry i{background:var(--red)}
+.card{flex:1 1 auto;min-height:150px;background:var(--sheet);border-radius:22px;box-shadow:0 8px 22px var(--shadow);
+  position:relative;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:14px;padding:22px 18px;text-align:center}
+.card .ask{font-size:14px;color:var(--muted);letter-spacing:.03em}
+.card .sent{font-size:clamp(24px,7.4vw,32px);line-height:1.55;word-break:keep-all;min-width:0}
+.mark{position:absolute;inset:0;margin:auto;width:min(70%,220px);height:min(75%,220px);pointer-events:none}
+.mark path{fill:none;stroke:var(--red);stroke-width:10;stroke-linecap:round;stroke-linejoin:round;
+  stroke-dasharray:600;stroke-dashoffset:600;opacity:.8}
+.mark.draw path{animation:draw .25s ease-out forwards}
+.mark.draw path:nth-child(2){animation-delay:.1s}
+@keyframes draw{to{stroke-dashoffset:0}}
+
+.keys{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.key{height:118px;border-radius:24px;background:var(--sheet);font-family:var(--f-display);font-size:72px;line-height:1;
+  border:4px solid currentColor;box-shadow:0 6px 0 currentColor;transition:transform .08s,box-shadow .08s}
+.key.o{color:var(--blue)} .key.x{color:var(--red)}
+.key:active{transform:translateY(5px);box-shadow:0 1px 0 currentColor}
+.key:disabled{opacity:.45}
+
+.sheet{background:var(--sheet);border-radius:22px;padding:18px;box-shadow:0 8px 22px var(--shadow);
+  display:flex;flex-direction:column;gap:10px;border-top:5px solid var(--red)}
+.sheet h2{font-size:24px;color:var(--red)}
+.sheet .right{font-size:19px;line-height:1.5}
+.sheet .right b{font-family:var(--f-display);font-weight:400;font-size:22px;color:var(--blue)}
+.sheet .tip{margin:0;color:var(--muted);line-height:1.6;font-size:15px}
+.sheet .auto{height:6px;border-radius:99px;background:var(--soft);overflow:hidden;margin-top:4px}
+.sheet .auto i{display:block;height:100%;background:var(--red);transform-origin:left}
+.sheet .auto i.run{animation:shrink 1.6s linear forwards}
+@keyframes shrink{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+
+/* result */
+.res{background:var(--sheet);border-radius:22px;padding:22px;text-align:center;box-shadow:0 8px 22px var(--shadow);position:relative}
+.res .grade{font-family:var(--f-hand);font-size:30px;color:var(--red);transform:rotate(-2deg)}
+.res .big{font-family:var(--f-display);font-size:64px;color:var(--blue);line-height:1.1;font-variant-numeric:tabular-nums}
+.res .big small{font-size:22px;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:14px}
+.stats div{background:var(--soft);border-radius:12px;padding:10px 4px}
+.stats strong{display:block;font-family:var(--f-display);font-size:22px;font-variant-numeric:tabular-nums}
+.stats span{font-size:12px;color:var(--muted)}
+.review h2{font-size:20px;margin-bottom:8px}
+.review ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.review li{background:var(--sheet);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:4px}
+.review li .s{font-size:16px;line-height:1.5}
+.review li .f{font-size:14px;color:var(--muted);line-height:1.5}
+.review li .f b{color:var(--blue);font-weight:700}
+.perfect{background:var(--sheet);border-radius:14px;padding:14px;text-align:center;color:var(--good)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.mark path{stroke-dashoffset:0}}
+</style>
+
+<div class="app">
+  <!-- 시작 -->
+  <section class="screen" id="start">
+    <div class="hero">
+      <span class="eyebrow">받아쓰기 대신!</span>
+      <h1>맞춤법 <b>O</b>/<i>X</i><br>스피드 퀴즈</h1>
+      <p>밑줄 친 말이 맞으면 O, 틀리면 X를 눌러요. 5초 안에 골라야 해요!</p>
+    </div>
+    <div class="rules">
+      <div class="rule"><strong>15</strong><span>문제</span></div>
+      <div class="rule"><strong>5초</strong><span>문제당 시간</span></div>
+      <div class="rule"><strong>콤보</strong><span>연속 정답 도전</span></div>
+    </div>
+    <div class="sample">
+      <div class="lbl">예시 문제</div>
+      <div class="sent">오늘이 <mark>몇일</mark>이야?</div>
+      <div class="fix">정답은 X! 바른 말은 ‘며칠’</div>
+    </div>
+    <button class="primary" id="startBtn">시작하기</button>
+  </section>
+
+  <!-- 게임 -->
+  <section class="screen" id="play" hidden>
+    <div class="hud">
+      <div class="q" id="qNum">1 <small>/ 15</small></div>
+      <div class="combo" id="combo"></div>
+      <div></div>
+    </div>
+    <div class="timer" id="timer"><i id="timerBar"></i></div>
+    <div class="card">
+      <div class="ask">밑줄 친 말, 맞춤법이 맞을까요?</div>
+      <div class="sent" id="sent"></div>
+      <svg class="mark" id="mark" viewBox="0 0 140 140" aria-hidden="true"></svg>
+    </div>
+    <div class="keys" id="keys">
+      <button class="key o" id="btnO" aria-label="맞아요 O">O</button>
+      <button class="key x" id="btnX" aria-label="틀려요 X">X</button>
+    </div>
+    <div class="sheet" id="sheet" hidden>
+      <h2 id="sheetTitle">아쉬워요!</h2>
+      <div class="right" id="sheetRight"></div>
+      <p class="tip" id="sheetTip"></p>
+      <div class="auto"><i id="autoBar"></i></div>
+    </div>
+  </section>
+
+  <!-- 결과 -->
+  <section class="screen" id="result" hidden>
+    <div class="res">
+      <div class="grade" id="grade"></div>
+      <div class="big" id="finalScore">0<small>/ 15</small></div>
+      <div class="stats">
+        <div><strong id="stCombo">0</strong><span>최대 콤보</span></div>
+        <div><strong id="stWrong">0</strong><span>틀린 문제</span></div>
+      </div>
+    </div>
+    <div class="review">
+      <h2>틀린 문제 다시 보기</h2>
+      <ul id="reviewList"></ul>
+    </div>
+    <button class="primary" id="againBtn">다시 하기</button>
+  </section>
+</div>
+
+<script>
+const ITEMS = [
+  {s:"오늘이 [몇일]이야?", ok:false, fix:"며칠", tip:"‘몇 일’로 쓰지 않고 언제나 ‘며칠’로 써요."},
+  {s:"[며칠] 동안 할머니 댁에 있었어.", ok:true, fix:"며칠", tip:"날짜를 물을 때도, 기간을 말할 때도 ‘며칠’이에요."},
+  {s:"숙제를 다 하면 놀아도 [돼].", ok:true, fix:"돼", tip:"‘되어’로 바꿔 말이 되면 ‘돼’예요. (놀아도 되어)"},
+  {s:"그러면 안 [되]!", ok:false, fix:"돼", tip:"‘안 되어’로 바꿀 수 있으니 ‘안 돼’가 맞아요."},
+  {s:"나는 선생님이 [되고] 싶어.", ok:true, fix:"되고", tip:"‘되어고’는 말이 안 되니 ‘되고’가 맞아요."},
+  {s:"아침밥을 [안] 먹었어.", ok:true, fix:"안", tip:"‘안’은 ‘아니’의 준말이에요. (아니 먹었어)"},
+  {s:"오늘은 학원에 가지 [안]았다.", ok:false, fix:"않았다", tip:"‘-지’ 뒤에는 ‘않다’(아니하다)가 와요. 가지 않았다!"},
+  {s:"[금새] 비가 그쳤다.", ok:false, fix:"금세", tip:"‘금시에’가 줄어든 말이라 ‘금세’예요."},
+  {s:"친구가 [금세] 달려왔다.", ok:true, fix:"금세", tip:"‘금시에’ → ‘금세’, 아주 빨리라는 뜻이에요."},
+  {s:"[왠지] 기분이 좋아.", ok:true, fix:"왠지", tip:"‘왜인지’의 준말이라 ‘왠지’예요."},
+  {s:"이게 [왠일]이야?", ok:false, fix:"웬일", tip:"‘왠지’만 ‘왠’이고, 나머지는 모두 ‘웬’이에요."},
+  {s:"설거지는 내가 [할게].", ok:true, fix:"할게", tip:"소리는 [할께]지만 쓸 때는 ‘할게’예요."},
+  {s:"내일 꼭 연락 [할께].", ok:false, fix:"할게", tip:"‘-ㄹ게’는 된소리로 쓰지 않아요. ‘할게’!"},
+  {s:"[오랫만]에 친구를 만났다.", ok:false, fix:"오랜만", tip:"‘오래간만’이 줄어든 말이라 ‘오랜만’이에요."},
+  {s:"[오랜만]에 눈이 내렸다.", ok:true, fix:"오랜만", tip:"‘오래간만’ → ‘오랜만’. (‘오랫동안’은 ㅅ이 맞아요)"},
+  {s:"[구지] 안 와도 괜찮아.", ok:false, fix:"굳이", tip:"‘굳다’에서 온 말이라 ‘굳이’로 써요."},
+  {s:"[일부로] 그런 건 아니야.", ok:false, fix:"일부러", tip:"‘일부러’가 맞아요. ‘일부로’는 없는 말이에요."},
+  {s:"밥 먹기 전에 손을 [깨끗이] 씻자.", ok:true, fix:"깨끗이", tip:"‘깨끗하다’처럼 ㅅ 받침 뒤에는 ‘-이’를 붙여요."},
+  {s:"내 방을 [깨끗히] 치웠다.", ok:false, fix:"깨끗이", tip:"‘깨끗히’가 아니라 ‘깨끗이’예요."},
+  {s:"감기가 다 [나았다].", ok:true, fix:"나았다", tip:"병이 좋아지는 건 ‘낫다’ → ‘나았다’예요."},
+  {s:"감기가 빨리 [낳았으면] 좋겠다.", ok:false, fix:"나았으면", tip:"‘낳다’는 아기를 낳을 때! 병은 ‘낫다’예요."},
+  {s:"화살로 과녁을 [맞혔다].", ok:true, fix:"맞혔다", tip:"목표에 닿게 하거나 정답을 고를 때는 ‘맞히다’예요."},
+  {s:"퀴즈 정답을 [맞췄다].", ok:false, fix:"맞혔다", tip:"정답은 ‘맞히는’ 거예요. ‘맞추다’는 둘을 비교할 때 써요."},
+  {s:"할머니께 편지를 [부쳤다].", ok:true, fix:"부쳤다", tip:"우편으로 보내는 건 ‘부치다’예요."},
+  {s:"벽에 그림을 [부쳤다].", ok:false, fix:"붙였다", tip:"딱 붙게 하는 건 ‘붙이다’ → ‘붙였다’예요."},
+  {s:"선생님이 수학을 [가르쳐] 주셨다.", ok:true, fix:"가르쳐", tip:"지식을 알려 주는 건 ‘가르치다’예요."},
+  {s:"손가락으로 북극성을 [가르쳤다].", ok:false, fix:"가리켰다", tip:"방향을 손으로 짚는 건 ‘가리키다’예요."},
+  {s:"놀이터에서 우산을 [잃어버렸다].", ok:true, fix:"잃어버렸다", tip:"물건이 없어지면 ‘잃다’예요."},
+  {s:"숙제가 있는 걸 깜빡 [잃어버렸다].", ok:false, fix:"잊어버렸다", tip:"기억이 안 나는 건 ‘잊다’ → ‘잊어버렸다’예요."},
+  {s:"나랑 너는 좋아하는 색이 [틀려].", ok:false, fix:"달라", tip:"같지 않은 건 ‘다르다’, 옳지 않은 건 ‘틀리다’예요."},
+  {s:"[어떡해], 필통을 놓고 왔어!", ok:true, fix:"어떡해", tip:"‘어떻게 해’가 줄어든 말이라 혼자 쓸 때는 ‘어떡해’예요."},
+  {s:"이 문제는 [어떡해] 풀어?", ok:false, fix:"어떻게", tip:"방법을 물을 때는 ‘어떻게’예요. (어떻게 풀어?)"},
+  {s:"엄마가 끓인 김치[찌게]는 최고야.", ok:false, fix:"찌개", tip:"‘찌개’, ‘베개’처럼 ‘개’로 써요."},
+  {s:"푹신한 [베개]를 베고 누웠다.", ok:true, fix:"베개", tip:"머리를 베는 물건은 ‘베개’예요."},
+  {s:"아침에 일어나니 [눈꼽]이 꼈다.", ok:false, fix:"눈곱", tip:"소리는 [눈꼽]이지만 쓸 때는 ‘눈곱’이에요."},
+  {s:"집에 가는 길에 문구점에 [들렀다].", ok:true, fix:"들렀다", tip:"잠깐 머무르는 건 ‘들르다’ → ‘들렀다’예요."},
+  {s:"학교 끝나고 편의점에 [들렸다].", ok:false, fix:"들렀다", tip:"‘들리다’는 소리가 들릴 때! 가게는 ‘들렀다’예요."},
+  {s:"나갈 때 현관문을 꼭 [잠궈].", ok:false, fix:"잠가", tip:"‘잠그다’ → ‘잠가’, ‘잠갔다’예요."},
+  {s:"할머니와 김치를 [담갔다].", ok:true, fix:"담갔다", tip:"‘담그다’ → ‘담가’, ‘담갔다’예요."},
+  {s:"정말 [희한한] 일이 생겼어.", ok:true, fix:"희한한", tip:"드물고 신기한 건 ‘희한하다’예요."},
+  {s:"너무 [어의없어]!", ok:false, fix:"어이없어", tip:"‘어이없다’가 맞아요. ‘어의’는 임금님 의사예요."},
+  {s:"그 연필은 내 [거에요].", ok:false, fix:"거예요", tip:"받침 없는 말 뒤에는 ‘-예요’를 써요. (거예요)"},
+  {s:"저는 범인이 [아니예요].", ok:false, fix:"아니에요", tip:"‘아니다’에는 ‘-에요’를 붙여 ‘아니에요’예요."},
+  {s:"선생님, 내일 [봬요]!", ok:true, fix:"봬요", tip:"‘뵈어요’가 줄어든 말이라 ‘봬요’예요."},
+  {s:"다음에 또 [뵈요].", ok:false, fix:"봬요", tip:"‘뵈어요’ → ‘봬요’. ‘돼요’와 같은 원리예요."},
+  {s:"연극에서 내 [역할]은 사회자야.", ok:true, fix:"역할", tip:"‘역활’이 아니라 ‘역할’이에요."},
+  {s:"소풍 전날 [설렘] 때문에 잠이 안 왔다.", ok:true, fix:"설렘", tip:"‘설레다’에서 온 말이라 ‘설렘’이에요."},
+  {s:"내 [바램]은 강아지를 키우는 거야.", ok:false, fix:"바람", tip:"‘바라다’에서 온 말이라 ‘바람’이에요."},
+  {s:"바구니 안의 사과 [개수]를 세어 보자.", ok:true, fix:"개수", tip:"‘갯수’가 아니라 ‘개수’예요."},
+  {s:"[어짜피] 늦었으니 천천히 가자.", ok:false, fix:"어차피", tip:"‘어차피’가 맞는 표기예요."}
+];
+const N = 15, LIMIT = 5000;
+const $ = id => document.getElementById(id);
+let qs = [], i = 0, combo = 0, maxCombo = 0, correct = 0, wrongs = [];
+let t0 = 0, raf = 0, locked = true, autoT = 0;
+
+function shuffle(a){ a = a.slice(); for(let k=a.length-1;k>0;k--){const j=Math.random()*(k+1)|0;[a[k],a[j]]=[a[j],a[k]];} return a; }
+function show(id){ ["start","play","result"].forEach(s => $(s).hidden = s !== id); }
+function sentHTML(s){ return s.replace(/\[(.+?)\]/, "<mark>$1</mark>"); }
+function word(q){ return q.s.match(/\[(.+?)\]/)[1]; }
+
+function start(){
+  qs = shuffle(ITEMS).slice(0, N);
+  i = 0; combo = 0; maxCombo = 0; correct = 0; wrongs = [];
+  $("combo").textContent = "";
+  show("play"); load();
+}
+
+function load(){
+  const q = qs[i];
+  $("qNum").innerHTML = `${i+1} <small>/ ${N}</small>`;
+  $("sent").innerHTML = sentHTML(q.s);
+  $("mark").innerHTML = ""; $("mark").classList.remove("draw");
+  $("sheet").hidden = true; $("keys").hidden = false;
+  $("btnO").disabled = $("btnX").disabled = false;
+  $("timer").classList.remove("hurry");
+  locked = false; t0 = performance.now();
+  cancelAnimationFrame(raf); tick();
+}
+
+function tick(){
+  const left = Math.max(0, LIMIT - (performance.now() - t0));
+  $("timerBar").style.transform = `scaleX(${left / LIMIT})`;
+  $("timer").classList.toggle("hurry", left < 1800);
+  if (left <= 0) { answer(null); return; }
+  raf = requestAnimationFrame(tick);
+}
+
+function drawMark(good){
+  const svg = $("mark");
+  svg.innerHTML = good
+    ? '<path d="M76 14C112 14 130 44 127 74C124 108 96 129 66 127C34 125 13 100 15 68C17 38 42 17 82 20"/>'
+    : '<path d="M30 30L110 110"/><path d="M110 30L30 110"/>';
+  svg.classList.remove("draw"); void svg.offsetWidth; svg.classList.add("draw");
+}
+
+function answer(choice){
+  if (locked) return;
+  locked = true; cancelAnimationFrame(raf);
+  $("btnO").disabled = $("btnX").disabled = true;
+  const q = qs[i];
+  const right = choice === q.ok;
+  if (right){
+    combo++; correct++; maxCombo = Math.max(maxCombo, combo);
+    const c = $("combo"); c.textContent = combo >= 2 ? combo + "콤보!" : "";
+    c.classList.remove("pop"); void c.offsetWidth; if (combo >= 2) c.classList.add("pop");
+    drawMark(true);
+    autoT = setTimeout(next, 500);
+  } else {
+    combo = 0; $("combo").textContent = "";
+    wrongs.push(q); drawMark(false);
+    $("sheetTitle").textContent = choice === null ? "시간 초과!" : "아쉬워요!";
+    $("sheetRight").innerHTML = q.ok
+      ? `정답은 <b>O</b> · ‘${word(q)}’는 맞는 말이에요`
+      : `정답은 <b>X</b> · ‘${word(q)}’ → <b>${q.fix}</b>`;
+    $("sheetTip").textContent = q.tip;
+    $("keys").hidden = true; $("sheet").hidden = false;
+    const ab = $("autoBar"); ab.classList.remove("run"); void ab.offsetWidth; ab.classList.add("run");
+    autoT = setTimeout(next, 1600);
+  }
+}
+
+function next(){
+  clearTimeout(autoT);
+  i++;
+  if (i >= N) finish(); else load();
+}
+
+function finish(){
+  $("grade").textContent = correct === N ? "맞춤법 박사!" : correct >= 12 ? "아주 잘했어요!" : correct >= 8 ? "조금만 더 힘내요!" : "다시 도전해 봐요!";
+  $("finalScore").innerHTML = `${correct}<small>/ ${N}</small>`;
+  $("stCombo").textContent = maxCombo;
+  $("stWrong").textContent = wrongs.length;
+  const ul = $("reviewList");
+  ul.innerHTML = wrongs.length
+    ? wrongs.map(q => `<li><div class="s">${sentHTML(q.s)}</div><div class="f">${q.ok ? `맞는 표기 <b>O</b>` : `바른 표기 <b>${q.fix}</b>`} · ${q.tip}</div></li>`).join("")
+    : '<li class="perfect">틀린 문제가 하나도 없어요!</li>';
+  show("result"); $("result").scrollTop = 0;
+}
+
+$("startBtn").onclick = start;
+$("againBtn").onclick = start;
+$("btnO").onclick = () => answer(true);
+$("btnX").onclick = () => answer(false);
+document.addEventListener("keydown", e => {
+  if ($("play").hidden) return;
+  const k = e.key.toLowerCase();
+  if (!locked && (k === "o" || k === "1")) answer(true);
+  else if (!locked && (k === "x" || k === "2")) answer(false);
+});
+</script>
+
+</body></html>

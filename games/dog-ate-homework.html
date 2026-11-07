@@ -210,13 +210,13 @@ button:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--red);outli
 .hub-back a:hover{color:var(--ink)}
 .hub-back a:focus-visible{outline:3px solid var(--heat,var(--ink));outline-offset:2px}
 </style>
+<style>.title-back{color:inherit;text-decoration:none;margin-right:.3em}.title-back:hover{opacity:.7}</style>
 </head>
 <body>
 
 <div class="app">
-<nav class="hub-back"><a href="../index.html">← 게임 목록</a></nav>
   <header class="hud">
-    <div class="brand"><small>4학년 3반 · 교무실 면담</small><h1>강아지가 먹은 <em>숙제</em></h1></div>
+    <div class="brand"><small>4학년 3반 · 교무실 면담</small><h1><a class="title-back" href="../index.html" aria-label="게임 목록으로">←</a>강아지가 먹은 <em>숙제</em></h1></div>
     <div class="clock" id="clockBox"><b id="clock">12:40</b><small>13:00 5교시 종</small></div>
     <div class="gauges">
       <div class="g g-conf"><label for="gConf">실토</label><div class="bar"><i id="gConf"></i></div><b id="nConf">0</b><small>100이 되면 시연이가 진실을 털어놓는다</small></div>
